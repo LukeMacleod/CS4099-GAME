@@ -1,0 +1,255 @@
+/* Page background + base typography */
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 20% 20%, #1f4bff, #020863);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Main game container */
+#game-container {
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Login screen - Duolingo-inspired */
+.login-screen {
+  background: white;
+  border-radius: 24px;
+  padding: 4rem 3rem;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Main title "Fàilte" */
+.login-screen h1 {
+  font-size: 4rem;
+  font-weight: 900;
+  margin: 0 0 1rem 0;
+  color: #1f4bff;
+  letter-spacing: -0.02em;
+}
+
+.login-screen p {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 0 0 2.5rem 0;
+}
+
+/* White textbox wrapper */
+.form-group {
+  margin-bottom: 2rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.8rem;
+  text-align: left;
+}
+
+/* Input field styling */
+.form-group input {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  font-size: 1.1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #1f4bff;
+  box-shadow: 0 0 0 3px rgba(31, 75, 255, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+/* Button styling */
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2.8rem;
+  border-radius: 999px;
+  border: none;
+  text-decoration: none;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #2b1300;
+  background: linear-gradient(135deg, #ffb347, #ff7b22);
+  box-shadow: 0 0 0 2px rgba(255, 244, 214, 0.9), 0 12px 28px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+  transition: transform 220ms ease-out, box-shadow 220ms ease-out, background-position 500ms ease-out;
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+}
+
+.play-button:focus-visible {
+  outline: 3px solid #ffe66d;
+  outline-offset: 3px;
+}
+
+.play-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.0),
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.0)
+  );
+  transform: skewX(-20deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.play-button:hover::before,
+.play-button:focus-visible::before {
+  animation: water-glide 700ms ease-out forwards;
+  opacity: 1;
+}
+
+.play-button:hover,
+.play-button:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(255, 248, 220, 0.95), 0 16px 34px rgba(0, 0, 0, 0.55);
+  background-position: 100% 50%;
+}
+
+.play-button:active {
+  transform: translateY(0);
+}
+
+@keyframes water-glide {
+  0%   { transform: translateX(0) skewX(-20deg); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translateX(250%) skewX(-20deg); opacity: 0; }
+}
+
+/* Tutorial screen */
+.tutorial-screen {
+  background: white;
+  border-radius: 24px;
+  padding: 4rem 3rem;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.tutorial-screen h2 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin: 0 0 2rem 0;
+  color: #1f4bff;
+}
+
+#tutorial-text {
+  font-size: 1.2rem;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+  min-height: 100px;
+}
+
+.tutorial-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2.5rem 0;
+  gap: 1.5rem;
+}
+
+.nav-btn {
+  padding: 0.8rem 1.6rem;
+  background: #1f4bff;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+  background: #1539cc;
+  transform: translateY(-2px);
+}
+
+.nav-btn:active {
+  transform: translateY(0);
+}
+
+.nav-btn:focus-visible {
+  outline: 3px solid #ffe66d;
+  outline-offset: 2px;
+}
+
+#tutorial-counter {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #666;
+}
+
+/* Game screen */
+.game-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 20% 20%, #1f4bff, #020863);
+}
+
+#game-canvas {
+  flex: 1;
+  display: block;
+}
+
+#hud {
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff5d1;
+  padding: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Decorative lobster (hidden) */
+.lobster {
+  position: fixed;
+  width: 120px;
+  height: auto;
+  z-index: 1;
+  pointer-events: none;
+  display: none;
+}
