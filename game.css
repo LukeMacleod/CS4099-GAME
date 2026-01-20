@@ -1,4 +1,11 @@
+/* ======================================
+   CORE PAGE LAYOUT & TYPOGRAPHY
+   ====================================== */
+
+
 /* Page background + base typography */
+/* Creates a radial gradient background (blue to dark blue) that covers full viewport */
+/* Flexbox centering ensures all child elements are centered on the page */
 body {
   margin: 0;
   min-height: 100vh;
@@ -9,7 +16,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
-/* Main game container */
+
+/* Main game container - houses all game screens */
+/* Positioned absolutely to overlay entire viewport; fade-in animation on mount */
 #game-container {
   position: absolute;
   width: 100%;
@@ -20,12 +29,22 @@ body {
   animation: fadeIn 0.3s ease-in;
 }
 
+
+/* Fade-in animation: triggered when transitioning between game screens */
+/* Prevents jarring appearance changes */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-/* Login screen - Duolingo-inspired */
+
+/* ======================================
+   LOGIN SCREEN STYLING
+   ====================================== */
+
+
+/* Login screen container - Duolingo-inspired clean UI */
+/* White background with shadow creates depth; responsive width (90% on mobile, max 500px) */
 .login-screen {
   background: white;
   border-radius: 24px;
@@ -36,7 +55,9 @@ body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-/* Main title "Fàilte" */
+
+/* Main title "Fàilte!" - Scottish Gaelic greeting */
+/* Large, bold, with tight letter-spacing for visual impact */
 .login-screen h1 {
   font-size: 4rem;
   font-weight: 900;
@@ -45,17 +66,22 @@ body {
   letter-spacing: -0.02em;
 }
 
+
+/* Subtitle paragraph on login screen */
 .login-screen p {
   font-size: 1.2rem;
   color: #666;
   margin: 0 0 2.5rem 0;
 }
 
-/* White textbox wrapper */
+
+/* Form group wrapper for input fields */
 .form-group {
   margin-bottom: 2rem;
 }
 
+
+/* Label styling - left-aligned, bold for clarity */
 .form-group label {
   display: block;
   font-size: 1.1rem;
@@ -65,7 +91,9 @@ body {
   text-align: left;
 }
 
-/* Input field styling */
+
+/* Input field styling - border-based focus state, smooth transitions */
+/* Responsive padding ensures touch-friendly on mobile (>44px height standard) */
 .form-group input {
   width: 100%;
   padding: 1rem 1.2rem;
@@ -77,17 +105,30 @@ body {
   font-family: inherit;
 }
 
+
+/* Input focus state - blue border highlight with subtle glow */
+/* Accessibility: provides clear visual feedback for keyboard navigation */
 .form-group input:focus {
   outline: none;
   border-color: #1f4bff;
   box-shadow: 0 0 0 3px rgba(31, 75, 255, 0.1);
 }
 
+
+/* Placeholder text styling */
 .form-group input::placeholder {
   color: #999;
 }
 
-/* Button styling */
+
+/* ======================================
+   BUTTON STYLING - ORANGE GRADIENT
+   ====================================== */
+
+
+/* Primary action button with gradient + shimmer effect */
+/* Orange gradient (#ffb347 to #ff7b22) with layered shadow for depth */
+/* Background-size trick enables smooth gradient position animation on hover */
 .play-button {
   display: inline-flex;
   align-items: center;
@@ -111,11 +152,17 @@ body {
   background-position: 0% 50%;
 }
 
+
+/* Focus state for keyboard accessibility */
+/* Yellow outline provides high contrast indication */
 .play-button:focus-visible {
   outline: 3px solid #ffe66d;
   outline-offset: 3px;
 }
 
+
+/* Water shimmer effect - pseudo-element with skewed gradient */
+/* Creates animated light reflection across button on hover */
 .play-button::before {
   content: "";
   position: absolute;
@@ -134,12 +181,16 @@ body {
   pointer-events: none;
 }
 
+
+/* Trigger shimmer animation on hover/focus */
 .play-button:hover::before,
 .play-button:focus-visible::before {
   animation: water-glide 700ms ease-out forwards;
   opacity: 1;
 }
 
+
+/* Hover/focus state - lift button up, intensify shadow, shift gradient */
 .play-button:hover,
 .play-button:focus-visible {
   transform: translateY(-2px);
@@ -147,49 +198,137 @@ body {
   background-position: 100% 50%;
 }
 
+
+/* Active state - button pressed effect */
 .play-button:active {
   transform: translateY(0);
 }
 
+
+/* Water shimmer animation - slides light reflection across button */
 @keyframes water-glide {
-  0%   { transform: translateX(0) skewX(-20deg); opacity: 0; }
-  30%  { opacity: 1; }
+  0% { transform: translateX(0) skewX(-20deg); opacity: 0; }
+  30% { opacity: 1; }
   100% { transform: translateX(250%) skewX(-20deg); opacity: 0; }
 }
 
-/* Tutorial screen */
-.tutorial-screen {
+
+/* ======================================
+   RUAIRIDH INTRO SCREEN & SPEECH
+   ====================================== */
+
+
+/* Ruairidh intro screen container - same styling as login but slightly wider */
+/* Used for character introduction scenes and tutorial transitions */
+.ruairidh-intro-screen {
   background: white;
   border-radius: 24px;
   padding: 4rem 3rem;
-  max-width: 600px;
+  max-width: 700px;
   width: 90%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.tutorial-screen h2 {
-  font-size: 2.5rem;
-  font-weight: 900;
-  margin: 0 0 2rem 0;
-  color: #1f4bff;
-}
-
-#tutorial-text {
-  font-size: 1.2rem;
-  color: #333;
-  line-height: 1.6;
-  margin-bottom: 2.5rem;
-  min-height: 100px;
-}
-
-.tutorial-nav {
+  box-shadow: none;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin: 2.5rem 0;
-  gap: 1.5rem;
+  border: none;
 }
 
+
+/* Fade-in animation for intro screens - entrance effect */
+/* Delay (0.5s) creates staggered appearance on load */
+@keyframes ruairidh-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* Container for seal icon + speech bubble */
+/* Flexbox with wrap allows responsive stacking on mobile */
+.ruairidh-container {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+
+/* Wrapper for seal SVG - prevents shrinking */
+.seal-icon-wrapper {
+  flex-shrink: 0;
+}
+
+
+/* Seal icon styling - fixed size with drop shadow filter */
+.seal-icon {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(31, 75, 255, 0.2));
+}
+
+
+/* Speech bubble - contains dialogue from Ruairidh character */
+/* CSS variables allow dark mode support (--color-surface, --color-text) */
+.speech-bubble {
+  background: var(--color-surface, #fff);
+  border: none;
+  border-radius: 20px;
+  padding: 2rem;
+  position: relative;
+  min-width: 300px;
+  box-shadow: none;
+}
+
+
+/* Outer triangle pointer - creates dark border for speech bubble tail */
+/* Pseudo-element ::after creates visual depth effect */
+.speech-bubble::after {
+  content: "";
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 26px solid transparent;
+  border-right: 26px solid transparent;
+  border-bottom: 22px solid var(--color-surface, #fff);
+}
+
+
+/* Inner triangle pointer - matches bubble background to create outline effect */
+/* Pseudo-element ::before creates inner fill */
+.speech-bubble::before {
+  display: none;
+}
+
+
+/* Speech bubble text - readable font size with line spacing */
+.speech-bubble p {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-text, #000);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+
+/* ======================================
+   NAVIGATION BUTTONS
+   ====================================== */
+
+
+/* Standard nav button - blue, used throughout tutorial/intro flows */
+/* Raised shadow indicates clickability */
 .nav-btn {
   padding: 0.8rem 1.6rem;
   background: #1f4bff;
@@ -202,49 +341,410 @@ body {
   transition: all 0.2s ease;
 }
 
+
+/* Nav button hover state - darker shade + lift effect */
 .nav-btn:hover {
   background: #1539cc;
   transform: translateY(-2px);
 }
 
+
+/* Nav button active/pressed state */
 .nav-btn:active {
   transform: translateY(0);
 }
 
+
+/* Nav button focus state - yellow outline for accessibility */
 .nav-btn:focus-visible {
   outline: 3px solid #ffe66d;
   outline-offset: 2px;
 }
 
+
+/* Disabled state - grayed out with reduced opacity */
+.nav-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+/* Tutorial counter display element */
 #tutorial-counter {
   font-size: 1.1rem;
   font-weight: 700;
   color: #666;
 }
 
-/* Game screen */
+
+/* ======================================
+   GAME SCREEN LAYOUTS
+   ====================================== */
+
+
+/* Generic game screen container - blue gradient background */
+/* Flex column creates vertical stacking of header/board/footer */
 .game-screen {
   width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: radial-gradient(circle at 20% 20%, #1f4bff, #020863);
+  overflow: hidden;
 }
 
-#game-canvas {
-  flex: 1;
-  display: block;
+
+/* Game 1 specific screen - beach background SVG with full-height flexbox */
+/* Beach imagery sets thematic context for lobster-catching game */
+/* background-attachment: fixed keeps beach visible and prevents blue showing through */
+.game1-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/clam-beach.svg') center/cover no-repeat;
+  color: white;
+  background-attachment: fixed;
+  padding: 0;
+  gap: 0;
+  position: relative;
 }
 
-#hud {
-  background: rgba(0, 0, 0, 0.3);
-  color: #fff5d1;
-  padding: 1.5rem;
+
+/* Add overlay to fade beach background during intro */
+.game1-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+/* Ensure content appears above overlay */
+.game1-header-wrapper,
+.game1-tutorial-content-wrapper,
+.game1-board,
+.game1-footer {
+  position: relative;
+  z-index: 2;
+}
+
+
+/* Game 1 header - legacy (replaced by .ruairidh-banner in actual gameplay) */
+.game1-header {
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+
+/* Legacy game 1 title styling */
+.game1-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #ffb347;
+}
+
+
+/* Help button - circular, positioned top-right in legacy layouts */
+.help-button {
+  background: #1f4bff;
+  color: white;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
   font-size: 1.5rem;
-  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* Decorative lobster (hidden) */
+
+/* Help button hover - scale and darken */
+.help-button:hover {
+  background: #1539cc;
+  transform: scale(1.1);
+}
+
+
+/* Points display flex container */
+.points-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+
+/* Pebbles container - flex layout for point visualization */
+.pebbles-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+
+/* Individual pebble indicator - 20px circle */
+.pebble {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+
+/* Filled pebble - orange background shows earned point */
+.pebble.filled {
+  background: #ffb347;
+}
+
+
+/* Empty pebble - transparent shows remaining points */
+.pebble.empty {
+  background: transparent;
+}
+
+
+/* ======================================
+   GAME 1 BOARD STYLING
+   ====================================== */
+
+
+/* Main game board container - flex grows to fill available space */
+/* Overflow auto allows scrolling if board larger than viewport */
+.game1-board {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+
+/* Hex board container - inline-block for natural sizing around SVG content */
+.hex-board-container {
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+}
+
+
+/* Hexagon grid SVG container */
+.hexagon-grid {
+  width: 100%;
+  height: 100%;
+}
+
+
+/* Individual hexagon tile styling - pointer cursor + transition for interactivity */
+/* Used for both sand tiles and rock tiles */
+.hexagon {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+/* Sand hexagon shadow effect */
+.hex-sand {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+
+/* Rock hexagon shadow - darker/deeper to indicate obstacle */
+.hex-rock {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  z-index: 100;
+}
+
+
+/* Lobster overlay container - prevents pointer events from affecting game */
+.lobster-overlay {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+}
+
+
+/* Lobster SVG styling - rotation controlled via CSS variable from JS */
+/* Transform applied smoothly via transition property */
+.lobster-svg {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+  transform: rotate(var(--lobster-rotation, 0deg));
+  transition: transform 200ms ease-out;
+}
+
+
+/* Turn animation state - comment indicates rotation handled by JS variable */
+.lobster-turn .lobster-svg {
+  /* turn is handled by rotate(var(--lobster-rotation)) + transition */
+}
+
+
+/* Wiggle animation - small left/right movement to indicate anticipation */
+/* Plays when lobster prepares to move */
+@keyframes lobsterWiggle {
+  0%   { transform: translateX(0) rotate(var(--lobster-rotation, 0deg)); }
+  25%  { transform: translateX(2px) rotate(var(--lobster-rotation, 0deg)); }
+  50%  { transform: translateX(-2px) rotate(var(--lobster-rotation, 0deg)); }
+  75%  { transform: translateX(1px) rotate(var(--lobster-rotation, 0deg)); }
+  100% { transform: translateX(0) rotate(var(--lobster-rotation, 0deg)); }
+}
+
+
+/* Apply wiggle animation */
+.lobster-wiggle .lobster-svg {
+  animation: lobsterWiggle 0.25s ease-in;
+}
+
+
+/* Jump animation - vertical movement with scale to indicate energy */
+/* Plays after wiggle, before movement to destination */
+@keyframes lobsterJump {
+  0%   { transform: translateY(0) scale(1) rotate(var(--lobster-rotation, 0deg)); }
+  40%  { transform: translateY(-8px) scale(1.05) rotate(var(--lobster-rotation, 0deg)); }
+  70%  { transform: translateY(-4px) scale(1.02) rotate(var(--lobster-rotation, 0deg)); }
+  100% { transform: translateY(0) scale(1) rotate(var(--lobster-rotation, 0deg)); }
+}
+
+
+/* Apply jump animation */
+.lobster-jump .lobster-svg {
+  animation: lobsterJump 0.28s ease-out;
+}
+
+
+/* Game 1 footer - semi-transparent background with controls */
+.game1-footer {
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+/* Round status display - minimum height prevents layout shift */
+#round-status {
+  font-size: 1.3rem;
+  font-weight: 700;
+  min-height: 30px;
+}
+
+
+/* ======================================
+   HELP MODAL
+   ====================================== */
+
+
+/* Help modal overlay - fixed, full-screen, semi-transparent dark background */
+/* Hidden by default, shown with .active class */
+.help-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+
+/* Active state - flex display reveals modal */
+.help-modal.active {
+  display: flex;
+}
+
+
+/* Modal content box - white, centered, scrollable */
+/* max-height prevents overflow on small screens */
+.help-modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 3rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+
+/* Close button - circular, positioned top-right */
+.modal-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: #e0e0e0;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+
+/* Close button hover state */
+.modal-close:hover {
+  background: #ccc;
+}
+
+
+/* Modal heading - blue color matching game theme */
+.help-modal-content h2 {
+  color: #1f4bff;
+  font-size: 2rem;
+  margin: 0 0 1.5rem 0;
+}
+
+
+/* Modal list - custom styling (no bullet points) */
+.help-modal-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+
+/* Modal list items - light gray background, rounded corners */
+.help-modal-content li {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+
+/* Strong text in modal - blue for emphasis */
+.help-modal-content strong {
+  color: #1f4bff;
+}
+
+
+/* ======================================
+   DECORATIVE LOBSTER
+   ====================================== */
+
+
+/* Hidden lobster element - prepared but not used in current implementation */
 .lobster {
   position: fixed;
   width: 120px;
@@ -253,3 +753,1065 @@ body {
   pointer-events: none;
   display: none;
 }
+
+
+/* ======================================
+   RUAIRIDH BANNER - GAME TOP BAR
+   ====================================== */
+
+
+/* New: Fixed header wrapper */
+.game1-header-wrapper {
+  flex-shrink: 0;
+  padding: 1rem;
+  z-index: 100;
+}
+
+
+/* Main banner container - appears at top of Game 1 and Game 2 screens */
+/* Blue gradient background with flexbox layout for 3-section design */
+/* 95% width allows breathing room; z-index: 100 keeps above game content */
+.ruairidh-banner {
+  width: 100%;
+  margin: 0;
+  background: linear-gradient(135deg, #1f4bff 0%, #1539cc 100%);
+  border-radius: 24px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 100;
+}
+
+
+/* Intro screen fade-in animation trigger */
+.ruairidh-intro-screen.fade-in {
+  animation: ruairidh-fade-in 0.8s ease-in 0.5s both;
+}
+
+
+/* Banner left section - holds help button */
+.ruairidh-banner-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+
+/* Banner center section - holds game title */
+.banner-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+
+/* Game title text - responsive sizing via clamp() function */
+/* clamp(min, preferred, max) ensures readability at all screen sizes */
+.game1-title-fun {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  color: #ffb347;
+  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.08em;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  text-align: center;
+  line-height: 1.1;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* Right: Points Box Container */
+.ruairidh-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+
+/* Points Counter Box */
+.points-box {
+  background: rgba(10, 31, 77, 0.95);
+  border-radius: 16px;
+  padding: clamp(0.6rem, 2vw, 0.9rem) clamp(0.9rem, 2vw, 1.2rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 0.8rem);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 183, 71, 0.2);
+}
+
+
+/* Timer Box */
+.timer-box {
+  background: rgba(10, 31, 77, 0.95);
+  border-radius: 16px;
+  padding: clamp(0.6rem, 2vw, 0.9rem) clamp(0.9rem, 2vw, 1.2rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 0.8rem);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 183, 71, 0.2);
+}
+
+
+.timer-icon {
+  width: clamp(50px, 10vw, 70px);
+  height: clamp(50px, 10vw, 70px);
+  object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.25));
+  flex-shrink: 0;
+}
+
+
+.timer-text {
+  color: #ffeb3b;
+  font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+
+/* Timer display number - red when warning state (< 10 seconds) */
+#timer-display {
+  color: #ff6b6b;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  min-width: 50px;
+  text-align: right;
+}
+
+
+/* Banner text labels - yellow, uppercase, bold */
+.ruairidh-banner-text {
+  color: #ffeb3b;
+  font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+
+/* Points counter number - orange color, responsive sizing */
+#points-counter {
+  color: #ffb347;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  min-width: 50px;
+  text-align: right;
+}
+
+
+/* Cairn icon - SVG representing stone stacking */
+/* Responsive sizing with drop shadow for depth */
+.cairn-icon {
+  width: clamp(50px, 10vw, 70px);
+  height: clamp(50px, 10vw, 70px);
+  object-fit: contain;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.25));
+  flex-shrink: 0;
+}
+
+
+/* Help button in banner - circular, orange gradient */
+/* Positioned at left of banner */
+.ruairidh-help-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(54px, 10vw, 66px);
+  height: clamp(54px, 10vw, 66px);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffb347, #ff7b22);
+  color: #2b1300;
+  border: 3px solid rgba(255, 244, 214, 0.9);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  transition: all 200ms ease-out;
+  flex-shrink: 0;
+  position: relative;
+}
+
+
+/* Help button hover state - lift and scale */
+.ruairidh-help-button:hover {
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+
+/* Help button active/pressed state */
+.ruairidh-help-button:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+
+/* Help button focus state - yellow outline */
+.ruairidh-help-button:focus-visible {
+  outline: 3px solid #ffff00;
+  outline-offset: 4px;
+}
+
+
+/* Glowing help button - triggered during tutorial to draw attention */
+.ruairidh-help-button.glowing {
+  animation: help-button-glow 1.5s ease-in-out infinite;
+}
+
+
+/* Glow animation - pulsing shadow effect to attract focus */
+@keyframes help-button-glow {
+  0%, 100% {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 0 15px rgba(255, 183, 71, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), 0 0 30px rgba(255, 183, 71, 0.8);
+  }
+}
+
+
+/* Responsive: Tablet */
+@media (max-width: 768px) {
+  .ruairidh-banner {
+    gap: 1rem;
+    padding: 1rem;
+    flex-wrap: wrap;
+  }
+
+
+  .game1-title-fun {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    flex: 1 1 auto;
+    min-width: 200px;
+  }
+
+
+  .ruairidh-banner-right {
+    gap: 0.8rem;
+  }
+
+
+  .points-box {
+    flex-direction: row;
+    gap: 0.4rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+
+  .ruairidh-banner-text {
+    font-size: clamp(0.8rem, 2vw, 1rem);
+  }
+
+
+  .game1-tutorial-content-wrapper {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+
+  .game1-tutorial-text-section {
+    max-width: 100%;
+    width: 100%;
+    order: 1;
+    max-height: 60%;
+    flex: 0 0 auto;
+    overflow-y: auto;
+  }
+
+
+  .game1-tutorial-board-section,
+  .game1-tutorial-board-section-right {
+    flex: 1;
+    width: 100%;
+    order: 2;
+    min-height: 200px;
+  }
+}
+
+
+/* Responsive: Mobile */
+@media (max-width: 480px) {
+  .ruairidh-banner {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.8rem;
+  }
+
+
+  .ruairidh-banner-left {
+    order: 1;
+  }
+
+
+  .banner-title-container {
+    order: 2;
+    flex: 1 1 100%;
+  }
+
+
+  .ruairidh-banner-right {
+    order: 3;
+    gap: 0.4rem;
+  }
+
+
+  .cairn-icon {
+    display: none;
+  }
+
+
+  #points-counter {
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+  }
+
+
+  .points-box {
+    padding: 0.4rem 0.6rem;
+    flex-direction: row;
+  }
+
+
+  .game1-tutorial-text-section {
+    max-width: 100%;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+
+  .game1-tutorial-board-section,
+  .game1-tutorial-board-section-right {
+    min-height: 180px;
+  }
+}
+
+
+/* Arrow navigation buttons */
+.arrow-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 2rem;
+}
+
+
+.arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  color: #2b1300;
+  background: linear-gradient(135deg, #ffb347, #ff7b22);
+  box-shadow: 0 0 0 2px rgba(255, 244, 214, 0.9), 0 12px 28px rgba(0, 0, 0, 0.45);
+  transition: transform 220ms ease-out, box-shadow 220ms ease-out;
+}
+
+
+.arrow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(255, 248, 220, 0.95), 0 16px 34px rgba(0, 0, 0, 0.55);
+}
+
+
+.arrow-btn:active {
+  transform: translateY(0);
+}
+
+
+/* Centred orange button */
+.arrow-buttons.centered {
+  justify-content: center;
+}
+
+
+/* Green flashing play button */
+.play-green-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2.5rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  color: white;
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  box-shadow: 0 0 0 2px rgba(200, 255, 200, 0.9), 0 12px 28px rgba(0, 0, 0, 0.45);
+  animation: greenPulse 1.5s ease-in-out infinite;
+  transition: transform 220ms ease-out, box-shadow 220ms ease-out;
+}
+
+
+.play-green-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(220, 255, 220, 0.95), 0 16px 34px rgba(0, 0, 0, 0.55);
+}
+
+
+@keyframes greenPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(200, 255, 200, 0.9), 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(200, 255, 200, 0.9), 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(76, 175, 80, 0.6);
+  }
+}
+
+
+.layout-tutorial-content {
+  position: relative;
+  z-index: 1000;
+}
+
+
+@keyframes cairn-glow {
+  0%, 100% {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+  }
+}
+
+
+.cairn-icon.pulsing {
+  animation: cairn-glow 1.5s ease-in-out infinite;
+}
+
+
+@keyframes button-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(255, 244, 214, 0.9), 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 183, 71, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(255, 244, 214, 0.9), 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(255, 183, 71, 0.6);
+  }
+}
+
+
+.layout-tutorial-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle 150px at var(--spotlight-x, 50%) var(--spotlight-y, 50%), transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+  z-index: 999;
+  transition: background 0.4s ease;
+}
+
+
+/* Fitts' Law: Cursor feedback and target expansion on hover */
+.hexagon {
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+
+.hexagon:hover {
+  filter: brightness(1.2);
+  stroke-width: 2;
+}
+
+
+svg.hexagon-grid {
+  cursor: crosshair;
+}
+
+
+.hex-tile {
+  cursor: pointer;
+  transition: transform 150ms ease-out, filter 150ms ease-out;
+}
+
+
+.hex-tile:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+
+.hex-sand polygon {
+  fill: #ffd700;
+  stroke: #e6c200;
+  stroke-width: 2;
+}
+
+
+@keyframes lobsterEscape {
+  0%   { transform: translate(0,0) rotate(var(--lobster-rotation, 0deg)); }
+  100% { transform: translate(1000px, -1000px) rotate(var(--lobster-rotation, 0deg)); opacity: 0; }
+}
+
+
+.lobster-escape .lobster-svg {
+  animation: lobsterWaddleExit 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+
+/* Directional waddle exit following --escape-x / --escape-y and final facing.
+   No fade-out; lobster remains opaque and simply leaves the screen. */
+@keyframes lobsterWaddleExit {
+  0% {
+    transform: translate(0, 0) rotate(var(--lobster-rotation, 0deg)) scaleX(1);
+    opacity: 1;
+  }
+  12% {
+    transform: translate(calc(var(--escape-x) * 0.12), calc(var(--escape-y) * 0.12))
+               rotate(var(--lobster-rotation, 0deg)) scaleX(0.94);
+  }
+  28% {
+    transform: translate(calc(var(--escape-x) * 0.28), calc(var(--escape-y) * 0.28))
+               rotate(var(--lobster-rotation, 0deg)) scaleX(1.06);
+  }
+  45% {
+    transform: translate(calc(var(--escape-x) * 0.45), calc(var(--escape-y) * 0.45))
+               rotate(var(--lobster-rotation, 0deg)) scaleX(0.96);
+  }
+  65% {
+    transform: translate(calc(var(--escape-x) * 0.65), calc(var(--escape-y) * 0.65))
+               rotate(var(--lobster-rotation, 0deg)) scaleX(1.04);
+  }
+  85% {
+    transform: translate(calc(var(--escape-x) * 0.85), calc(var(--escape-y) * 0.85))
+               rotate(var(--lobster-rotation, 0deg)) scaleX(0.98);
+  }
+  100% {
+    transform: translate(var(--escape-x), var(--escape-y)) rotate(var(--lobster-rotation, 0deg)) scaleX(1);
+    opacity: 1;
+  }
+}
+
+
+/* Speech bubble above lobster */
+.lobster-speech {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 3px solid #000;
+  border-radius: 16px;
+  padding: 10px 16px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #000;
+  white-space: nowrap;
+  animation: bubble-pop 0.3s ease-out;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+
+/* Stone flight (larger, in front of banner) */
+.stone-fly {
+  width: 50px;
+  height: 50px;
+  z-index: 9999;
+}
+
+
+.stone-fly-animate {
+  animation: stone-float 1.5s linear forwards;
+}
+
+
+@keyframes stone-float {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--fly-x), var(--fly-y)) scale(1); opacity: 1; }
+}
+
+
+@keyframes bubble-pop {
+  0% { transform: translateX(-50%) scale(0); opacity: 0; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+
+/* Points counter bounce */
+.points-bounce {
+  animation: pointsPulse 0.6s ease;
+}
+
+
+@keyframes pointsPulse {
+  0%   { transform: scale(1); color: #fff; }
+  40%  { transform: scale(1.4); color: #ffb347; }
+  100% { transform: scale(1); color: #fff; }
+}
+
+
+.points-reward {
+  animation: pointsBurst 1.2s ease-out;
+}
+
+
+@keyframes pointsBurst {
+  0%   { transform: scale(1); color: #fff; text-shadow: none; }
+  20%  { transform: scale(1.6) rotate(-5deg); color: #ffeb3b;
+         text-shadow: 0 0 10px #ffeb3b, 0 0 20px #ffb347; }
+  50%  { transform: scale(1.3) rotate(5deg); color: #ffb347;
+         text-shadow: 0 0 15px #ffb347, 0 0 30px #ff7b22; }
+  80%  { transform: scale(1.1); color: #fff;
+         text-shadow: 0 0 8px #fff; }
+  100% { transform: scale(1); color: #fff; text-shadow: none; }
+}
+
+
+/* Game 1 Tutorial - Full responsive layout */
+.game1-tutorial-content-wrapper {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+  overflow: hidden;
+}
+
+
+.game1-tutorial-text-section {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 650px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  max-height: 100%;
+}
+
+
+.game1-tutorial-board-section,
+.game1-tutorial-board-section-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
+
+
+#game1-board-tutorial {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+
+#game1-board-tutorial svg {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+
+/* Game 2 Ready Screen - Beach background */
+.game2-ready-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/clam-beach.svg') center/cover no-repeat;
+  color: white;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* Game 2 Tutorial - Underwater background */
+.game2-tutorial-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/underwater.svg') center/cover no-repeat;
+  color: white;
+}
+
+
+/* Game 2 Tutorial Layout */
+.game2-tutorial-content-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem;
+  flex: 1;
+}
+
+
+.game2-tutorial-text-section {
+  flex: 0 0 50%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.game2-tutorial-cards-section {
+  flex: 0 0 35%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.tutorial-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 250px;
+  width: 100%;
+}
+
+
+.tutorial-card {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  aspect-ratio: 1 / 1;
+  perspective: 1000px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+
+.tutorial-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+
+.tutorial-card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 3px solid #8b7355;
+  background: white;
+  overflow: hidden;
+}
+
+
+.tutorial-card-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+.game2-screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/underwater.svg') center/cover no-repeat !important;
+  overflow: hidden;
+}
+
+
+.game2-board {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  max-width: 800px;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+}
+
+
+.card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+  perspective: 1000px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+
+.card:hover:not(.matched) {
+  transform: none;
+}
+
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-style: preserve-3d;
+}
+
+
+/* Start with back showing (card-inner NOT flipped) */
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+
+/* Card FRONT (the tweed back - shown by default) */
+.card-back {
+  background: white;
+  border: 1px solid #a89968;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+
+.card-back img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+/* Card BACK (the image + label - shown when flipped) */
+.card-front {
+  background: #e8f0ff;
+  border: 1px solid #1f4bff;
+  transform: rotateY(180deg);
+}
+
+
+.card-image {
+  width: 75%;
+  height: 60%;
+  object-fit: contain;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+
+.card-label {
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  font-weight: 700;
+  color: #1f4bff;
+  text-align: center;
+  line-height: 1.2;
+}
+
+
+.card.matched {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+
+.card.matched .card-inner {
+  transform: rotateY(180deg);
+}
+
+
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    aspect-ratio: auto;
+  }
+
+
+  .game2-board {
+    padding: 1.5rem;
+    max-width: 95vw;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+}
+
+
+.game2-footer {
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  color: white;
+}
+
+
+.game2-footer .nav-btn {
+  display: none;
+}
+
+
+.game2-message {
+  display: none;
+}
+
+
+/* Game 1 Tutorial - Darkened background with spotlight on lobster */
+.game1-tutorial-step1 .game1-board {
+  background: rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+
+.game1-tutorial-step1 .game1-board::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle 400px at var(--spotlight-x, 50%) var(--spotlight-y, 50%), transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+  z-index: 50;
+}
+
+
+/* Hide all hex tiles in step 1, show only lobster */
+.game1-tutorial-step1 .hex-tile:not([data-lobster="true"]) {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+
+.game1-tutorial-step1 .hex-tile[data-lobster="true"] {
+  opacity: 1 !important;
+}
+
+
+/* Game 1 Tutorial - Highlight board in step 2 */
+.game1-tutorial-step2 .game1-board {
+  position: relative;
+}
+
+
+.game1-tutorial-step2 .game1-board::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: 50;
+}
+
+
+/* Game 1 Tutorial - Step 3 board with light on rocks area */
+.game1-tutorial-step3 .game1-board {
+  position: relative;
+}
+
+
+.game1-tutorial-step3 .game1-board::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle 300px at var(--spotlight-x, 50%) var(--spotlight-y, 50%), transparent 0%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
+  z-index: 50;
+}
+
+
+/* Timer turns red in last 10 seconds */
+#timer-display.warning {
+  color: #ff4444 !important;
+  animation: timerWarning 0.5s infinite;
+}
+
+
+@keyframes timerWarning {
+  0%, 100% { color: #ff4444; }
+  50% { color: #ff8888; }
+}
+
