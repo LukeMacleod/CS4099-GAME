@@ -192,7 +192,7 @@ class GameFlowController {
                 <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
               </div>
               <div class="speech-bubble">
-                <p>Seo putan airson cuideachadh, nuair nach eil fios agad mu dheidhinn ruideihgin, brùth seo airson barrach fios.</p>
+                <p>Seo putan airson cuideachadh, nuair nach eil fios agad mu dheidhinn ruideihgin, brùth seo airson barrachd fios.</p>
               </div>
             </div>
             <div class="arrow-buttons">
@@ -731,12 +731,12 @@ renderGame1Tutorial_Step3() {
     
     const html = `
       <div class="login-screen">
-        <h1>Game Complete!</h1>
-        <p>Participant: ${this.participantCode}</p>
+        <h1>Deiseil!</h1>
+        <p>Cluicheadair: ${this.participantCode}</p>
         <div style="font-size: 3rem; margin: 2rem 0;">🦞</div>
-        <p style="font-size: 1.5rem; font-weight: bold; color: #1f4bff;">Final Score: ${this.totalPoints} Giomaich</p>
-        <p style="color: #666;">Thank you for playing. Your data has been recorded.</p>
-        <button class="play-button" onclick="location.reload()">Play Again</button>
+        <p style="font-size: 1.5rem; font-weight: bold; color: #1f4bff;">Puingean: ${this.totalPoints} Giomaich</p>
+        <p style="color: #666;">Ceud taing airson an geama seo a' chluich, tha na puingean agad air a' shàbhaladh.</p>
+        <button class="play-button" onclick="location.reload()">Cluich a-rithist!</button>
       </div>
     `;
     this.gameContainer.innerHTML = html;
