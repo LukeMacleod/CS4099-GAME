@@ -1,4 +1,21 @@
 /* ======================================
+   ACCESSIBILITY UTILITIES
+   ====================================== */
+
+/* Screen reader only text - hidden visually but available to assistive tech */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ======================================
    CORE PAGE LAYOUT & TYPOGRAPHY
    ====================================== */
 
@@ -8,12 +25,16 @@
 /* Flexbox centering ensures all child elements are centered on the page */
 body {
   margin: 0;
-  min-height: 100vh;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
   display: flex;
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 20% 20%, #1f4bff, #020863);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  overflow: hidden;
 }
 
 
@@ -23,10 +44,15 @@ body {
   position: absolute;
   width: 100%;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   animation: fadeIn 0.3s ease-in;
+  overflow: hidden;
 }
 
 
@@ -35,6 +61,38 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+
+/* Typing animation for Ruairidh's speech bubbles */
+/* Makes text appear with a slide-in fade effect for a more engaging experience */
+.speech-bubble {
+  animation: speech-bubble-appear 0.4s ease-out forwards;
+}
+
+.speech-bubble p {
+  animation: text-fade-in 0.8s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+@keyframes speech-bubble-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes text-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 
@@ -218,19 +276,38 @@ body {
    ====================================== */
 
 
+/* Wrapper for intro screen - provides centering without visual artifacts */
+.intro-screen-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
 /* Ruairidh intro screen container - same styling as login but slightly wider */
 /* Used for character introduction scenes and tutorial transitions */
+/* Visual hierarchy: Enhanced shadow and subtle border for emphasis */
 .ruairidh-intro-screen {
   background: white;
   border-radius: 24px;
-  padding: 4rem 3rem;
+  padding: 2rem;
   max-width: 700px;
   width: 90%;
-  box-shadow: none;
+  max-height: 85vh;
+  max-height: 85dvh;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   border: none;
+  overflow: visible;
+  box-sizing: border-box;
+  gap: 1.5rem;
+  position: relative;
 }
 
 
@@ -249,15 +326,19 @@ body {
 
 
 /* Container for seal icon + speech bubble */
-/* Flexbox with wrap allows responsive stacking on mobile */
+/* Desktop/iPad optimized layout */
 .ruairidh-container {
   display: flex;
-  align-items: center;
-  gap: 3rem;
-  margin-bottom: 2rem;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: auto;
   width: 100%;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex: 1;
+  min-height: 0;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 
@@ -267,58 +348,113 @@ body {
 }
 
 
-/* Seal icon styling - fixed size with drop shadow filter */
+/* Seal icon styling - fixed size for desktop/iPad */
 .seal-icon {
-  width: 200px;
-  height: 200px;
+  width: 140px;
+  height: 140px;
   object-fit: contain;
   filter: drop-shadow(0 4px 12px rgba(31, 75, 255, 0.2));
+  flex-shrink: 0;
 }
 
 
 /* Speech bubble - contains dialogue from Ruairidh character */
-/* CSS variables allow dark mode support (--color-surface, --color-text) */
+/* Desktop/iPad optimized sizing */
+/* Visual hierarchy: Enhanced shadow for better separation */
 .speech-bubble {
-  background: var(--color-surface, #fff);
-  border: none;
-  border-radius: 20px;
-  padding: 2rem;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 16px;
+  padding: 1.3rem;
   position: relative;
-  min-width: 300px;
-  box-shadow: none;
+  min-width: 280px;
+  max-width: 100%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 
-/* Outer triangle pointer - creates dark border for speech bubble tail */
-/* Pseudo-element ::after creates visual depth effect */
+/* Triangle pointer - points left toward the seal */
+/* Creates a subtle arrow pointing to the seal character */
 .speech-bubble::after {
   content: "";
   position: absolute;
-  top: -22px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 0;
   height: 0;
-  border-left: 26px solid transparent;
-  border-right: 26px solid transparent;
-  border-bottom: 22px solid var(--color-surface, #fff);
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 12px solid #e9ecef;
 }
 
-
-/* Inner triangle pointer - matches bubble background to create outline effect */
-/* Pseudo-element ::before creates inner fill */
+/* Inner triangle - creates filled pointer matching bubble background */
 .speech-bubble::before {
-  display: none;
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid #f8f9fa;
+  z-index: 1;
 }
 
 
 /* Speech bubble text - readable font size with line spacing */
 .speech-bubble p {
   margin: 0;
-  font-size: 1.2rem;
-  color: var(--color-text, #000);
-  font-weight: 600;
+  font-size: 1.05rem;
+  color: #2c3e50;
+  font-weight: 500;
   line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: left;
+}
+
+/* Speech bubble variant for Game 1 tutorials - seal is directly above */
+/* Triangle pointer matching standard speech bubble proportions */
+.speech-bubble.tutorial-top-left {
+  overflow: visible;
+  margin-top: 14px;
+  position: relative;
+}
+
+/* Outer triangle border (darker gray) - matches standard speech bubble */
+.speech-bubble.tutorial-top-left::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 24px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 12px solid #e9ecef;
+  z-index: 1;
+}
+
+/* Inner triangle fill (matches bubble background) - matches standard speech bubble */
+.speech-bubble.tutorial-top-left::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 26px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 10px solid #f8f9fa;
+  z-index: 2;
 }
 
 
@@ -387,11 +523,22 @@ body {
 /* Flex column creates vertical stacking of header/board/footer */
 .game-screen {
   width: 100%;
+  max-width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  max-height: 100vh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: radial-gradient(circle at 20% 20%, #1f4bff, #020863);
   overflow: hidden;
+}
+
+/* Ensure flex wrappers inside game screens allow content to be visible */
+.game-screen > div[style*="flex: 1"] {
+  overflow-y: auto;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 
@@ -400,7 +547,11 @@ body {
 /* background-attachment: fixed keeps beach visible and prevents blue showing through */
 .game1-screen {
   width: 100%;
+  max-width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  max-height: 100vh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: url('./svgs/clam-beach.svg') center/cover no-repeat;
@@ -409,6 +560,7 @@ body {
   padding: 0;
   gap: 0;
   position: relative;
+  overflow: hidden;
 }
 
 
@@ -520,15 +672,36 @@ body {
 
 /* Main game board container - flex grows to fill available space */
 /* Overflow auto allows scrolling if board larger than viewport */
+/* Visual hierarchy: Subtle vignette draws focus to center */
 .game1-board {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: auto;
+  overflow: hidden;
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+  position: relative;
+}
+
+/* Subtle vignette effect to focus attention on game board center */
+.game1-board::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.15) 100%);
+  z-index: 1;
+}
+
+/* Ensure game content appears above vignette */
+.hex-board-container {
+  position: relative;
+  z-index: 2;
 }
 
 
@@ -537,6 +710,27 @@ body {
   position: relative;
   display: inline-block;
   margin: 0 auto;
+}
+
+/* Visual affordance: Preview rock placement on hover */
+.hex-tile.hover-preview::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('./svgs/rock-wall.svg') center/cover no-repeat;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 10;
+  border-radius: 50%;
+  animation: previewPulse 1s infinite;
+}
+
+@keyframes previewPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.95); }
+  50% { opacity: 0.5; transform: scale(1); }
 }
 
 
@@ -630,6 +824,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 
@@ -646,62 +841,583 @@ body {
    ====================================== */
 
 
-/* Help modal overlay - fixed, full-screen, semi-transparent dark background */
-/* Hidden by default, shown with .active class */
+/* ======================================
+   ENHANCED HELP SYSTEM - HCI-DRIVEN DESIGN
+   ====================================== */
+
+/* Help modal overlay - fixed, full-screen, backdrop blur for modern effect */
 .help-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 10000;
+  animation: modalFadeIn 0.3s ease-out;
 }
-
 
 /* Active state - flex display reveals modal */
 .help-modal.active {
   display: flex;
 }
 
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
 
-/* Modal content box - white, centered, scrollable */
-/* max-height prevents overflow on small screens */
+/* Enhanced modal content box - modern card design */
 .help-modal-content {
   background: white;
   border-radius: 24px;
-  padding: 3rem;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
+  padding: 0;
+  max-width: 900px;
+  width: 92%;
+  max-height: 85vh;
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6),
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Help modal header - sticky, contains tabs and close button */
+.help-modal-header {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #1f4bff 0%, #1539cc 100%);
+  padding: 1.5rem 2rem 0;
+  border-radius: 24px 24px 0 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.help-modal-title {
+  color: white;
+  font-size: 2rem;
+  font-weight: 900;
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.help-modal-title-icon {
+  font-size: 2.5rem;
+}
+
+/* Tab navigation system */
+.help-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.3) transparent;
+  padding-bottom: 0;
+  margin: 0 -0.5rem;
+  padding: 0 0.5rem;
+}
+
+.help-tab {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 12px 12px 0 0;
+  padding: 0.8rem 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.help-tab:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
+.help-tab.active {
+  background: white;
+  color: #1f4bff;
+  transform: translateY(0);
+}
+
+.help-tab-icon {
+  font-size: 1.1rem;
+}
+
+/* Context badge - shows when tab has contextual help */
+.help-tab-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: #ff4444;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+/* Help modal body - scrollable content area */
+.help-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background: #f8f9fa;
+}
+
+.help-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.help-modal-body::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.help-modal-body::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.help-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Tab panel - contains content for each tab */
+.help-tab-panel {
+  display: none;
+  animation: tabFadeIn 0.3s ease-out;
+}
+
+.help-tab-panel.active {
+  display: block;
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
-/* Close button - circular, positioned top-right */
+/* Close button - modern floating design */
 .modal-close {
   position: absolute;
   top: 1.5rem;
   right: 1.5rem;
-  background: #e0e0e0;
-  border: none;
-  width: 40px;
-  height: 40px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   font-size: 1.5rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close:active {
+  transform: rotate(90deg) scale(0.95);
+}
+
+/* Help section styles */
+.help-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
+}
+
+.help-section-title {
+  color: #1f4bff;
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.help-section-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.help-section-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.help-section-content {
+  color: #333;
+  line-height: 1.7;
+}
+
+.help-section-content p {
+  margin: 0 0 1rem 0;
+}
+
+.help-section-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Interactive demo container */
+.help-demo {
+  background: linear-gradient(135deg, #e3f2fd 0%, #f0f7ff 100%);
+  border: 2px solid #1f4bff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.help-demo::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(31, 75, 255, 0.05) 0%, transparent 70%);
+  animation: demoGlow 8s linear infinite;
+}
+
+@keyframes demoGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.help-demo-title {
+  font-weight: 800;
+  color: #1f4bff;
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.help-demo-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Mini hex grid for rock placement demo */
+.help-demo-grid {
+  display: inline-block;
+  position: relative;
+  margin: 1rem auto;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.help-demo-hex {
+  width: 40px;
+  height: 40px;
+  position: absolute;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
+.help-demo-hex:hover {
+  transform: scale(1.15);
+  filter: brightness(1.2);
+}
 
-/* Close button hover state */
-.modal-close:hover {
-  background: #ccc;
+.help-demo-hex.has-rock {
+  pointer-events: none;
+}
+
+.help-demo-hex.has-lobster {
+  pointer-events: none;
+}
+
+/* Strategy cards */
+.strategy-card {
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  border-left: 4px solid #4caf50;
+  border-radius: 12px;
+  padding: 1.2rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.strategy-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateX(4px);
+}
+
+.strategy-card-title {
+  font-weight: 800;
+  color: #4caf50;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.strategy-card-content {
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Troubleshooting items - Collapsible FAQ accordion */
+.troubleshoot-item {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  margin: 0.8rem 0;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.troubleshoot-item:hover {
+  border-color: #1f4bff;
+  box-shadow: 0 2px 12px rgba(31, 75, 255, 0.1);
+}
+
+.troubleshoot-question {
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  padding: 1rem 1.2rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.troubleshoot-question:hover {
+  background: #f8f9fa;
+}
+
+.troubleshoot-question-text {
+  flex: 1;
+}
+
+.troubleshoot-toggle {
+  font-size: 1.2rem;
+  color: #1f4bff;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.troubleshoot-item.open .troubleshoot-toggle {
+  transform: rotate(180deg);
+}
+
+.troubleshoot-answer {
+  color: #555;
+  line-height: 1.7;
+  margin: 0;
+  padding: 0 1.2rem 1rem;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.troubleshoot-item.open .troubleshoot-answer {
+  max-height: 500px;
+  padding: 0 1.2rem 1.2rem;
+}
+
+.troubleshoot-answer p {
+  margin: 0 0 0.8rem 0;
+}
+
+.troubleshoot-answer p:last-child {
+  margin-bottom: 0;
+}
+
+.troubleshoot-answer ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.troubleshoot-answer li {
+  margin: 0.3rem 0;
+}
+
+/* Context-aware suggestions */
+.context-suggestion {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border: 2px solid #4caf50;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.15);
+  animation: suggestionSlideIn 0.5s ease-out;
+}
+
+@keyframes suggestionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.context-suggestion-title {
+  font-weight: 900;
+  color: #2e7d32;
+  margin: 0 0 0.8rem 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.context-suggestion-icon {
+  font-size: 1.8rem;
+}
+
+.context-suggestion-content {
+  color: #333;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Step-by-step guide */
+.help-steps {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  counter-reset: step-counter;
+}
+
+.help-step {
+  position: relative;
+  padding-left: 3.5rem;
+  margin-bottom: 1.5rem;
+  counter-increment: step-counter;
+}
+
+.help-step::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #1f4bff 0%, #1539cc 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(31, 75, 255, 0.3);
+}
+
+.help-step-content {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
+}
+
+.help-step-title {
+  font-weight: 800;
+  color: #1f4bff;
+  margin: 0 0 0.5rem 0;
+}
+
+.help-step-description {
+  color: #555;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Quick tip boxes */
+.help-tip {
+  background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+  border-left: 4px solid #ffeb3b;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.help-tip-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.help-tip-content {
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
 }
 
 
@@ -739,6 +1455,78 @@ body {
 }
 
 
+/* Pause modal - appears when game is paused */
+.pause-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.pause-modal.active {
+  display: flex;
+}
+
+.pause-modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 3rem 4rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modal-pop-in 0.3s ease-out;
+}
+
+@keyframes modal-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.pause-modal-content h2 {
+  color: #1f4bff;
+  font-size: 2.5rem;
+  margin: 0 0 2rem 0;
+  font-weight: 900;
+}
+
+.pause-resume-btn {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pause-resume-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 28px rgba(40, 167, 69, 0.5);
+}
+
+.pause-resume-btn:active {
+  transform: translateY(-1px) scale(1);
+}
+
+
 /* ======================================
    DECORATIVE LOBSTER
    ====================================== */
@@ -771,9 +1559,10 @@ body {
 /* Main banner container - appears at top of Game 1 and Game 2 screens */
 /* Blue gradient background with flexbox layout for 3-section design */
 /* 95% width allows breathing room; z-index: 100 keeps above game content */
+/* Visual hierarchy: Banner emphasized with stronger shadow and glow */
 .ruairidh-banner {
-  width: 100%;
-  margin: 0;
+  width: 95%;
+  margin: 1rem auto 0;
   background: linear-gradient(135deg, #1f4bff 0%, #1539cc 100%);
   border-radius: 24px;
   padding: 1.2rem 1.5rem;
@@ -782,9 +1571,12 @@ body {
   align-items: center;
   gap: 1.5rem;
   box-sizing: border-box;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 60px rgba(31, 75, 255, 0.3);
   position: relative;
   z-index: 100;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 
@@ -800,6 +1592,7 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  gap: 10px;
 }
 
 
@@ -810,22 +1603,27 @@ body {
   justify-content: center;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 
 /* Game title text - responsive sizing via clamp() function */
 /* clamp(min, preferred, max) ensures readability at all screen sizes */
+/* Uses aggressive viewport-based scaling to fit long titles like "Glac an Giomach" */
 .game1-title-fun {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(1rem, 4vw, 2.5rem);
   font-weight: 900;
   color: #ffb347;
-  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.35);
-  letter-spacing: 0.08em;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.05em;
   font-family: 'Segoe UI', system-ui, sans-serif;
   text-align: center;
   line-height: 1.1;
   margin: 0;
   padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 
@@ -883,14 +1681,37 @@ body {
 }
 
 
-/* Timer display number - red when warning state (< 10 seconds) */
+/* Timer display number - color changes based on time remaining */
 #timer-display {
-  color: #ff6b6b;
+  color: white;
   font-size: clamp(1.2rem, 3vw, 1.8rem);
   font-weight: 900;
   letter-spacing: 0.05em;
   min-width: 50px;
   text-align: right;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+/* Timer warning states for better visibility of system status */
+#timer-display.warning-yellow {
+  color: #ffeb3b;
+  text-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
+}
+
+#timer-display.warning-orange {
+  color: #ff9800;
+  text-shadow: 0 0 10px rgba(255, 152, 0, 0.8);
+}
+
+#timer-display.warning-red {
+  color: #ff4444;
+  text-shadow: 0 0 12px rgba(255, 68, 68, 1);
+  animation: timerPulse 0.8s infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 
@@ -948,6 +1769,20 @@ body {
   position: relative;
 }
 
+/* Disabled help button - clear visual feedback */
+.ruairidh-help-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #999, #666);
+  border-color: rgba(150, 150, 150, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ruairidh-help-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 
 /* Help button hover state - lift and scale */
 .ruairidh-help-button:hover {
@@ -986,119 +1821,81 @@ body {
 }
 
 
-/* Responsive: Tablet */
-@media (max-width: 768px) {
-  .ruairidh-banner {
-    gap: 1rem;
-    padding: 1rem;
-    flex-wrap: wrap;
-  }
+/* Sound button - matches help button style */
+.ruairidh-sound-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(54px, 10vw, 66px);
+  height: clamp(54px, 10vw, 66px);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffb347, #ff7b22);
+  color: #2b1300;
+  border: 3px solid rgba(255, 244, 214, 0.9);
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  transition: all 200ms ease-out;
+  flex-shrink: 0;
+  position: relative;
+}
 
+.ruairidh-sound-button:hover {
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
 
-  .game1-title-fun {
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-    flex: 1 1 auto;
-    min-width: 200px;
-  }
+.ruairidh-sound-button:active {
+  transform: translateY(-1px) scale(0.98);
+}
 
+.ruairidh-sound-button:focus-visible {
+  outline: 3px solid #ffff00;
+  outline-offset: 4px;
+}
 
-  .ruairidh-banner-right {
-    gap: 0.8rem;
-  }
-
-
-  .points-box {
-    flex-direction: row;
-    gap: 0.4rem;
-    padding: 0.5rem 0.8rem;
-  }
-
-
-  .ruairidh-banner-text {
-    font-size: clamp(0.8rem, 2vw, 1rem);
-  }
-
-
-  .game1-tutorial-content-wrapper {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
-
-  .game1-tutorial-text-section {
-    max-width: 100%;
-    width: 100%;
-    order: 1;
-    max-height: 60%;
-    flex: 0 0 auto;
-    overflow-y: auto;
-  }
-
-
-  .game1-tutorial-board-section,
-  .game1-tutorial-board-section-right {
-    flex: 1;
-    width: 100%;
-    order: 2;
-    min-height: 200px;
-  }
+.ruairidh-sound-button.glowing {
+  animation: help-button-glow 1.5s ease-in-out infinite;
 }
 
 
-/* Responsive: Mobile */
-@media (max-width: 480px) {
-  .ruairidh-banner {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.8rem;
-  }
+/* Pause/Play button - matches help button style */
+.ruairidh-pause-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(54px, 10vw, 66px);
+  height: clamp(54px, 10vw, 66px);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffb347, #ff7b22);
+  color: #2b1300;
+  border: 3px solid rgba(255, 244, 214, 0.9);
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  transition: all 200ms ease-out;
+  flex-shrink: 0;
+  position: relative;
+}
 
+.ruairidh-pause-button:hover {
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
 
-  .ruairidh-banner-left {
-    order: 1;
-  }
+.ruairidh-pause-button:active {
+  transform: translateY(-1px) scale(0.98);
+}
 
+.ruairidh-pause-button:focus-visible {
+  outline: 3px solid #ffff00;
+  outline-offset: 4px;
+}
 
-  .banner-title-container {
-    order: 2;
-    flex: 1 1 100%;
-  }
-
-
-  .ruairidh-banner-right {
-    order: 3;
-    gap: 0.4rem;
-  }
-
-
-  .cairn-icon {
-    display: none;
-  }
-
-
-  #points-counter {
-    font-size: clamp(1rem, 2.5vw, 1.4rem);
-  }
-
-
-  .points-box {
-    padding: 0.4rem 0.6rem;
-    flex-direction: row;
-  }
-
-
-  .game1-tutorial-text-section {
-    max-width: 100%;
-    padding: 1.5rem;
-    overflow-y: auto;
-  }
-
-
-  .game1-tutorial-board-section,
-  .game1-tutorial-board-section-right {
-    min-height: 180px;
-  }
+.ruairidh-pause-button.glowing {
+  animation: help-button-glow 1.5s ease-in-out infinite;
 }
 
 
@@ -1107,7 +1904,11 @@ body {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  margin-top: 2rem;
+  margin-top: auto;
+  padding-top: clamp(0.8rem, 2vw, 1.2rem);
+  gap: clamp(0.6rem, 2vw, 1rem);
+  flex-shrink: 0;
+  border-top: 2px solid #f0f0f0;
 }
 
 
@@ -1115,10 +1916,10 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem 2rem;
+  padding: clamp(0.6rem, 1.5vw, 1rem) clamp(1rem, 2.5vw, 2rem);
   border-radius: 999px;
   border: none;
-  font-size: 1.2rem;
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
   font-weight: 800;
   letter-spacing: 0.05em;
   cursor: pointer;
@@ -1126,6 +1927,7 @@ body {
   background: linear-gradient(135deg, #ffb347, #ff7b22);
   box-shadow: 0 0 0 2px rgba(255, 244, 214, 0.9), 0 12px 28px rgba(0, 0, 0, 0.45);
   transition: transform 220ms ease-out, box-shadow 220ms ease-out;
+  flex-shrink: 0;
 }
 
 
@@ -1151,10 +1953,10 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem 2.5rem;
+  padding: clamp(0.8rem, 2vw, 1rem) clamp(1.5rem, 4vw, 2.5rem);
   border-radius: 999px;
   border: none;
-  font-size: 1.3rem;
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
   font-weight: 800;
   letter-spacing: 0.05em;
   cursor: pointer;
@@ -1246,13 +2048,25 @@ svg.hexagon-grid {
 
 .hex-tile {
   cursor: pointer;
-  transition: transform 150ms ease-out, filter 150ms ease-out;
+  /* No transform/filter animations - keeps board feeling solid and responsive */
+  /* Rock preview is handled by .hover-preview::after class instead */
 }
 
+/* Rock tiles should not respond to hover - they are solid, immovable obstacles */
+.hex-tile.has-rock {
+  cursor: default;
+  transition: none;
+}
 
-.hex-tile:hover {
-  transform: scale(1.05);
-  filter: brightness(1.2);
+.hex-tile.has-rock:hover {
+  transform: none;
+  filter: none;
+}
+
+/* Ensure rock images are solid and don't create visual artifacts */
+.hex-rock {
+  pointer-events: none;
+  user-select: none;
 }
 
 
@@ -1263,52 +2077,27 @@ svg.hexagon-grid {
 }
 
 
-@keyframes lobsterEscape {
-  0%   { transform: translate(0,0) rotate(var(--lobster-rotation, 0deg)); }
-  100% { transform: translate(1000px, -1000px) rotate(var(--lobster-rotation, 0deg)); opacity: 0; }
-}
-
-
+/* Lobster escape animation - smooth scurry off screen */
 .lobster-escape .lobster-svg {
-  animation: lobsterWaddleExit 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: lobsterScurryOff 1.5s ease-out forwards;
 }
 
-
-/* Directional waddle exit following --escape-x / --escape-y and final facing.
-   No fade-out; lobster remains opaque and simply leaves the screen. */
-@keyframes lobsterWaddleExit {
+@keyframes lobsterScurryOff {
   0% {
-    transform: translate(0, 0) rotate(var(--lobster-rotation, 0deg)) scaleX(1);
+    transform: translate(0, 0) rotate(var(--lobster-rotation, 0deg));
     opacity: 1;
   }
-  12% {
-    transform: translate(calc(var(--escape-x) * 0.12), calc(var(--escape-y) * 0.12))
-               rotate(var(--lobster-rotation, 0deg)) scaleX(0.94);
-  }
-  28% {
-    transform: translate(calc(var(--escape-x) * 0.28), calc(var(--escape-y) * 0.28))
-               rotate(var(--lobster-rotation, 0deg)) scaleX(1.06);
-  }
-  45% {
-    transform: translate(calc(var(--escape-x) * 0.45), calc(var(--escape-y) * 0.45))
-               rotate(var(--lobster-rotation, 0deg)) scaleX(0.96);
-  }
-  65% {
-    transform: translate(calc(var(--escape-x) * 0.65), calc(var(--escape-y) * 0.65))
-               rotate(var(--lobster-rotation, 0deg)) scaleX(1.04);
-  }
-  85% {
-    transform: translate(calc(var(--escape-x) * 0.85), calc(var(--escape-y) * 0.85))
-               rotate(var(--lobster-rotation, 0deg)) scaleX(0.98);
-  }
+
   100% {
-    transform: translate(var(--escape-x), var(--escape-y)) rotate(var(--lobster-rotation, 0deg)) scaleX(1);
-    opacity: 1;
+    transform: translate(var(--escape-x), var(--escape-y)) rotate(var(--lobster-rotation, 0deg));
+    opacity: 0;
   }
 }
 
 
-/* Speech bubble above lobster */
+
+
+/* Speech bubble above lobster - always stays on top */
 .lobster-speech {
   position: absolute;
   top: -60px;
@@ -1323,8 +2112,39 @@ svg.hexagon-grid {
   color: #000;
   white-space: nowrap;
   animation: bubble-pop 0.3s ease-out;
-  z-index: 10000;
+  z-index: 99999 !important;
   pointer-events: none;
+  isolation: isolate;
+}
+
+/* Speech bubble tail pointing to lobster */
+.lobster-speech::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 15px solid #000;
+  z-index: 1;
+}
+
+/* Inner tail to create white fill */
+.lobster-speech::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 12px solid white;
+  z-index: 2;
 }
 
 
@@ -1337,7 +2157,7 @@ svg.hexagon-grid {
 
 
 .stone-fly-animate {
-  animation: stone-float 1.5s linear forwards;
+  animation: stone-float 0.8s ease-out forwards;
 }
 
 
@@ -1350,6 +2170,11 @@ svg.hexagon-grid {
 @keyframes bubble-pop {
   0% { transform: translateX(-50%) scale(0); opacity: 0; }
   100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* Disable animation for persistent bubbles (prevents flashing on re-render) */
+.lobster-speech.persistent-bubble {
+  animation: none;
 }
 
 
@@ -1401,7 +2226,7 @@ svg.hexagon-grid {
 .game1-tutorial-text-section {
   flex: 0 0 auto;
   min-width: 0;
-  max-width: 650px;
+  max-width: 700px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -1411,8 +2236,8 @@ svg.hexagon-grid {
   border-radius: 20px;
   padding: 2rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  max-height: 100%;
+  overflow: visible;
+  box-sizing: border-box;
 }
 
 
@@ -1451,73 +2276,127 @@ svg.hexagon-grid {
 /* Game 2 Ready Screen - Beach background */
 .game2-ready-screen {
   width: 100%;
+  max-width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  max-height: 100vh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: url('./svgs/clam-beach.svg') center/cover no-repeat;
   color: white;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+/* Allow scrolling in game2-ready-screen content wrapper */
+.game2-ready-screen > div[style*="flex: 1"] {
+  overflow-y: auto;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 
-/* Game 2 Tutorial - Underwater background */
+/* Game 2 Tutorial - Underwater background with darkened overlay for focus */
 .game2-tutorial-screen {
   width: 100%;
+  max-width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  max-height: 100vh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: url('./svgs/underwater.svg') center/cover no-repeat;
   color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.game2-tutorial-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.game2-tutorial-screen > * {
+  position: relative;
+  z-index: 2;
 }
 
 
 /* Game 2 Tutorial Layout */
 .game2-tutorial-content-wrapper {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  gap: 2rem;
+  gap: 3rem;
   padding: 2rem;
   flex: 1;
 }
 
-
 .game2-tutorial-text-section {
-  flex: 0 0 50%;
+  flex: 0 0 auto;
   min-width: 0;
+  max-width: 600px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Ensure buttons in Game 2 tutorial match previous screens */
+.game2-tutorial-screen .ruairidh-intro-screen {
+  max-width: 600px;
+}
+
+.game2-tutorial-screen .arrow-btn,
+.game2-tutorial-screen .play-green-btn {
+  padding: clamp(0.6rem, 1.5vw, 1rem) clamp(1rem, 2.5vw, 2rem);
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
+}
 
 .game2-tutorial-cards-section {
-  flex: 0 0 35%;
+  flex: 0 0 auto;
   min-width: 0;
+  max-width: 400px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: url('./svgs/wooden-table.svg') center/cover no-repeat;
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
 }
 
 
 .tutorial-card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  max-width: 250px;
-  width: 100%;
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
 }
-
 
 .tutorial-card {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   aspect-ratio: 1 / 1;
   perspective: 1000px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease;
+}
+
+.tutorial-card:hover {
+  transform: translateY(-5px) scale(1.05);
 }
 
 
@@ -1538,54 +2417,131 @@ svg.hexagon-grid {
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  border: 3px solid #8b7355;
-  background: white;
-  overflow: hidden;
+  border: none;
+  background: transparent;
+  overflow: visible;
 }
 
-
 .tutorial-card-face img {
-  width: 100%;
-  height: 100%;
+  width: 110%;
+  height: 110%;
   object-fit: cover;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 
 .game2-screen {
   width: 100%;
+  max-width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  max-height: 100vh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: url('./svgs/underwater.svg') center/cover no-repeat !important;
   overflow: hidden;
+  position: relative;
+}
+
+/* Darken overlay for better card visibility and aesthetic */
+.game2-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 0;
 }
 
 
-.game2-board {
+.game2-content-wrapper {
+  position: relative;
+  z-index: 1;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 3vh, 3rem) clamp(1rem, 2vw, 2rem);
+  min-height: 0;
+}
+
+.game2-stats-bar {
+  display: flex;
+  gap: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.stat-label {
+  font-weight: 700;
+  color: #1f4bff;
+  font-size: 1rem;
+}
+
+.stat-value {
+  font-weight: 900;
+  color: #2b1300;
+  font-size: 1.3rem;
+  min-width: 50px;
+  text-align: center;
+  background: linear-gradient(135deg, #ffeb3b, #ffd700);
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.game2-board {
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: auto;
-  width: 100%;
-  height: 100%;
+  overflow: hidden;
+  width: 90%;
+  max-width: min(90vw, 950px);
+  max-height: min(70vh, 650px);
   box-sizing: border-box;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.95);
+  padding: clamp(2rem, 4vw, 3.5rem);
+  background: url('./svgs/wooden-table.svg') center/cover no-repeat;
   border-radius: 24px;
-  max-width: 900px;
-  margin: 0 auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+.game2-feedback-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-height: 80px;
 }
 
 
 .card-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  max-width: 800px;
+  gap: clamp(0.8rem, 1.5vw, 1.2rem);
+  max-width: 100%;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  padding: 0;
 }
 
 
@@ -1595,13 +2551,18 @@ svg.hexagon-grid {
   aspect-ratio: 1 / 1;
   cursor: pointer;
   perspective: 1000px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* No transform animations - keeps cards stable and responsive */
 }
 
+/* Subtle brightness on hover - no movement, just visual feedback */
+.card:hover:not(.matched):not(.flipped) {
+  filter: brightness(1.15);
+}
 
-.card:hover:not(.matched) {
-  transform: none;
+.card:active:not(.matched):not(.flipped) {
+  filter: brightness(1.1);
 }
 
 
@@ -1609,7 +2570,7 @@ svg.hexagon-grid {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: transform 0.5s ease;
   transform-style: preserve-3d;
 }
 
@@ -1617,6 +2578,10 @@ svg.hexagon-grid {
 /* Start with back showing (card-inner NOT flipped) */
 .card.flipped .card-inner {
   transform: rotateY(180deg);
+}
+
+.card.flipped:not(.matched) {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 
@@ -1629,35 +2594,69 @@ svg.hexagon-grid {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 8px;
   padding: 1rem;
   box-sizing: border-box;
+  -webkit-backface-visibility: hidden;
 }
 
 
 /* Card FRONT (the tweed back - shown by default) */
 .card-back {
-  background: white;
-  border: 1px solid #a89968;
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 
 .card-back img {
-  width: 100%;
-  height: 100%;
+  width: 110%;
+  height: 110%;
   object-fit: cover;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) sepia(0.15) saturate(0.9);
 }
 
 
-/* Card BACK (the image + label - shown when flipped) */
+/* Card BACK (the image + label - shown when flipped) - aged paper look */
 .card-front {
-  background: #e8f0ff;
-  border: 1px solid #1f4bff;
+  background: linear-gradient(135deg, #f5f1e8 0%, #e8e0d0 100%);
+  border: 3px solid #8b7355;
+  border-style: solid;
   transform: rotateY(180deg);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.3);
+  /* Aged paper texture effect */
+  position: relative;
+}
+
+/* Add subtle texture/aging to card front */
+.card-front::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(139, 115, 85, 0.03) 2px,
+      rgba(139, 115, 85, 0.03) 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(139, 115, 85, 0.03) 2px,
+      rgba(139, 115, 85, 0.03) 4px
+    );
+  opacity: 0.4;
+  pointer-events: none;
+  border-radius: 8px;
 }
 
 
@@ -1667,49 +2666,46 @@ svg.hexagon-grid {
   object-fit: contain;
   margin-bottom: 0.5rem;
   flex-shrink: 0;
+  filter: sepia(0.1) saturate(0.95) contrast(0.95) brightness(0.98);
+  opacity: 0.92;
 }
 
 
 .card-label {
   font-size: clamp(0.8rem, 1.5vw, 1rem);
   font-weight: 700;
-  color: #1f4bff;
+  color: #5d4a37;
   text-align: center;
   line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
 
 .card.matched {
   pointer-events: none;
   opacity: 0.7;
+  filter: saturate(0.7) brightness(0.9);
+  animation: matchSuccess 0.5s ease;
 }
-
 
 .card.matched .card-inner {
   transform: rotateY(180deg);
 }
 
-
-@media (max-width: 768px) {
-  .card-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    aspect-ratio: auto;
-  }
-
-
-  .game2-board {
-    padding: 1.5rem;
-    max-width: 95vw;
-  }
+.card.card-mismatch {
+  animation: cardWiggle 0.4s ease;
 }
 
+@keyframes matchSuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
 
-@media (max-width: 480px) {
-  .card-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.8rem;
-  }
+@keyframes cardWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
 }
 
 
@@ -1720,6 +2716,7 @@ svg.hexagon-grid {
   justify-content: flex-end;
   align-items: center;
   color: white;
+  flex-shrink: 0;
 }
 
 
@@ -1729,9 +2726,676 @@ svg.hexagon-grid {
 
 
 .game2-message {
-  display: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  font-size: 1.3rem;
+  font-weight: 800;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.game2-message.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.game2-message.feedback-success {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: white;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+  animation: successPulse 0.5s ease;
+}
+
+.game2-message.feedback-mismatch {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+}
+
+.game2-message.feedback-error {
+  background: linear-gradient(135deg, #ff5252, #d32f2f);
+  color: white;
+  box-shadow: 0 4px 16px rgba(255, 82, 82, 0.4);
+  animation: shakeError 0.4s ease;
+}
+
+@keyframes successPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.game2-restart-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Flying stone animation for Game 2 matches */
+.flying-stone {
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+/* ======================================
+   GAME 3 - CHO LUATH RIS A' BHRADAN
+   ====================================== */
+
+/* Game 3 Ready Screen - Same background as game */
+.game3-ready-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/game 3 background.svg') center center / cover no-repeat;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Game 3 Main Screen - SVG background with progressive dimming */
+.game3-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/game 3 background.svg') center center / cover no-repeat;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Dimming overlay that increases as game progresses */
+.game3-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0);
+  transition: background 2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.game3-screen.dimming-light::before {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.game3-screen.dimming-medium::before {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.game3-screen.dimming-heavy::before {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Game 3 banner keeps standard styling */
+.game3-screen .ruairidh-banner {
+  background: linear-gradient(135deg, #1f4bff, #1539cc);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 40px rgba(31, 75, 255, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.game3-title {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 900;
+  color: white;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.game3-content-wrapper {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 3vh, 3rem) clamp(1rem, 2vw, 2rem);
+  min-height: 0;
+}
+
+.game3-canvas-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* HUD Elements */
+.game3-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Combo Counter */
+.combo-counter {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  animation: comboAppear 0.3s ease;
+}
+
+.combo-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.combo-value {
+  font-size: 3rem;
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.combo-counter.combo-yellow .combo-value {
+  color: #ffeb3b;
+}
+
+.combo-counter.combo-orange .combo-value {
+  color: #ff9800;
+}
+
+.combo-counter.combo-red .combo-value {
+  color: #f44336;
+}
+
+@keyframes comboAppear {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Depth Meter */
+.depth-meter {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.depth-fill {
+  width: 100%;
+  background: linear-gradient(0deg, #2196f3 0%, #64b5f6 100%);
+  transition: height 1s ease;
+  border-radius: 0 0 17px 17px;
+}
+
+.depth-label {
+  position: absolute;
+  top: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: white;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: -2px;
+}
+
+.depth-meters {
+  position: absolute;
+  bottom: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* Fish Elements */
+.game3-fish {
+  position: absolute;
+  cursor: pointer;
+  transition: filter 0.1s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  z-index: 5;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, left, top;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  padding: 20px;
+  margin: -20px;
+}
+
+.game3-fish:hover {
+  filter: brightness(1.15) drop-shadow(0 2px 6px rgba(255, 255, 255, 0.4));
+}
+
+.game3-fish img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+
+/* Points Text Animation */
+.points-text {
+  position: absolute;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #ffeb3b;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 15;
+  animation: pointsFloat 1s ease-out forwards;
+}
+
+.points-text.penalty {
+  color: #f44336;
+}
+
+.points-text.garbage {
+  color: #4caf50;
+  font-size: 1.8rem;
+}
+
+@keyframes pointsFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Underwater Bubbles - Realistic Physics */
+.underwater-bubble {
+  position: absolute;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.1));
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  z-index: 3;
+  animation: bubbleShimmer 2s ease-in-out infinite;
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes bubbleShimmer {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Combo Display */
+.combo-display {
+  position: absolute;
+  top: 120px;
+  left: 20px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffeb3b;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  transition: opacity 0.3s;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Milestone Flash Celebration */
+.milestone-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  font-weight: 900;
+  color: #ffeb3b;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9);
+  background: rgba(255, 215, 0, 0.2);
+  padding: 2rem 4rem;
+  border-radius: 20px;
+  border: 4px solid #ffeb3b;
+  animation: milestoneFlash 2s ease-out forwards;
+  z-index: 100;
+  pointer-events: none;
+  backdrop-filter: blur(5px);
+}
+
+@keyframes milestoneFlash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* HCI: Zone Transition Warning */
+.zone-warning {
+  position: absolute;
+  top: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #ff9800;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  border: 3px solid #ff9800;
+  animation: warningPulse 1s ease-in-out infinite;
+  z-index: 50;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.05);
+  }
+}
+
+/* Pause Button for Game 3 */
+.ruairidh-pause-button {
+  width: clamp(2.5rem, 5vw, 3rem);
+  height: clamp(2.5rem, 5vw, 3rem);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.ruairidh-pause-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.ruairidh-pause-button:active {
+  transform: scale(0.95);
+}
+
+/* ========================================
+   RUAIRIDH COMMAND CAPSULE (Game 3 Redesign - Centered)
+   ======================================== */
+
+.ruairidh-command-capsule {
+  width: 85%;
+  max-width: 500px;
+  margin: 0.4rem auto;
+  background: linear-gradient(135deg, rgba(31, 75, 255, 0.95), rgba(21, 57, 204, 0.95));
+  border-radius: 18px;
+  padding: 0.8rem 1.2rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  z-index: 50;
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+/* Ruairidh avatar with thought bubble */
+.ruairidh-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.ruairidh-avatar {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.ruairidh-avatar .seal-icon {
+  width: 70%;
+  height: 70%;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+}
+
+/* Thought bubble (like speech bubbles in tutorials) */
+.thinking-bubble {
+  position: relative;
+  background: white;
+  border-radius: 15px;
+  padding: 0.4rem 0.8rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  border: 2px solid #e0e0e0;
+}
+
+.thinking-bubble::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 10px 15px 10px 0;
+  border-color: transparent white transparent transparent;
+  filter: drop-shadow(-2px 0 0 #e0e0e0);
+}
+
+.thinking-dots {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #666;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+/* Target fish display - centered and large */
+.target-fish-display {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.target-fish-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  padding: 0.8rem 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+  min-width: 200px;
+}
+
+.target-fish-image {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
+  animation: fishBounce 2s ease-in-out infinite;
+}
+
+@keyframes fishBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.05); }
+}
+
+.target-fish-name {
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+.target-phrase-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  border: 2px solid rgba(76, 175, 80, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.target-phrase-text {
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  font-weight: 700;
+  color: #4caf50;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-style: italic;
+}
+
+/* ========================================
+   FISH SPEECH BUBBLES
+   ======================================== */
+
+.fish-speech-bubble {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  color: #2c3e50;
+  padding: 0.5rem 1rem;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid #1f4bff;
+  pointer-events: none;
+  z-index: 10;
+  animation: bubbleBob 2s ease-in-out infinite;
+}
+
+.fish-speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid white;
+}
+
+@keyframes bubbleBob {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
+}
+
+/* ========================================
+   SQUID INK BUBBLE EFFECT
+   ======================================== */
+
+.ink-bubble {
+  position: absolute;
+  background: radial-gradient(circle at 30% 30%,
+    rgba(10, 10, 15, 0.95) 0%,
+    rgba(5, 5, 10, 0.98) 40%,
+    rgba(0, 0, 0, 1) 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s ease-out;
+  pointer-events: none;
+  z-index: 90;
+  filter: blur(8px);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8),
+              inset -10px -10px 30px rgba(0, 0, 0, 0.5);
+}
 
 /* Game 1 Tutorial - Darkened background with spotlight on lobster */
 .game1-tutorial-step1 .game1-board {
@@ -1803,15 +3467,311 @@ svg.hexagon-grid {
 }
 
 
-/* Timer turns red in last 10 seconds */
+/* Legacy warning class - kept for backwards compatibility */
 #timer-display.warning {
   color: #ff4444 !important;
   animation: timerWarning 0.5s infinite;
 }
 
-
 @keyframes timerWarning {
   0%, 100% { color: #ff4444; }
   50% { color: #ff8888; }
+}
+
+/* ======================================
+   GAME 3 - IASGACH (FISHING GAME)
+   ====================================== */
+
+.game3-header-wrapper {
+  flex-shrink: 0;
+  padding: 1rem;
+  z-index: 100;
+}
+
+/* Reuse the ruairidh-banner styling */
+.game3-banner {
+  width: 100%;
+  background: linear-gradient(135deg, #1f4bff 0%, #1539cc 100%);
+  border-radius: 24px;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.game3-banner-left,
+.game3-banner-center,
+.game3-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.game3-banner-center {
+  flex: 1;
+  justify-content: center;
+}
+
+.game3-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  color: #ffb347;
+  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.08em;
+  margin: 0;
+  padding: 0;
+}
+
+.game3-board {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 100%;
+  background: linear-gradient(180deg, #4a90e2 0%, #2a5aa0 50%, #1a3a70 100%);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.game3-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(180deg, #4a90e2 0%, #2a5aa0 50%, #1a3a70 100%);
+  overflow: hidden;
+}
+
+.game3-footer {
+  flex-shrink: 0;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.game3-instructions {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+.game3-instruction-item {
+  flex: 1;
+  min-width: 150px;
+}
+
+.game3-instruction-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.8;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.game3-instruction-key {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffeb3b;
+}
+
+/* Reuse styling from Danns a Rathad fishing game */
+.game3-water-surface {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+  animation: wave 3s ease-in-out infinite;
+  z-index: 2;
+}
+
+.game3-fish {
+  position: absolute;
+  width: 50px;
+  height: 40px;
+  cursor: pointer;
+  user-select: none;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+}
+
+.game3-fish:hover {
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)) brightness(1.2);
+}
+
+.game3-fish.hooked {
+  animation: reel 0.6s ease-out forwards;
+}
+
+.game3-fish.wrong-catch {
+  animation: wrongCatch 0.3s ease-out forwards;
+}
+
+@keyframes reel {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0) translateY(-100px); opacity: 0; }
+}
+
+@keyframes wrongCatch {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-15px); }
+  75% { transform: translateX(15px); }
+  100% { transform: translateX(0); }
+}
+
+.game3-target-card {
+  width: 80px;
+  height: 80px;
+  background: rgba(50, 184, 198, 0.2);
+  border: 3px solid var(--teal-accent, #32b8c6);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  box-shadow: 0 0 15px rgba(50, 184, 198, 0.5);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.game3-target-card.correct-catch {
+  animation: correctFlash 0.4s ease-out;
+}
+
+@keyframes correctFlash {
+  0% { box-shadow: 0 0 15px rgba(50, 184, 198, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(255, 255, 0, 1); background: rgba(255, 255, 0, 0.3); }
+  100% { box-shadow: 0 0 15px rgba(50, 184, 198, 0.5); background: rgba(50, 184, 198, 0.2); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.game3-pause-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 8px 16px;
+  background: #ffb347;
+  color: #1f4bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+  z-index: 50;
+  transition: all 0.2s ease;
+}
+
+.game3-pause-button:hover {
+  transform: scale(1.05);
+}
+
+.game3-pause-menu {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #1f4bff;
+  padding: 40px;
+  border-radius: 8px;
+  text-align: center;
+  z-index: 150;
+  display: none;
+  border: 2px solid #ffb347;
+}
+
+.game3-pause-menu.active {
+  display: block;
+}
+
+.game3-pause-menu h2 {
+  color: #ffeb3b;
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.game3-pause-menu button {
+  display: block;
+  width: 200px;
+  margin: 10px auto;
+  padding: 12px;
+  background: #ffb347;
+  color: #1f4bff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.game3-pause-menu button:hover {
+  transform: scale(1.05);
+}
+
+.game3-game-over {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  gap: 20px;
+}
+
+.game3-game-over.active {
+  display: flex;
+}
+
+.game3-game-over h2 {
+  font-size: 48px;
+  color: #ffb347;
+  margin: 0;
+}
+
+.game3-game-over-stats {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px 40px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 18px;
+  border: 2px solid #ffb347;
+}
+
+.game3-game-over-stats div {
+  margin: 10px 0;
+  color: #fff;
+}
+
+.game3-reset-button {
+  margin-top: 20px;
+  padding: 12px 24px;
+  background: #ffb347;
+  color: #1f4bff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.game3-reset-button:hover {
+  transform: scale(1.05);
 }
 
