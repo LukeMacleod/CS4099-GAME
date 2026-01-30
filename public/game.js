@@ -1,134 +1,387 @@
 // ==========================================================
-// GAME CONTROLLER
-// Overall game state machine and screen rendering
-// Manages the complete flow: LOGIN → INTRO → TUTORIAL → GAME1 → GAME2 → RESULTS
+// MAIN GAME CONTROLLER CLASS
 // ==========================================================
+// This handles the entire game flow from login all the way through to results
+// State machine pattern: LOGIN → INTRO → TUTORIAL → GAME1 → GAME2 → GAME3 → RESULTS
+// Each state renders a different screen and transitions to the next when appropriate
+// ==========================================================
+
 class GameFlowController {
   constructor() {
-    // Current state in the game flow
+    // ===== GAME STATE TRACKING =====
+    // Keeps track of where we are in the game flow
     this.currentState = 'LOGIN';
 
-    // Main DOM container for all game screens
+    // Main container element where all screens get rendered
     this.gameContainer = document.getElementById('game-container');
 
-    // Player data
-    this.participantCode = null;
-    this.gameData = {};
-    this.totalPoints = 0;
+    // ===== PLAYER DATA =====
+    // Store participant info and their accumulated points across all games
+    this.participantCode = null;  // Their unique code from login screen
+    this.gameData = {};           // Misc game data (probably should refactor this later)
+    this.totalPoints = 0;         // Running total across all 3 games
 
-    // Tutorial state tracking
-    this.tutorialStep = 0;
-    this.layoutTutorialStep = 0;
-    this.game1TutorialStep = 0;
-    this.game2TutorialStep = 0;
+    // ===== TUTORIAL PROGRESSION =====
+    // Different tutorials have different step counters to track progress
+    // This lets us show multi-step tutorials with next/back buttons
+    this.tutorialStep = 0;        // General tutorial counter
+    this.layoutTutorialStep = 0;  // For the UI layout intro (banner, help button, etc)
+    this.game1TutorialStep = 0;   // Game 1 specific tutorial
+    this.game2TutorialStep = 0;   // Game 2 specific tutorial
 
-    // Game instances
-    this.game1Board = null;
-    this.game2Board = null;
+    // ===== GAME BOARD INSTANCES =====
+    // We create these when starting each game, null when not active
+    this.game1Board = null;  // The cairn building game
+    this.game2Board = null;  // The matching game
 
-    // Timer management (5 minutes for Game 1)
-    this.gameTimer = null;
-    this.timeRemaining = 300; // seconds
+    // ===== TIMER STUFF =====
+    // Game 1 uses a 4 minute countdown timer
+    this.gameTimer = null;       // setInterval reference so we can clear it
+    this.timeRemaining = 240;    // 240 seconds = 4 mins
 
-    // Sound and pause state
-    this.soundEnabled = true;
-    this.gamePaused = false;
+    // ===== UI STATE =====
+    this.soundEnabled = true;   // Whether audio is on or off (toggled by sound button)
+    this.gamePaused = false;    // Pause state for Game 1
+
+    // ===== AUDIO SYSTEM =====
+    // We use seperate audio tracks for different parts of the game
+    // Note: Using HTML5 Audio elements instead of Web Audio API because of CORS issues
+    // with file:// protocol. Web Audio would be better for seamless looping but oh well.
+
+    // Background music that plays during menus and tutorial screens
+    this.backgroundMusic = new Audio('./music/non-game.ogg');
+    this.backgroundMusic.loop = true;
+    this.backgroundMusic.volume = 0.3;
+
+    // Game 1 tutorial has its own track, kept quiet so narration can be added later
+    this.game1TutorialMusic = new Audio('./music/game-1-tutorial.ogg');
+    this.game1TutorialMusic.loop = true;
+    this.game1TutorialMusic.volume = 0.1;  // Really low volume
+    this.game1TutorialMusic.preload = 'auto';  // Helps reduce gap at loop point
+
+    // Each game has its own music track during gameplay
+    this.game1Music = new Audio('./music/game-1-music.ogg');
+    this.game1Music.loop = true;
+    this.game1Music.volume = 0.25;
+
+    this.game2Music = new Audio('./music/game-2-loop.ogg');
+    this.game2Music.loop = true;
+    this.game2Music.volume = 0.15;  // This one was too loud initially, reduced it
+
+    this.game3Music = new Audio('./music/game-3.ogg');
+    this.game3Music.loop = true;
+    this.game3Music.volume = 0.15;
+
+    // Ambient nature sounds for Game 1 (ocean theme)
+    // Kept these REALLY quiet so they don't interfere with voice-over narration
+    this.oceanWaves = new Audio('./music/ocean-waves.ogg');
+    this.oceanWaves.loop = true;
+    this.oceanWaves.volume = 0.05;  // Super subtle
+
+    this.seagulls = new Audio('./music/seagulls_short.ogg');
+    this.seagulls.loop = true;
+    this.seagulls.volume = 0.08;   // Also very quiet
+
+    // Sound effect for earning points (plays in Game 1 when adding stones to cairn)
+    // Also plays for milestone bonuses in Game 3
+    this.pointSound = new Audio('./music/point-sound.ogg');
+    this.pointSound.volume = 0.4;  // Audible but not overpowering
   }
 
-  // Spotlight helper used in layout tutorial screens
+  // ===== SPOTLIGHT TUTORIAL HELPER =====
+  // During the layout tutorial, we use a spotlight effect to highlight specific UI elements
+  // This updates the CSS custom properties to move the spotlight circle around
   updateLayoutSpotlightPosition(elementId) {
     try {
       const element = document.getElementById(elementId);
       const overlay = document.getElementById('layout-overlay');
       if (element && overlay) {
+        // Get the element's position on screen
         const rect = element.getBoundingClientRect();
+        // Calculate centre point
         const x = rect.left + rect.width / 2;
         const y = rect.top + rect.height / 2;
+        // Update CSS variables that control the spotlight position
         overlay.style.setProperty('--spotlight-x', x + 'px');
         overlay.style.setProperty('--spotlight-y', y + 'px');
       }
     } catch (error) {
+      // Shouldn't happen but just in case
       console.error('Error updating spotlight position:', error);
     }
   }
 
-  // Layout tutorial step progression for intro banner/help/cairn/sound
+  // ===== LAYOUT TUTORIAL PROGRESSION =====
+  // The layout tutorial walks through the UI elements step by step
+  // Steps: 0=banner, 1=cairn, 2=help button, 2.5=pause button, 3=finished
   advanceLayoutTutorialStep() {
     if (this.layoutTutorialStep === 0) {
+      // Move to cairn explanation
       this.layoutTutorialStep = 1;
       this.updateLayoutSpotlightPosition('cairn-spotlight');
       this.renderGameIntro_LayoutStep1();
     } else if (this.layoutTutorialStep === 1) {
+      // Show the help button
       this.layoutTutorialStep = 2;
       this.updateLayoutSpotlightPosition('layout-help-btn');
       this.renderGameIntro_LayoutStep2();
     } else if (this.layoutTutorialStep === 2) {
+      // Show the pause button (this is step 2.5, kinda wierd numbering but it works)
+      this.layoutTutorialStep = 2.5;
+      this.updateLayoutSpotlightPosition('layout-pause-btn');
+      this.renderGameIntro_LayoutStep2_5();
+    } else if (this.layoutTutorialStep === 2.5) {
+      // Finish the layout tutorial
       this.layoutTutorialStep = 3;
       this.renderGameIntro_LayoutStep3();
     }
   }
 
-  // Toggle sound on/off
+  // ===== SOUND TOGGLE =====
+  // Handles the speaker button in the top-right corner
+  // Turns all audio on/off and updates button icon
   toggleSound() {
     this.soundEnabled = !this.soundEnabled;
     const button = document.getElementById('sound-button');
+
     if (button) {
+      // Update button icon and accessibility label
       button.textContent = this.soundEnabled ? '🔊' : '🔇';
       button.setAttribute('aria-label', this.soundEnabled ? 'Cuir dheth fuaim' : 'Cuir air fuaim');
     }
+
+    // Start or stop music depending on new state
+    if (this.soundEnabled) {
+      this.startCurrentMusic();  // Resumes whatever music should be playing for current screen
+    } else {
+      this.stopAllMusic();       // Kills everything
+    }
+
     console.log(`Sound ${this.soundEnabled ? 'enabled' : 'disabled'}`);
   }
 
-  // Get sound button HTML with current state
+  // ===== MUSIC CONTROL FUNCTIONS =====
+  // These functions start/stop different audio tracks
+  // Each screen has its own audio context (or silence)
+
+  // Background music for menu screens and tutorials (except Game 1 tutorial which has its own)
+  startBackgroundMusic() {
+    if (this.soundEnabled && this.backgroundMusic.paused) {
+      this.backgroundMusic.play().catch(err => {
+        console.log('Background music play failed:', err);
+      });
+    }
+  }
+
+  // Game 1 tutorial music (quieter than normal background music for narration)
+  startGame1TutorialMusic() {
+    if (this.soundEnabled && this.game1TutorialMusic.paused) {
+      this.game1TutorialMusic.play().catch(err => {
+        console.log('Game 1 tutorial music play failed:', err);
+      });
+    }
+  }
+
+  stopGame1TutorialMusic() {
+    if (!this.game1TutorialMusic.paused) {
+      this.game1TutorialMusic.pause();
+      this.game1TutorialMusic.currentTime = 0;  // Rewind to start
+    }
+  }
+
+  // Game 1 actual gameplay music
+  startGame1Music() {
+    if (this.soundEnabled && this.game1Music.paused) {
+      this.game1Music.play().catch(err => {
+        console.log('Game 1 music play failed:', err);
+      });
+    }
+  }
+
+  stopGame1Music() {
+    if (!this.game1Music.paused) {
+      this.game1Music.pause();
+      this.game1Music.currentTime = 0;
+    }
+  }
+
+  // Game 2 music (the matching game)
+  startGame2Music() {
+    if (this.soundEnabled && this.game2Music.paused) {
+      this.game2Music.play().catch(err => {
+        console.log('Game 2 music play failed:', err);
+      });
+    }
+  }
+
+  stopGame2Music() {
+    if (!this.game2Music.paused) {
+      this.game2Music.pause();
+      this.game2Music.currentTime = 0;
+    }
+  }
+
+  // Game 3 music (the fishing game)
+  startGame3Music() {
+    if (this.soundEnabled && this.game3Music.paused) {
+      this.game3Music.play().catch(err => {
+        console.log('Game 3 music play failed:', err);
+      });
+    }
+  }
+
+  stopGame3Music() {
+    if (!this.game3Music.paused) {
+      this.game3Music.pause();
+      this.game3Music.currentTime = 0;
+    }
+  }
+
+  // Kill switch - stops everything
+  stopAllMusic() {
+    if (!this.backgroundMusic.paused) {
+      this.backgroundMusic.pause();
+    }
+    this.stopGame1TutorialMusic();
+    this.stopGame1Music();
+    this.stopGame2Music();
+    this.stopGame3Music();
+    this.stopGame1Ambience();
+  }
+
+  // ===== AMBIENT SOUND CONTROLS =====
+  // Game 1 has ocean waves and seagulls playing alongside the music
+  // These are kept really quiet so they just add atmosphere
+
+  startGame1Ambience() {
+    if (this.soundEnabled) {
+      if (this.oceanWaves.paused) {
+        this.oceanWaves.play().catch(err => {
+          console.log('Ocean waves play failed:', err);
+        });
+      }
+      if (this.seagulls.paused) {
+        this.seagulls.play().catch(err => {
+          console.log('Seagulls play failed:', err);
+        });
+      }
+    }
+  }
+
+  stopGame1Ambience() {
+    if (!this.oceanWaves.paused) {
+      this.oceanWaves.pause();
+      this.oceanWaves.currentTime = 0;
+    }
+    if (!this.seagulls.paused) {
+      this.seagulls.pause();
+      this.seagulls.currentTime = 0;
+    }
+  }
+
+  // ===== SOUND EFFECTS =====
+  // Point sound plays when you earn points (cairn stones in Game 1, milestones in Game 3)
+  playPointSound() {
+    if (this.soundEnabled) {
+      // Clone the audio node so we can play overlapping sounds
+      // Otherwise rapid clicks would restart the same sound instead of stacking
+      const sound = this.pointSound.cloneNode();
+      sound.volume = this.pointSound.volume;
+      sound.play().catch(err => {
+        console.log('Point sound play failed:', err);
+      });
+    }
+  }
+
+  // ===== SMART MUSIC STARTER =====
+  // Figures out what music should be playing based on current game state
+  // Called when sound is re-enabled after being muted
+  startCurrentMusic() {
+    if (this.currentState === 'GAME1_TUTORIAL') {
+      // Tutorial has its own quieter music plus ambient sounds
+      this.startGame1TutorialMusic();
+      this.startGame1Ambience();
+    } else if (this.currentState === 'GAME1') {
+      // Actual gameplay has different music plus ambience
+      this.startGame1Music();
+      this.startGame1Ambience();
+    } else if (this.currentState === 'GAME2') {
+      // Matching game music
+      this.startGame2Music();
+    } else if (this.currentState === 'GAME3') {
+      // Fishing game music
+      this.startGame3Music();
+    } else if (['RUAIRIDH_INTRO', 'PREGAME_TUTORIAL', 'GAME2_READY', 'GAME2_TUTORIAL', 'GAME3_READY', 'RESULTS'].includes(this.currentState)) {
+      // Menu/tutorial screens use the generic background music
+      this.startBackgroundMusic();
+    }
+    // LOGIN screen has no music (silence)
+  }
+
+  // ===== SOUND BUTTON HTML GENERATOR =====
+  // Returns the HTML for the sound toggle button with correct icon and label
   getSoundButtonHTML() {
     const icon = this.soundEnabled ? '🔊' : '🔇';
     const label = this.soundEnabled ? 'Cuir dheth fuaim' : 'Cuir air fuaim';
     return `<button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="${label}">${icon}</button>`;
   }
 
-  // Toggle pause/play for Game 1
+  // ===== PAUSE/PLAY CONTROLS =====
+
+  // Game 1 pause functionality
+  // Freezes the timer, stops lobster movement, shows pause modal
   togglePause() {
     this.gamePaused = !this.gamePaused;
     const button = document.getElementById('pause-button');
     const modal = document.getElementById('pause-modal');
 
     if (this.gamePaused) {
-      // Pause the game
-      if (this.gameTimer) clearInterval(this.gameTimer);
+      // Entering pause state
+      if (this.gameTimer) clearInterval(this.gameTimer);  // Stop the countdown
       if (this.game1Board) {
-        this.game1Board.isAnimating = true; // Freeze lobster movement
+        // Bit of a hack - we use isAnimating=true to freeze the lobster
+        // Not the most intuitive naming but it works
+        this.game1Board.isAnimating = true;
       }
+      // Change button to play icon
       if (button) {
-        button.textContent = '▶️';
+        button.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z" fill="#000000"/></svg>';
         button.setAttribute('aria-label', 'Cluich an geama');
       }
+      // Show the pause overlay modal
       if (modal) {
         modal.classList.add('active');
       }
     } else {
-      // Resume the game
+      // Resuming from pause
       if (this.game1Board) {
-        this.game1Board.isAnimating = false; // Allow lobster movement
+        this.game1Board.isAnimating = false;  // Let lobster move again
       }
-      // Resume timer from where it was paused (don't reset timeRemaining)
-      if (this.gameTimer) clearInterval(this.gameTimer);
+
+      // Restart the timer from wherever it was
+      // Important: we DON'T reset timeRemaining here, just continue counting down
+      if (this.gameTimer) clearInterval(this.gameTimer);  // Clear any existing timer first
       this.gameTimer = setInterval(() => {
         this.timeRemaining--;
         this.updateGame1TimerDisplay();
 
+        // Check if time's up
         if (this.timeRemaining <= 0) {
           clearInterval(this.gameTimer);
           this.playTimerEndSoundEffect();
+          // Small delay before transitioning to next screen
           setTimeout(() => {
             this.setGameFlowState('GAME2_READY');
           }, 500);
         }
-      }, 1000);
+      }, 1000);  // Tick every second
 
+      // Change button back to pause icon
       if (button) {
-        button.textContent = '⏸️';
+        button.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg>';
         button.setAttribute('aria-label', 'Cuir stad air a\' gheama');
       }
+      // Hide pause modal
       if (modal) {
         modal.classList.remove('active');
       }
@@ -136,35 +389,68 @@ class GameFlowController {
     console.log(`Game ${this.gamePaused ? 'paused' : 'resumed'}`);
   }
 
-  // Toggle pause/play for Game 3
+  // Game 3 pause is simpler - no timer to worry about
+  // Just freezes fish movement
   toggleGame3Pause() {
-    if (!this.game3Board) return;
+    if (!this.game3Board) return;  // Bail if game isn't running
 
     this.game3Board.isPaused = !this.game3Board.isPaused;
     const button = document.getElementById('pause-button');
 
     if (this.game3Board.isPaused) {
+      // Update button to show play icon
       if (button) {
-        button.textContent = '▶️';
+        button.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z" fill="#000000"/></svg>';
         button.setAttribute('aria-label', 'Cluich an geama');
       }
       console.log('Game 3 paused');
     } else {
+      // Resume - change back to pause icon
       if (button) {
-        button.textContent = '⏸️';
+        button.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg>';
         button.setAttribute('aria-label', 'Cuir na stad');
       }
       console.log('Game 3 resumed');
     }
   }
 
-  // Main state machine for the whole game flow
-  // States: LOGIN → RUAIRIDH_INTRO → PREGAME_TUTORIAL → GAME1_TUTORIAL →
-  //         GAME1 → GAME2_READY → GAME2_TUTORIAL → GAME2 → RESULTS
+  // ===== MAIN STATE MACHINE =====
+  // This is the heart of the app - controls which screen is showing
+  // Flow: LOGIN → RUAIRIDH_INTRO → PREGAME_TUTORIAL → GAME1_TUTORIAL →
+  //       GAME1 → GAME2_READY → GAME2_TUTORIAL → GAME2 → GAME3_READY →
+  //       GAME3 → RESULTS
   setGameFlowState(newState) {
     console.log(`Transitioning: ${this.currentState} → ${newState}`);
     this.currentState = newState;
+
+    // Clear out whatever was on screen before
     this.gameContainer.innerHTML = '';
+
+    // ===== AUDIO MANAGEMENT =====
+    // Each state has different audio requirements
+    // First, kill everything that's currently playing
+    this.stopAllMusic();
+
+    // Then start the appropriate tracks for this new state
+    if (newState === 'GAME1_TUTORIAL') {
+      // Tutorial has quiet music + ocean ambience
+      this.startGame1TutorialMusic();
+      this.startGame1Ambience();
+    } else if (newState === 'GAME1') {
+      // Actual gameplay has slightly louder music + ambience
+      this.startGame1Music();
+      this.startGame1Ambience();
+    } else if (newState === 'GAME2') {
+      // Matching game music
+      this.startGame2Music();
+    } else if (newState === 'GAME3') {
+      // Fishing game music
+      this.startGame3Music();
+    } else if (['RUAIRIDH_INTRO', 'PREGAME_TUTORIAL', 'GAME2_READY', 'GAME2_TUTORIAL', 'GAME3_READY', 'RESULTS'].includes(newState)) {
+      // Menu and tutorial screens use generic background music
+      this.startBackgroundMusic();
+    }
+    // LOGIN screen stays silent (no music)
 
     switch (newState) {
       case 'LOGIN':
@@ -202,6 +488,18 @@ class GameFlowController {
         break;
       default:
         console.error(`Unknown game state: ${newState}`);
+    }
+
+    // Update sound button icon to match current sound state
+    this.updateSoundButtonIcon();
+  }
+
+  // Update sound button icon after state transitions
+  updateSoundButtonIcon() {
+    const button = document.getElementById('sound-button');
+    if (button) {
+      button.textContent = this.soundEnabled ? '🔊' : '🔇';
+      button.setAttribute('aria-label', this.soundEnabled ? 'Cuir dheth fuaim' : 'Cuir air fuaim');
     }
   }
 
@@ -262,10 +560,10 @@ class GameFlowController {
       <div class="ruairidh-intro-screen">
         <div class="ruairidh-container">
           <div class="seal-icon-wrapper">
-            <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+            <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
           </div>
           <div class="speech-bubble">
-            <p>Is mise Ruairidh an Ròn! Tha mi an seo airson do chuideachadh leis a' gheama seo.</p>
+            <p>Halo! Is mise Ruairidh an Ròn, 's tha mi an seo airson do chuideachadh leis a' gheama seo.</p>
           </div>
         </div>
         <div class="arrow-buttons centered">
@@ -286,10 +584,12 @@ class GameFlowController {
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
             <button class="ruairidh-sound-button glowing" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-            <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast">?</button>
+            <button class="ruairidh-pause-button" disabled><svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg></button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast">?</button> -->
           </div>
           <div class="ruairidh-banner-right">
-            <img src="./svgs/cairn.svg" alt="Cairn" class="cairn-icon" />
+            <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
             <div class="ruairidh-banner-text">PUINGEAN:</div>
           </div>
         </div>
@@ -298,7 +598,7 @@ class GameFlowController {
           <div class="ruairidh-intro-screen">
             <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
               </div>
               <div class="speech-bubble">
                 <p>Seo am putan airson an fhuaim a chur air agus dheth.</p>
@@ -326,10 +626,12 @@ class GameFlowController {
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
             <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-            <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast">?</button>
+            <button class="ruairidh-pause-button" disabled><svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg></button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast">?</button> -->
           </div>
           <div class="ruairidh-banner-right">
-            <img src="./svgs/cairn.svg" alt="Cairn" class="cairn-icon pulsing" id="cairn-spotlight" />
+            <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon pulsing" id="cairn-spotlight" />
             <div class="ruairidh-banner-text">PUINGEAN:</div>
           </div>
         </div>
@@ -338,7 +640,7 @@ class GameFlowController {
           <div class="ruairidh-intro-screen">
             <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
               </div>
               <div class="speech-bubble">
                 <p>Nise, tha mise a' cumail sùil air na puingean. Nuair a gheibh thu puing, gheibh thu clach air an càirn agad.<br><br>Cuimhich, nithear càirn mòr bho chlachan bheaga.</p>
@@ -366,10 +668,12 @@ class GameFlowController {
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
             <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-            <button class="ruairidh-help-button glowing" disabled style="cursor: default;" id="layout-help-btn">?</button>
+            <button class="ruairidh-pause-button" disabled><svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg></button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button glowing" disabled style="cursor: default;" id="layout-help-btn">?</button> -->
           </div>
           <div class="ruairidh-banner-right">
-            <img src="./svgs/cairn.svg" alt="Cairn" class="cairn-icon" id="cairn-spotlight" />
+            <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" id="cairn-spotlight" />
             <div class="ruairidh-banner-text">PUINGEAN:</div>
           </div>
         </div>
@@ -378,7 +682,7 @@ class GameFlowController {
           <div class="ruairidh-intro-screen">
             <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
               </div>
               <div class="speech-bubble">
                 <p>Seo putan airson cuideachadh, nuair nach eil fios agad mu dheidhinn rudeigin, brùth seo airson barrachd fios.</p>
@@ -397,19 +701,63 @@ class GameFlowController {
   }
 
   // ----------------------------------------------------------
-  // 2 - INTRODUCTION (Pre-game layout tutorial, step 3 - ready to play)
+  // 2 - INTRODUCTION (Pre-game layout tutorial, step 2.5 - pause button)
   // ----------------------------------------------------------
-  renderGameIntro_LayoutStep3() {
-    this.layoutTutorialStep = 3; // Set state for this step
+  renderGameIntro_LayoutStep2_5() {
+    this.layoutTutorialStep = 2.5; // Set state for this step
     const html = `
       <div class="game-screen">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
             <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-            <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast" id="layout-help-btn">?</button>
+            <button class="ruairidh-pause-button glowing" disabled style="cursor: default;" id="layout-pause-btn"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg></button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast">?</button> -->
           </div>
           <div class="ruairidh-banner-right">
-            <img src="./svgs/cairn.svg" alt="Cairn" class="cairn-icon" id="cairn-spotlight" />
+            <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" id="cairn-spotlight" />
+            <div class="ruairidh-banner-text">PUINGEAN:</div>
+          </div>
+        </div>
+        <div class="layout-tutorial-overlay" id="layout-overlay"></div>
+        <div class="intro-screen-wrapper" style="position: relative; z-index: 1000;">
+          <div class="ruairidh-intro-screen">
+            <div class="ruairidh-container">
+              <div class="seal-icon-wrapper">
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+              </div>
+              <div class="speech-bubble">
+                <p>Ma tha thu ag iarraidh stad a chur air geama, brùth pause an seo.</p>
+              </div>
+            </div>
+            <div class="arrow-buttons">
+              <button class="arrow-btn" onclick="gameController.renderGameIntro_LayoutStep2()">← Air ais</button>
+              <button class="arrow-btn" onclick="gameController.advanceLayoutTutorialStep()">Air adhart →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    this.gameContainer.innerHTML = html;
+    this.updateLayoutSpotlightPosition('layout-pause-btn');
+  }
+
+  // ----------------------------------------------------------
+  // 2 - INTRODUCTION (Pre-game layout tutorial, step 3 - ready to play)
+  // ----------------------------------------------------------
+  renderGameIntro_LayoutStep3() {
+    this.layoutTutorialStep = 3; // Set state for this step
+    const html = `
+      <div class="game-screen layout-step3-beach-bg">
+        <div class="ruairidh-banner">
+          <div class="ruairidh-banner-left">
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
+            <button class="ruairidh-pause-button" disabled><svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg></button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast" id="layout-help-btn">?</button> -->
+          </div>
+          <div class="ruairidh-banner-right">
+            <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" id="cairn-spotlight" />
             <div class="ruairidh-banner-text">PUINGEAN:</div>
           </div>
         </div>
@@ -417,14 +765,14 @@ class GameFlowController {
           <div class="ruairidh-intro-screen">
             <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
               </div>
               <div class="speech-bubble">
                 <p>A chiad gheama a chluicheas sinn se Glac an Giomach. A bheil thu deiseil?</p>
               </div>
             </div>
             <div class="arrow-buttons">
-              <button class="arrow-btn" onclick="gameController.renderGameIntro_LayoutStep2()">← Air ais</button>
+              <button class="arrow-btn" onclick="gameController.renderGameIntro_LayoutStep2_5()">← Air ais</button>
               <button class="play-green-btn" onclick="gameController.setGameFlowState('GAME1_TUTORIAL')">Cluich an Geama</button>
             </div>
           </div>
@@ -465,14 +813,15 @@ class GameFlowController {
       <div class="ruairidh-banner">
         <div class="ruairidh-banner-left">
           <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-          <button class="ruairidh-help-button" disabled style="opacity: 0.5; cursor: not-allowed;">?</button>
+          <!-- TEMPORARILY DISABLED FOR DEMO -->
+          <!-- <button class="ruairidh-help-button" disabled style="opacity: 0.5; cursor: not-allowed;">?</button> -->
         </div>
         <div class="banner-title-container">
           <div class="game1-title-fun">Glac an Giomach</div>
         </div>
         <div class="ruairidh-banner-right">
           <div class="points-box">
-            <img src="./svgs/cairn.svg" alt="Cairn" class="cairn-icon" />
+            <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
             <div class="ruairidh-banner-text">PUINGEAN:</div>
             <span id="points-counter" style="color: white; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800;">0</span>
           </div>
@@ -482,11 +831,11 @@ class GameFlowController {
       <div class="game1-tutorial-content-wrapper">
         <div class="game1-tutorial-text-section">
           <div class="ruairidh-intro-screen game1-tutorial-box">
-            <div class="ruairidh-container" style="flex-direction: column; gap: 1.5rem;">
+            <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" style="width: 150px; height: 150px;" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" style="width: 150px; height: 150px;" />
               </div>
-              <div class="speech-bubble tutorial-top-left">
+              <div class="speech-bubble">
                 <p>Fàilte dhan tràigh, a charaid!<br><br>Bidh iad ag ràdh… San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar.<br><br>'S fìor thoil leam giomaich, ach tha iad cho duilich an glacadh!<br><br>Le sin, tha mi ag iarraidh do chuideachadh.</p>
               </div>
             </div>
@@ -544,14 +893,15 @@ renderGame1Tutorial_Step2() {
       <div class="ruairidh-banner">
         <div class="ruairidh-banner-left">
           <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-          <button class="ruairidh-help-button" disabled style="opacity: 0.5; cursor: not-allowed;">?</button>
+          <!-- TEMPORARILY DISABLED FOR DEMO -->
+          <!-- <button class="ruairidh-help-button" disabled style="opacity: 0.5; cursor: not-allowed;">?</button> -->
         </div>
         <div class="banner-title-container">
           <div class="game1-title-fun">Glac an Giomach</div>
         </div>
         <div class="ruairidh-banner-right">
           <div class="points-box">
-            <img src="./svgs/cairn.svg" alt="Cairn" class="cairn-icon" />
+            <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
             <div class="ruairidh-banner-text">PUINGEAN:</div>
             <span id="points-counter" style="color: white; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800;">0</span>
           </div>
@@ -561,11 +911,11 @@ renderGame1Tutorial_Step2() {
       <div class="game1-tutorial-content-wrapper game1-tutorial-step2">
         <div class="game1-tutorial-text-section">
           <div class="ruairidh-intro-screen game1-tutorial-box">
-            <div class="ruairidh-container" style="flex-direction: column; gap: 1.5rem;">
+            <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" style="width: 150px; height: 150px;" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" style="width: 150px; height: 150px;" />
               </div>
-              <div class="speech-bubble tutorial-top-left">
+              <div class="speech-bubble">
                 <p>Ri mo thaobh chì thu giomach agus blocaichean gainmhich bhuidhe. Seo far a bheil sinn a' dol a dh' fheuchainn giomaich a ghlacadh!</p>
               </div>
             </div>
@@ -602,14 +952,15 @@ renderGame1Tutorial_Step3() {
       <div class="ruairidh-banner">
         <div class="ruairidh-banner-left">
           <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-          <button class="ruairidh-help-button" disabled style="opacity: 0.5; cursor: not-allowed;">?</button>
+          <!-- TEMPORARILY DISABLED FOR DEMO -->
+          <!-- <button class="ruairidh-help-button" disabled style="opacity: 0.5; cursor: not-allowed;">?</button> -->
         </div>
         <div class="banner-title-container">
           <div class="game1-title-fun">Glac an Giomach</div>
         </div>
         <div class="ruairidh-banner-right">
           <div class="points-box">
-            <img src="./svgs/cairn.svg" alt="Cairn" class="cairn-icon" />
+            <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
             <div class="ruairidh-banner-text">PUINGEAN:</div>
             <span id="points-counter" style="color: white; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800;">0</span>
           </div>
@@ -619,11 +970,11 @@ renderGame1Tutorial_Step3() {
       <div class="game1-tutorial-content-wrapper game1-tutorial-step3">
         <div class="game1-tutorial-text-section">
           <div class="ruairidh-intro-screen game1-tutorial-box">
-            <div class="ruairidh-container" style="flex-direction: column; gap: 1.5rem;">
+            <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" style="width: 150px; height: 150px;" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" style="width: 150px; height: 150px;" />
               </div>
-              <div class="speech-bubble tutorial-top-left">
+              <div class="speech-bubble">
                 <p>Nuair a bhrùthas tu air an gainmheach bhuidhe, 's urrainn dhut clach a chur sìos. Cha toil leis na giomaich a dhol thairis air na clachan!<br><br>Airson a h-uile giomach a gheibh thu thèid clach a chur air an càirn.<br><br>Cuimhich tha na giomaich ann an Leòdhas gu math seòlta!<br><br>Chan eil ach còig mionaidean againn! Steall ort!</p>
               </div>
             </div>
@@ -649,12 +1000,16 @@ renderGame1Tutorial_Step3() {
   this.game1TutorialBoard.boardSquares.clear();
   this.game1TutorialBoard.initializeBoard();
   this.game1TutorialBoard.spawnLobster();
-  
-  this.game1TutorialBoard.blockedSet.add('2,1');
-  this.game1TutorialBoard.blockedSet.add('3,1');
-  this.game1TutorialBoard.blockedSet.add('4,1');
-  this.game1TutorialBoard.blockedSet.add('5,2');
-  
+
+  // Add rocks, ensuring they don't overlap with lobster position
+  const lobsterKey = `${this.game1TutorialBoard.lobster.position.x},${this.game1TutorialBoard.lobster.position.y}`;
+  const rockPositions = ['2,1', '3,1', '4,1', '5,2'];
+  rockPositions.forEach(pos => {
+    if (pos !== lobsterKey) {
+      this.game1TutorialBoard.blockedSet.add(pos);
+    }
+  });
+
   this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
 }
 
@@ -670,20 +1025,21 @@ renderGame1Tutorial_Step3() {
         <div class="ruairidh-banner" role="banner">
           <div class="ruairidh-banner-left">
             <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-            <button class="ruairidh-pause-button" id="pause-button" onclick="gameController.togglePause()" aria-label="Cuir stad air a' gheama">⏸️</button>
-            <button class="ruairidh-help-button" onclick="gameController.toggleInGameHelpModal()" aria-label="Fosgail am modal cuideachaidh">?</button>
+            <button class="ruairidh-pause-button" id="pause-button" onclick="gameController.togglePause()" aria-label="Cuir stad air a' gheama"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg></button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button" onclick="gameController.toggleInGameHelpModal()" aria-label="Fosgail am modal cuideachaidh">?</button> -->
           </div>
           <div class="banner-title-container">
             <h1 class="game1-title-fun">Glac an Giomach</h1>
           </div>
           <div class="ruairidh-banner-right">
             <div class="timer-box" role="timer" aria-live="polite">
-              <img src="./svgs/clock.svg" alt="Uaireadair" class="timer-icon" />
+              <img src="./svgs/all-games/clock.svg" alt="Uaireadair" class="timer-icon" />
               <div class="timer-text">ÙINE:</div>
               <span id="timer-display" style="color: white;" aria-label="Ùine air fhàgail">5:00</span>
             </div>
             <div class="points-box" role="status" aria-live="polite">
-              <img src="./svgs/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-spotlight" />
+              <img src="./svgs/all-games/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-spotlight" />
               <div class="ruairidh-banner-text">PUINGEAN:</div>
               <span id="points-counter" style="color: white; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800;" aria-label="Puingean agad">${this.totalPoints}</span>
             </div>
@@ -725,39 +1081,51 @@ renderGame1Tutorial_Step3() {
   }
 
 
+  // ===== GAME 1 TIMER SYSTEM =====
+  // Starts a 4-minute countdown timer for the cairn building game
+  // Originally was 5 minutes but that felt too long, so we reduced it
+  // Timer shows warnings at 60s, 30s, and 10s to create urgency
   startGame1Timer() {
-    this.timeRemaining = 300;
+    this.timeRemaining = 240;  // 4 minutes (240 seconds)
     this.updateGame1TimerDisplay();
 
-    // Mark game as played for help system
+    // Tell the help system that game has started
+    // This prevents help popups during active gameplay
     if (this.helpSystem) {
       this.helpSystem.markAsPlayed();
     }
 
+    // Clear any existing timer first (safety check)
     if (this.gameTimer) clearInterval(this.gameTimer);
 
+    // Start the countdown - ticks every second
     this.gameTimer = setInterval(() => {
       this.timeRemaining--;
-      this.updateGame1TimerDisplay();
+      this.updateGame1TimerDisplay();  // Update the visual display
 
+      // Check if time's up
       if (this.timeRemaining <= 0) {
-        clearInterval(this.gameTimer);
-        this.playTimerEndSoundEffect();
+        clearInterval(this.gameTimer);  // Stop the timer
+        this.playTimerEndSoundEffect();  // Satisfying "ding" sound
+        // Brief pause before transitioning to next screen
         setTimeout(() => {
           this.setGameFlowState('GAME2_READY');
         }, 500);
       }
-    }, 1000);
+    }, 1000);  // Run every 1000ms (1 second)
   }
 
+  // Updates the timer display and adds visual warnings when time is running out
+  // Colour-coded warnings help players manage their time effectivly
   updateGame1TimerDisplay() {
     const display = document.getElementById('timer-display');
     if (display) {
+      // Format as MM:SS (e.g., "3:45")
       const minutes = Math.floor(this.timeRemaining / 60);
       const seconds = this.timeRemaining % 60;
       display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
-      // Tiered warning system for better visibility of system status
+      // Remove any existing warning classes first
       display.classList.remove('warning-yellow', 'warning-orange', 'warning-red', 'warning');
 
       if (this.timeRemaining <= 10) {
@@ -798,7 +1166,7 @@ renderGame1Tutorial_Step3() {
           <div class="ruairidh-intro-screen">
             <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
               </div>
               <div class="speech-bubble">
                 <p>Tapadh leibh airson mo chuideachadh! A bheil sibh deiseil airson an ath gheama?</p>
@@ -819,19 +1187,24 @@ renderGame1Tutorial_Step3() {
   // ----------------------------------------------------------
   renderGame2TutorialScreen() {
     this.game2TutorialStep = 0;
+    // Generate random tweed numbers for tutorial cards
+    const tweed1 = Math.floor(Math.random() * 9) + 1;
+    const tweed2 = Math.floor(Math.random() * 9) + 1;
+
     const html = `
       <div class="game2-tutorial-screen">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
             <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-            <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast">?</button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button" disabled aria-label="Cuideachadh - chan eil ri fhaighinn fhathast">?</button> -->
           </div>
           <div class="banner-title-container">
             <div class="game1-title-fun">Cho Coltrach ris an Dà Sgadan</div>
           </div>
           <div class="ruairidh-banner-right">
             <div class="points-box">
-              <img src="./svgs/cairn.svg" alt="Cairn" class="cairn-icon" />
+              <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
               <div class="ruairidh-banner-text">PUINGEAN:</div>
               <span id="points-counter" style="color: white; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800;">${this.totalPoints}</span>
             </div>
@@ -843,10 +1216,10 @@ renderGame1Tutorial_Step3() {
             <div class="ruairidh-intro-screen" style="max-width: 600px;">
               <div class="ruairidh-container" style="flex-direction: column; gap: 1.5rem;">
                 <div class="seal-icon-wrapper">
-                  <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" style="width: 120px; height: 120px;" />
+                  <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" style="width: 120px; height: 120px;" />
                 </div>
                 <div class="speech-bubble tutorial-top-left">
-                  <p>Anns an ath ghema tha feum agad mo chuideachadh paidhireachdan a dhèanamh bho rudan a's urrainn dhut a lorg timcheall orm aig muir. Tha gach rud air falach air cùl pìos cleòdh hearach.</p>
+                  <p>Anns an geama seo, feumaidh tu mo chuideachadh paidhrichean a dhèanamh de rudan as urrainn dhut a lorg timcheall orm aig muir. Bidh pìosan clò Hearaich air a' bhòrd ri mo thaobh agus feumaidh tu paidhrichean a dhèanamh asta.</p>
                 </div>
               </div>
               <div class="arrow-buttons">
@@ -861,14 +1234,14 @@ renderGame1Tutorial_Step3() {
               <div class="tutorial-card">
                 <div class="tutorial-card-inner">
                   <div class="tutorial-card-face">
-                    <img src="./svgs/tweed.svg" alt="Card back" />
+                    <img src="./svgs/game-2/tweeds/tweed-${tweed1}.svg" alt="Card back" />
                   </div>
                 </div>
               </div>
               <div class="tutorial-card">
                 <div class="tutorial-card-inner">
                   <div class="tutorial-card-face">
-                    <img src="./svgs/tweed.svg" alt="Card back" />
+                    <img src="./svgs/game-2/tweeds/tweed-${tweed2}.svg" alt="Card back" />
                   </div>
                 </div>
               </div>
@@ -889,7 +1262,8 @@ renderGame1Tutorial_Step3() {
         <div class="ruairidh-banner" role="banner">
           <div class="ruairidh-banner-left">
             <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-            <button class="ruairidh-help-button" onclick="gameController.toggleGame2HelpModal()" aria-label="Fosgail am modal cuideachaidh">?</button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button" onclick="gameController.toggleGame2HelpModal()" aria-label="Fosgail am modal cuideachaidh">?</button> -->
           </div>
           <div class="banner-title-container">
             <h1 class="game1-title-fun">Cho Coltrach ris an Dà Sgadan</h1>
@@ -901,7 +1275,7 @@ renderGame1Tutorial_Step3() {
           </div>
           <div class="ruairidh-banner-right">
             <div class="points-box" role="status" aria-live="polite">
-              <img src="./svgs/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-spotlight" />
+              <img src="./svgs/all-games/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-spotlight" />
               <div class="ruairidh-banner-text">PUINGEAN:</div>
               <span id="points-counter" style="color: white; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800;" aria-label="Puingean agad">${this.totalPoints}</span>
             </div>
@@ -969,6 +1343,9 @@ renderGame1Tutorial_Step3() {
     this.setGameFlowState('GAME2_READY');
   }
 
+  // ===== POINTS TRACKING =====
+  // Updates the visual display of total points across all games
+  // This just refreshes the UI, doesn't actually modify the point value
   updatePointsDisplayOnly() {
     const counter = document.getElementById('points-counter');
     if (counter) {
@@ -976,9 +1353,14 @@ renderGame1Tutorial_Step3() {
     }
   }
 
+  // ===== CAIRN POINT SYSTEM =====
+  // Called whenever player places a stone on the board in Game 1
+  // Each stone = 1 point, keeps things simple and fair
+  // Originally tried more complex scoring but this works best
   addPointToCairn() {
-    this.totalPoints++;
-    this.updatePointsDisplayOnly();
+    this.totalPoints++;  // Increment running total
+    this.updatePointsDisplayOnly();  // Refresh display
+    this.playPointSound();  // Satisfying click sound - important for feedback!
   }
 
   skipToGame3() {
@@ -996,7 +1378,7 @@ renderGame1Tutorial_Step3() {
           <div class="ruairidh-intro-screen">
             <div class="ruairidh-container">
               <div class="seal-icon-wrapper">
-                <img src="./svgs/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
               </div>
               <div class="speech-bubble">
                 <p>'S e an ath gheama:<br><strong>"Cho luath ris a' bhradan!"</strong><br><br>Anns a gheama seo tha feum agad aire a chumail air a mhulach oir bidh dealbh ann ag innse dè an t-iasg a tha mi ag iarraidh. Ma ma gheibh sibh an fhear cheart gheibh sibh puing… cum do shùil a-mach airson rudan eile a tha ri lorg bhon mhuir, 's dòcha gum faigh sibh torr puingean!<br><br>Cliog air an iasg agus gheibh sibh na puingean. Ach na cliog air an ola neo bidh na h-èisg air falbh!</p>
@@ -1021,8 +1403,9 @@ renderGame1Tutorial_Step3() {
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
             <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()" aria-label="Cuir dheth fuaim">🔊</button>
-            <button class="ruairidh-help-button" onclick="gameController.toggleInGameHelpModal()" aria-label="Fosgail cuideachadh">?</button>
-            <button class="ruairidh-pause-button" id="pause-button" onclick="gameController.toggleGame3Pause()" aria-label="Cuir na stad">⏸️</button>
+            <!-- TEMPORARILY DISABLED FOR DEMO -->
+            <!-- <button class="ruairidh-help-button" onclick="gameController.toggleInGameHelpModal()" aria-label="Fosgail cuideachadh">?</button> -->
+            <button class="ruairidh-pause-button" id="pause-button" onclick="gameController.toggleGame3Pause()" aria-label="Cuir na stad"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="5" width="3" height="14" fill="#000000"/><rect x="14" y="5" width="3" height="14" fill="#000000"/></svg></button>
           </div>
           <div class="banner-title-container">
             <div class="game3-title">Cho luath ris a' bhradan</div>
@@ -1032,31 +1415,26 @@ renderGame1Tutorial_Step3() {
               <span id="timer-display" class="timer-display" role="timer" aria-label="Ùine air fhàgail">3:00</span>
             </div>
             <div class="points-box">
-              <img src="./svgs/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-spotlight" />
+              <img src="./svgs/all-games/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-spotlight" />
               <div class="ruairidh-banner-text">PUINGEAN:</div>
               <span id="points-counter" style="color: white; font-size: clamp(1.3rem, 4vw, 1.8rem); font-weight: 800;" aria-label="Puingean agad">${this.totalPoints}</span>
             </div>
           </div>
         </div>
 
-        <!-- Ruairidh Command Capsule (below banner) - Centered Design -->
-        <div class="ruairidh-command-capsule">
-          <div class="ruairidh-avatar-section">
-            <div class="ruairidh-avatar">
-              <img src="./svgs/seal-2.svg" alt="Ruairidh" class="seal-icon" />
+        <!-- Ruairidh with Speech Bubble showing target fish -->
+        <div class="game3-ruairidh-section">
+          <div class="ruairidh-container">
+            <div class="seal-icon-wrapper">
+              <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh" class="seal-icon" />
             </div>
-            <div class="thinking-bubble">
-              <span class="thinking-dots">...</span>
+            <div class="speech-bubble">
+              <div id="target-fish-display" class="target-fish-display">
+                <!-- Fish image and name will be inserted here -->
+              </div>
             </div>
-          </div>
-
-          <div class="target-fish-display" id="target-fish-display">
-            <!-- Fish image and name will be inserted here -->
           </div>
         </div>
-
-        <!-- Combo Display -->
-        <div id="game3-combo-display" class="combo-display">Combo: 0</div>
 
         <div class="game3-canvas-container" id="game3-canvas">
           <!-- Fish and bubbles appear here -->
@@ -1223,86 +1601,110 @@ class LobsterToken {
   }
 }
 
+// ==========================================================
+// GAME 1: CAIRN BUILDING (LOBSTER TRAPPING)
+// ==========================================================
+// This is the first game where you trap a lobster by blocking its path
+// The lobster moves around the grid trying to escape to the edges
+// Player clicks squares to place stones and build a cairn around it
+// If you surround it completely, you win. If it reaches an edge, you lose.
+// 4 minute time limit, points awarded for each stone placed
+// ==========================================================
+
 class Game1Board {
   constructor(radius, controller) {
-    this.controller = controller;
-    this.blockedSet = new Set();
-    this.lobster = null;
-    this.gameOver = false;
-    this.gameLost = false;
-    this.isAnimating = false;
-    this.isEscaping = false;
-    this.isOnEdge = false; // Lobster has reached edge, waiting for player to acknowledge
-    this.tutorialAnimationInterval = null;
+    this.controller = controller;  // Reference back to main game controller
 
+    // ===== GAME STATE =====
+    this.blockedSet = new Set();  // Tracks which squares have stones on them
+    this.lobster = null;           // Lobster position {x, y}
+    this.gameOver = false;         // Game finished (win or lose)
+    this.gameLost = false;         // Did we lose?
+    this.isAnimating = false;      // Used to freeze/unfreeze lobster movement (for pause)
+    this.isEscaping = false;       // Lobster is currently moving to escape
+    this.isOnEdge = false;         // Lobster reached edge, waiting for player acknowledgement
+    this.tutorialAnimationInterval = null;  // For tutorial mode animations
+
+    // ===== GRID DIMENSIONS =====
     this.gridWidth = 11;
     this.gridHeight = 10;
 
-    // Lobster message arrays for different scenarios
+    // ===== LOBSTER DIALOG =====
+    // The lobster says different things when caught vs. when moving
+    // These cycle through in order (not random) to give variety
     this.caughtMessages = [
-      'Ghlac thu mi!',
-      'Dè fo ghrian?',
-      'Sgriosail!',
-      'Oh bhròinean...',
-      'Cuidich mi!',
-      'Beiridh mise ort!'
+      'Ghlac thu mi!',     // You caught me!
+      'Dè fo ghrian?',     // What on earth?
+      'Sgriosail!',        // Destructive!
+      'Oh bhròinean...',   // Oh sorrow...
+      'Cuidich mi!',       // Help me!
+      'Beiridh mise ort!'  // I'll catch you!
     ];
     this.movementMessages = [
-      'haoi',
-      'duda?',
-      'mach às mo rathad',
-      'obh obh',
-      'aidh aidh',
-      'brochan lom',
-      'balaich an iasgaich',
-      'Mach a seo!',
-      'Seo nis',
-      'Cho carach',
-      'teich!',
-      'Bha sin faisg!'
+      'haoi',              // hey
+      'duda?',             // hello?
+      'mach às mo rathad', // out of my way
+      'obh obh',           // expression of surprise
+      'aidh aidh',         // yes yes
+      'brochan lom',       // plain porridge (expression)
+      'balaich an iasgaich',  // boys of the fishing
+      'Mach a seo!',       // Out of here!
+      'Seo nis',           // Here now
+      'Cho carach',        // So tricky
+      'teich!',            // flee!
+      'Bha sin faisg!'     // That was close!
     ];
 
-    // Message rotation indices
+    // Track which message to show next (cycles through arrays)
     this.caughtMessageIndex = 0;
     this.movementMessageIndex = 0;
 
-    // Jump counter for movement messages (show every 3-4 jumps)
+    // ===== MOVEMENT MESSAGE TIMING =====
+    // Don't show a message every single jump - that would be annoying
+    // Instead, show one every 3-4 jumps randomly
     this.jumpCounter = 0;
-    this.jumpsUntilMessage = this.getRandomJumps(); // Random 3 or 4
+    this.jumpsUntilMessage = this.getRandomJumps();  // Gets 3 or 4
 
-    // Active speech bubble tracking for persistence
-    this.activeBubble = null; // { message: string, startTime: timestamp, duration: ms }
+    // ===== SPEECH BUBBLE SYSTEM =====
+    // Keeps track of currently displayed bubble so it persists across re-renders
+    // Structure: { message, startTime, duration, hasBeenRendered }
+    this.activeBubble = null;
 
-    this.boardSquares = new Map();
-    this.initializeBoard();
-    this.spawnLobster();
-    this.placeRandomRocks();
+    // ===== INITIALIZATION =====
+    this.boardSquares = new Map();  // Stores the grid state
+    this.initializeBoard();         // Set up empty grid
+    this.spawnLobster();            // Place lobster randomly
+    this.placeRandomRocks();        // Add some initial obstacles
   }
 
-  // Helper to get random number of jumps (3 or 4) before showing message
+  // ===== HELPER FUNCTIONS =====
+
+  // Randomly returns 3 or 4 (for varying movement message frequency)
   getRandomJumps() {
     return Math.random() < 0.5 ? 3 : 4;
   }
 
-  // Show a speech bubble and track it for persistence across re-renders
+  // Display a speech bubble above the lobster
+  // Bubble persists for the specified duration then auto-clears
   showSpeechBubble(message, duration) {
     this.activeBubble = {
       message: message,
       startTime: Date.now(),
       duration: duration,
-      hasBeenRendered: false // Track if this bubble has been rendered yet
+      hasBeenRendered: false  // Tracks if we've rendered this bubble yet
     };
 
-    // Auto-clear after duration
+    // Set up auto-clear timer
     setTimeout(() => {
+      // Only clear if it's still the same bubble (prevents race conditions)
       if (this.activeBubble && this.activeBubble.message === message) {
         this.activeBubble = null;
-        this.render(); // Re-render to remove bubble
+        this.render();  // Refresh display to remove bubble
       }
     }, duration);
   }
 
-  // Check if there's an active bubble that should be displayed
+  // Check if there's currently a bubble that should be showing
   // Returns { message, isFirstRender } or null
   shouldShowBubble() {
     if (!this.activeBubble) return null;
@@ -1333,13 +1735,13 @@ class Game1Board {
   }
 
   // Place random rock obstacles on the board (15% coverage)
-  // Ensures no rocks are placed on the lobster's position or the center position
+  // Ensures no rocks are placed on the lobster's position or the centre position
   placeRandomRocks() {
     const squareArray = Array.from(this.boardSquares.values());
     const rockCount = Math.floor(squareArray.length * 0.15);
     const lobsterPosHash = this.lobster.position.hash(); // Cache for performance
 
-    // Explicitly calculate center position to avoid placing rocks there (critical for tutorials)
+    // Explicitly calculate centre position to avoid placing rocks there (critical for tutorials)
     const centerX = Math.floor(this.gridWidth / 2);
     const centerY = Math.floor(this.gridHeight / 2);
     const centerPosHash = `${centerX},${centerY}`;
@@ -1348,7 +1750,7 @@ class Game1Board {
       let square;
       let squareHash;
 
-      // Select random squares until we find one that's not the lobster's position OR the center
+      // Select random squares until we find one that's not the lobster's position OR the centre
       do {
         square = squareArray[Math.floor(Math.random() * squareArray.length)];
         squareHash = square.hash();
@@ -1398,7 +1800,7 @@ class Game1Board {
         setTimeout(() => {
 
           const stone = document.createElement('img');
-          stone.src = './svgs/stone.svg';
+          stone.src = './svgs/all-games/stone.svg';
           stone.classList.add('stone-fly');
           document.body.appendChild(stone);
 
@@ -1617,10 +2019,14 @@ class Game1Board {
         hexBg.classList.add('hex-sand');
         tile.appendChild(hexBg);
 
-        if (this.blockedSet.has(key)) {
+        // Check if this is the lobster position
+        const isLobsterPosition = this.lobster.position.x === x && this.lobster.position.y === y;
+
+        // Only render rock if position is blocked AND not the lobster position
+        if (this.blockedSet.has(key) && !isLobsterPosition) {
           tile.classList.add('has-rock'); // Mark tile as containing a rock
           const rock = document.createElement('img');
-          rock.src = './svgs/rock-wall.svg';
+          rock.src = './svgs/game-1/rock-wall.svg';
           rock.classList.add('hex-rock');
           rock.style.width = '100%';
           rock.style.height = '100%';
@@ -1633,13 +2039,13 @@ class Game1Board {
           tile.appendChild(rock);
         }
 
-        if (this.lobster.position.x === x && this.lobster.position.y === y) {
+        if (isLobsterPosition) {
           tile.setAttribute('data-lobster', 'true');
           tile.style.setProperty('--lobster-rotation', `${this.lobster.rotation}deg`);
           tile.style.zIndex = '1000'; // Ensure lobster tile is above other tiles
 
           const lobster = document.createElement('img');
-          lobster.src = './svgs/lobster.svg';
+          lobster.src = './svgs/game-1/lobster.svg';
           lobster.classList.add('lobster-svg');
           lobster.style.width = '100%';
           lobster.style.height = '100%';
@@ -1727,10 +2133,14 @@ class Game1Board {
         hexBg.classList.add('hex-sand');
         tile.appendChild(hexBg);
 
-        if (this.blockedSet.has(key)) {
+        // Check if this is the lobster position
+        const isLobsterPosition = this.lobster.position.x === x && this.lobster.position.y === y;
+
+        // Only render rock if position is blocked AND not the lobster position
+        if (this.blockedSet.has(key) && !isLobsterPosition) {
           tile.classList.add('has-rock'); // Mark tile as containing a rock
           const rock = document.createElement('img');
-          rock.src = './svgs/rock-wall.svg';
+          rock.src = './svgs/game-1/rock-wall.svg';
           rock.classList.add('hex-rock');
           rock.style.width = '100%';
           rock.style.height = '100%';
@@ -1743,13 +2153,13 @@ class Game1Board {
           tile.appendChild(rock);
         }
 
-        if (this.lobster.position.x === x && this.lobster.position.y === y) {
+        if (isLobsterPosition) {
           tile.setAttribute('data-lobster', 'true');
           tile.style.setProperty('--lobster-rotation', `${this.lobster.rotation}deg`);
           tile.style.zIndex = '1000'; // Ensure lobster tile is above other tiles
 
           const lobster = document.createElement('img');
-          lobster.src = './svgs/lobster.svg';
+          lobster.src = './svgs/game-1/lobster.svg';
           lobster.classList.add('lobster-svg');
           lobster.style.width = '100%';
           lobster.style.height = '100%';
@@ -1818,7 +2228,7 @@ class Game1Board {
           tile.style.setProperty('--lobster-rotation', `${this.lobster.rotation}deg`);
 
           const lobster = document.createElement('img');
-          lobster.src = './svgs/lobster.svg';
+          lobster.src = './svgs/game-1/lobster.svg';
           lobster.classList.add('lobster-svg');
           lobster.style.width = hexSize + 'px';
           lobster.style.height = hexSize + 'px';
@@ -1917,18 +2327,28 @@ class Game1Board {
 }
 
 // ==========================================================
-// CARD MATCHING GAME (GAME 2)
+// GAME 2: CARD MATCHING GAME
 // ==========================================================
+// Classic memory/concentration game with Scottish Gaelic sea creature cards
+// 12 cards total (6 pairs) - flip two at a time to find matches
+// Each card shows a different tweed pattern on the back
+// When you find a match, those cards stay face-up
+// Points awarded when all pairs are matched
+// No time limit - take as long as you need
+// ==========================================================
+
 class CardMatchingGame {
   constructor(controller) {
-    this.controller = controller;
-    this.cards = [];
-    this.flipped = new Set();
-    this.matched = new Set();
-    this.attempts = 0;
-    this.moves = 0;
-    this.isProcessing = false;
-    this.totalPairs = 6;
+    this.controller = controller;  // Reference to main game controller
+
+    // ===== GAME STATE =====
+    this.cards = [];              // Array of card objects (will be shuffled)
+    this.flipped = new Set();     // Indices of currently face-up cards
+    this.matched = new Set();     // Indices of cards that have been successfully matched
+    this.attempts = 0;            // Total number of pair flips (for stats)
+    this.moves = 0;               // Number of valid moves made
+    this.isProcessing = false;    // Prevents clicking during card flip/match checking
+    this.totalPairs = 6;          // 6 pairs = 12 cards total
   }
 
   render() {
@@ -1939,18 +2359,21 @@ class CardMatchingGame {
     }
 
     const cardImages = [
-      { name: 'Guga', src: './svgs/gannet.svg' },
-      { name: 'Portan', src: './svgs/shorecrab.svg' },
-      { name: 'Cliabh', src: './svgs/creel.svg' },
-      { name: 'Easgann', src: './svgs/eel.svg' },
-      { name: 'Crosgag', src: './svgs/starfish.svg' },
-      { name: 'Sgadan', src: './svgs/herring.svg' }
+      { name: 'Guga', src: './svgs/game-2/card-items/gannet.svg' },
+      { name: 'Portan', src: './svgs/game-2/card-items/shorecrab.svg' },
+      { name: 'Cliabh', src: './svgs/game-2/card-items/creel.svg' },
+      { name: 'Easgann', src: './svgs/game-2/card-items/eel.svg' },
+      { name: 'Crosgag', src: './svgs/game-2/card-items/starfish.svg' },
+      { name: 'Sgadan', src: './svgs/game-2/card-items/herring.svg' }
     ];
 
     this.cards = [...cardImages, ...cardImages].sort(() => Math.random() - 0.5);
 
     // Use template string for faster rendering
-    const cardsHTML = this.cards.map((card, index) => `
+    const cardsHTML = this.cards.map((card, index) => {
+      // Random tweed pattern for each card (1-9)
+      const tweedNumber = Math.floor(Math.random() * 9) + 1;
+      return `
       <div class="card"
            data-index="${index}"
            role="button"
@@ -1958,7 +2381,7 @@ class CardMatchingGame {
            aria-label="Cairt ${index + 1} - falaichte">
         <div class="card-inner">
           <div class="card-face card-back">
-            <img src="./svgs/tweed.svg" alt="Cùl na cairt" loading="lazy">
+            <img src="./svgs/game-2/tweeds/tweed-${tweedNumber}.svg" alt="Cùl na cairt" loading="lazy">
           </div>
           <div class="card-face card-front">
             <img src="${card.src}" alt="${card.name}" class="card-image" loading="lazy">
@@ -1966,7 +2389,8 @@ class CardMatchingGame {
           </div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     board.innerHTML = `<div class="card-grid">${cardsHTML}</div>`;
 
@@ -2106,7 +2530,7 @@ class CardMatchingGame {
   animateStoneTocairn(cardElement) {
     // Create flying stone element (matching Game 1 style)
     const stone = document.createElement('img');
-    stone.src = './svgs/stone.svg';
+    stone.src = './svgs/all-games/stone.svg';
     stone.classList.add('stone-fly');
     stone.style.position = 'fixed';
     stone.style.width = '50px';
@@ -2115,14 +2539,14 @@ class CardMatchingGame {
     stone.style.pointerEvents = 'none';
     stone.style.display = 'block';
 
-    // Start position: center of the matched card
+    // Start position: centre of the matched card
     let startX, startY;
     if (cardElement) {
       const cardRect = cardElement.getBoundingClientRect();
       startX = cardRect.left + cardRect.width / 2;
       startY = cardRect.top + cardRect.height / 2;
     } else {
-      // Fallback: center of the game board
+      // Fallback: centre of the game board
       const board = document.getElementById('game2-board');
       const boardRect = board.getBoundingClientRect();
       startX = boardRect.left + boardRect.width / 2;
@@ -2206,116 +2630,168 @@ class CardMatchingGame {
 }
 
 // ==========================================================
-// FISHING GAME (GAME 3) - Cho luath ris a' bhradan
+// GAME 3: UNDERWATER FISHING GAME
 // ==========================================================
+// "Cho luath ris a' bhradan" (As fast as the salmon)
+// Dynamic fishing game with depth zones that change over time
+// Click on the fish that Ruairidh asks for to score points
+// Three zones: SHALLOW → MID_DEPTH → DEEP (with different fish species)
+// Combo system rewards consecutive correct catches
+// Milestone bonuses at 5, 10, 15 combo streaks
+// Also collect garbage for bonus points
+// 135 second time limit (2 mins 15 secs)
+// Point values carefully balanced to keep totals under 300 across all 3 games
+// ==========================================================
+
 class Game3FishingGame {
   constructor(controller) {
-    this.controller = controller;
-    this.gameActive = false;
-    this.isPaused = false;
+    this.controller = controller;  // Reference to main controller
 
-    // HCI: Reduced from 180s to 135s for faster progression
-    this.timeRemaining = 135;
-    this.elapsedTime = 0;
-    this.currentDepth = 'SHALLOW';
+    // ===== GAME STATE =====
+    this.gameActive = false;  // Is the game currently running?
+    this.isPaused = false;    // Pause state
 
-    this.points = 0;
-    this.comboStreak = 0;
-    this.maxCombo = 0;
-    this.correctCatches = 0;
-    this.totalAttempts = 0;
+    // ===== TIMING =====
+    // Originally was 180s (3 mins) but reduced for better pacing
+    this.timeRemaining = 135;  // 2 minutes 15 seconds
+    this.elapsedTime = 0;      // Tracks how long game has been running
+    this.currentDepth = 'SHALLOW';  // Starts shallow, goes deeper over time
 
-    this.activeFish = [];
-    this.lastSpawnTime = 0;
-    this.spawnInterval = 400;
+    // ===== SCORING =====
+    this.points = 0;           // Points earned THIS game (seperate from total)
+    this.correctCatches = 0;   // Total correct fish caught
+    this.totalAttempts = 0;    // Total clicks (correct + wrong)
 
-    // HCI: Adaptive fish density based on zone
-    this.maxFish = 8; // Will be adjusted per zone: SHALLOW=8, MID_DEPTH=6, DEEP=4
+    // ===== ENCOURAGEMENT MESSAGES =====
+    // Rotating positive feedback messages in Gaelic
+    // Only shown after 5 correct catches in a row
+    this.encouragementMessages = [
+      "Sin thu fhèin!",  // That's yourself! (Well done!)
+      "Sgoinneil!",      // Excellent!
+      "Fìor Mhath!"      // Very good!
+    ];
+    this.currentMessageIndex = 0;  // Track which message to show next
+    this.correctStreakCount = 0;   // Track consecutive correct catches
 
-    // Zone transition animation flags
-    this.isZoneTransitioning = false;
-    this.transitionFishCount = 0;
+    // ===== FISH SPAWNING =====
+    this.activeFish = [];      // Array of fish currently swimming on screen
+    this.lastSpawnTime = 0;    // Timestamp of last fish spawn
+    this.spawnInterval = 400;  // Milliseconds between spawns (adjusts dynamically)
 
-    this.activeBubbles = [];
+    // Fish density varies by zone - deeper = fewer but more valuable fish
+    this.maxFish = 8;  // SHALLOW=8, MID_DEPTH=6, DEEP=4
+
+    // ===== ZONE TRANSITIONS =====
+    // When transitioning between depths, we need special handling
+    this.isZoneTransitioning = false;  // Currently in transition animation?
+    this.transitionFishCount = 0;      // Tracks transition fish spawning
+
+    // ===== BUBBLES (DECORATIVE) =====
+    this.activeBubbles = [];    // Bubbles floating up for atmosphere
     this.lastBubbleSpawn = 0;
-    this.bubbleInterval = 300;
+    this.bubbleInterval = 300;  // Spawn rate for bubbles
 
-    this.shrimpShoal = []; // Track shrimp in current shoal
+    // ===== SHRIMP SHOALING =====
+    // Shrimp move in groups (shoals) rather than individually
+    this.shrimpShoal = [];      // Current shoal of shrimp
     this.lastShoalSpawn = 0;
 
-    this.animationFrameId = null;
-    this.timerIntervalId = null;
+    // ===== ANIMATION LOOPS =====
+    this.animationFrameId = null;  // requestAnimationFrame ID
+    this.timerIntervalId = null;   // setInterval ID for countdown timer
 
+    // ===== FISH CATALOG =====
+    // Load all the fish types and their properties
     this.fishManifest = this.getFishManifest();
 
-    // Order system - fish only, no phrases
-    this.currentOrder = null; // { type: 'fish', target: 'giomach' }
+    // ===== ORDER SYSTEM =====
+    // Ruairidh tells you which fish to catch
+    // Changes every 8-15 seconds to keep it interesting
+    this.currentOrder = null;      // { type: 'fish', target: 'giomach' }
     this.lastOrderChange = 0;
-    this.orderChangeInterval = 8000; // Change order every 8-15 seconds (will be randomized)
+    this.orderChangeInterval = 8000;  // Base interval, gets randomized
 
-    // Fish names in Scottish Gaelic
+    // ===== FISH NAME TRANSLATIONS =====
+    // Maps fish IDs to their Scottish Gaelic display names
+    // These show up in Ruairidh's speech bubble when he asks for a fish
     this.fishNames = {
-      // SHALLOW
-      shrimp: "Carran",
-      crubag: "Crùbag",
-      giomach_side: "Giomach",
-      banag_beag: "Banag Beag",
-      banag_mor: "Banag Mòr",
-      creachann: "Creachann",
-      stroilleag: "Stroilleag",
-      creagag: "Creagag",
-      // MID_DEPTH
-      cuiteag: "Cuiteag",
-      cudan: "Cùdan",
-      sgadan: "Sgadan",
-      leobag: "Leòbag",
-      breac_geal: "Breac Geal",
-      iasg_galldach: "Iasg-galldach",
-      breac_garbh: "Breac Garbh",
-      // DEEP
-      trosg: "Trosg",
-      cat_mara: "Cat-mara",
-      manach: "Manach",
-      muc_mara: "Muc-mhara",
-      tuna: "Tuna"
+      // SHALLOW water species (tiny creatures)
+      shrimp: "Carran",          // Shrimp
+      crubag: "Crùbag",          // Hermit crab
+      giomach_side: "Giomach",   // Lobster
+      banag_beag: "Banag Beag",  // Small lumpfish
+      banag_mor: "Banag Mòr",    // Large lumpfish
+      creachann: "Creachann",    // Scallop
+      stroilleag: "Stroilleag",  // Jellyfish
+      creagag: "Creagag",        // Cuckoo wrasse
+      // MID_DEPTH species (medium fish)
+      cuiteag: "Cuiteag",              // Whiting
+      cudan: "Cùdan",                  // Haddock
+      sgadan: "Sgadan",                // Herring
+      leobag: "Leòbag",                // Plaice
+      breac_geal: "Breac Geal",        // White trout
+      iasg_galldach: "Sgeit",  // Skate/Ray
+      breac_garbh: "Breac Garbh",      // Rough trout
+      // DEEP water species (big fish)
+      trosg: "Trosg",            // Cod
+      cat_mara: "Cat-mara",      // Catfish
+      manach: "Manach",          // Monkfish
+      muc_mara: "Muc-mhara",     // Porpoise
+      tuna: "Tùna"               // Tuna
     };
   }
 
+  // ===== FISH DATABASE =====
+  // This is where we define every fish type in the game
+  // Each fish has properties that control its behaviour:
+  // - zone: which depth it appears at (SHALLOW/MID_DEPTH/DEEP)
+  // - direction: which way it swims (L/R/EITHER/UP)
+  // - basePoints: how many points it's worth (before multipliers)
+  // - speed: how fast it moves across screen
+  // - size: visual size in pixels
+  // - spawnWeight: how likely it is to spawn (higher = more common)
+  // - special flags: isShoaling, isDarting, isWavy, isFloater, etc.
+  //
+  // IMPORTANT: Point values have been carefully rebalanced to prevent students
+  // from going over 300 total points across all 3 games. Don't increase these
+  // without checking the overall point economy!
   getFishManifest() {
     return {
-      // SHALLOW ZONE (0-60s) - Smallest creatures (5-25cm real size) - MUCH BIGGER AGAIN
-      shrimp: { id: 'shrimp', svg: './svgs/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'L', basePoints: 8, speed: 8.0, size: 85, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
-      crubag: { id: 'crubag', svg: './svgs/game-3-fish/Crubag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 8, speed: 4.5, size: 115, spawnWeight: 4, isValid: true },
-      giomach_side: { id: 'giomach_side', svg: './svgs/game-3-fish/giomach-side-R.svg', zone: 'SHALLOW', direction: 'R', basePoints: 12, speed: 4.0, size: 170, spawnWeight: 3, isValid: true },
-      banag_beag: { id: 'banag_beag', svg: './svgs/game-3-fish/banag beag-R.svg', zone: 'SHALLOW', direction: 'R', basePoints: 10, speed: 5.5, size: 155, spawnWeight: 4, isDarting: true, isValid: true },
-      banag_mor: { id: 'banag_mor', svg: './svgs/game-3-fish/banag mor-R.svg', zone: 'SHALLOW', direction: 'R', basePoints: 12, speed: 5.5, size: 175, spawnWeight: 3, isDarting: true, isValid: true },
-      creachann: { id: 'creachann', svg: './svgs/game-3-fish/creachann.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 10, speed: 3.0, size: 110, spawnWeight: 2, isValid: true },
-      stroilleag: { id: 'stroilleag', svg: './svgs/game-3-fish/stroilleag.svg', zone: 'SHALLOW', direction: 'UP', basePoints: 12, speed: 5.0, size: 185, spawnWeight: 3, isMultiDirectional: true, isValid: true },
-      creagag: { id: 'creagag', svg: './svgs/game-3-fish/creagag-R.svg', zone: 'SHALLOW', direction: 'R', basePoints: 15, speed: 5.0, size: 120, spawnWeight: 3, isValid: true },
+      // ===== SHALLOW ZONE (0-60 seconds) =====
+      // Small critters, low points, fast movement
+      // Sizes increased to make them easier to click on mobile
+      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'L', basePoints: 1, speed: 8.0, size: 85, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
+      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 4.5, size: 115, spawnWeight: 4, isValid: true },
+      giomach_side: { id: 'giomach_side', svg: './svgs/game-3/game-3-fish/giomach-side-R.svg', zone: 'SHALLOW', direction: 'R', basePoints: 2, speed: 4.0, size: 170, spawnWeight: 3, isValid: true },
+      banag_beag: { id: 'banag_beag', svg: './svgs/game-3/game-3-fish/bànag beag-R.svg', zone: 'SHALLOW', direction: 'R', basePoints: 2, speed: 5.5, size: 155, spawnWeight: 4, isDarting: true, isValid: true },
+      banag_mor: { id: 'banag_mor', svg: './svgs/game-3/game-3-fish/bànag mòr-R.svg', zone: 'SHALLOW', direction: 'R', basePoints: 2, speed: 5.5, size: 175, spawnWeight: 3, isDarting: true, isValid: true },
+      creachann: { id: 'creachann', svg: './svgs/game-3/game-3-fish/creachann.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 2, speed: 3.0, size: 110, spawnWeight: 2, isValid: true },
+      stroilleag: { id: 'stroilleag', svg: './svgs/game-3/game-3-fish/stròilleag.svg', zone: 'SHALLOW', direction: 'UP', basePoints: 3, speed: 5.0, size: 185, spawnWeight: 3, isMultiDirectional: true, isValid: true },
+      creagag: { id: 'creagag', svg: './svgs/game-3/game-3-fish/creagag-R.svg', zone: 'SHALLOW', direction: 'R', basePoints: 3, speed: 5.0, size: 120, spawnWeight: 3, isValid: true },
 
       // GARBAGE (can appear anytime, floats upward)
-      garbage_bag: { id: 'garbage_bag', svg: './svgs/game-3-garbage/garbage-bag-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 100, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bag: { id: 'plastic_bag', svg: './svgs/game-3-garbage/plastic bag.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.5, size: 90, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bottle_1: { id: 'plastic_bottle_1', svg: './svgs/game-3-garbage/plastic-bottle-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 80, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bottle_2: { id: 'plastic_bottle_2', svg: './svgs/game-3-garbage/plastic bottle-2.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.2, size: 85, spawnWeight: 2, isFloater: true, isValid: false },
-      straw: { id: 'straw', svg: './svgs/game-3-garbage/straw.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.8, size: 70, spawnWeight: 1, isFloater: true, isValid: false },
-      welly: { id: 'welly', svg: './svgs/game-3-garbage/welly-either.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 100, spawnWeight: 1, isFloater: true, isValid: false },
+      garbage_bag: { id: 'garbage_bag', svg: './svgs/game-3/game-3-garbage/garbage-bag-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 100, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bag: { id: 'plastic_bag', svg: './svgs/game-3/game-3-garbage/plastic bag.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.5, size: 90, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bottle_1: { id: 'plastic_bottle_1', svg: './svgs/game-3/game-3-garbage/plastic-bottle-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 80, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bottle_2: { id: 'plastic_bottle_2', svg: './svgs/game-3/game-3-garbage/plastic bottle-2.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.2, size: 85, spawnWeight: 2, isFloater: true, isValid: false },
+      straw: { id: 'straw', svg: './svgs/game-3/game-3-garbage/straw.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.8, size: 70, spawnWeight: 1, isFloater: true, isValid: false },
+      welly: { id: 'welly', svg: './svgs/game-3/game-3-garbage/welly-either.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 100, spawnWeight: 1, isFloater: true, isValid: false },
 
       // MID_DEPTH ZONE (60-120s) - Medium fish (20-60cm real size) - MUCH BIGGER AGAIN
-      cuiteag: { id: 'cuiteag', svg: './svgs/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'R', basePoints: 20, speed: 7.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
-      cudan: { id: 'cudan', svg: './svgs/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'R', basePoints: 20, speed: 7.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
-      sgadan: { id: 'sgadan', svg: './svgs/game-3-fish/sgadan-L.svg', zone: 'MID_DEPTH', direction: 'L', basePoints: 22, speed: 7.5, size: 220, spawnWeight: 4, isWavy: true, isValid: true },
-      leobag: { id: 'leobag', svg: './svgs/game-3-fish/leobag-L.svg', zone: 'MID_DEPTH', direction: 'L', basePoints: 25, speed: 6.0, size: 240, spawnWeight: 3, isValid: true },
-      breac_geal: { id: 'breac_geal', svg: './svgs/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'R', basePoints: 30, speed: 7.5, size: 270, spawnWeight: 3, isValid: true },
-      iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3-fish/iasg-galldach-L.svg', zone: 'MID_DEPTH', direction: 'L', basePoints: 35, speed: 7.5, size: 280, spawnWeight: 3, isValid: true },
-      breac_garbh: { id: 'breac_garbh', svg: './svgs/game-3-fish/breac-garbh-R.svg', zone: 'MID_DEPTH', direction: 'R', basePoints: 38, speed: 7.0, size: 300, spawnWeight: 2, isValid: true },
+      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'R', basePoints: 5, speed: 7.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
+      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'R', basePoints: 5, speed: 7.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
+      sgadan: { id: 'sgadan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'MID_DEPTH', direction: 'L', basePoints: 6, speed: 7.5, size: 220, spawnWeight: 4, isWavy: true, isValid: true },
+      leobag: { id: 'leobag', svg: './svgs/game-3/game-3-fish/leòbag-L.svg', zone: 'MID_DEPTH', direction: 'L', basePoints: 7, speed: 6.0, size: 240, spawnWeight: 3, isValid: true },
+      breac_geal: { id: 'breac_geal', svg: './svgs/game-3/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'R', basePoints: 8, speed: 7.5, size: 270, spawnWeight: 3, isValid: true },
+      iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3/game-3-fish/sgeit.svg', zone: 'MID_DEPTH', direction: 'EITHER', basePoints: 10, speed: 7.5, size: 280, spawnWeight: 3, isValid: true },
+      breac_garbh: { id: 'breac_garbh', svg: './svgs/game-3/game-3-fish/breac-garbh-R.svg', zone: 'MID_DEPTH', direction: 'R', basePoints: 12, speed: 7.0, size: 300, spawnWeight: 2, isValid: true },
 
       // DEEP ZONE (120-180s) - Large predators but not too easy to catch
-      trosg: { id: 'trosg', svg: './svgs/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'R', basePoints: 50, speed: 8.5, size: 220, spawnWeight: 4, isValid: true },
-      cat_mara: { id: 'cat_mara', svg: './svgs/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'R', basePoints: 55, speed: 9.0, size: 230, spawnWeight: 3, isValid: true },
-      manach: { id: 'manach', svg: './svgs/game-3-fish/manach-R.svg', zone: 'DEEP', direction: 'R', basePoints: 65, speed: 8.0, size: 250, spawnWeight: 3, isValid: true },
-      muc_mara: { id: 'muc_mara', svg: './svgs/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'R', basePoints: 75, speed: 7.5, size: 280, spawnWeight: 2, isValid: true },
-      tuna: { id: 'tuna', svg: './svgs/game-3-fish/tuna-L.svg', zone: 'DEEP', direction: 'L', basePoints: 100, speed: 10.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 150 }
+      trosg: { id: 'trosg', svg: './svgs/game-3/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'R', basePoints: 15, speed: 8.5, size: 220, spawnWeight: 4, isValid: true },
+      cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'R', basePoints: 18, speed: 9.0, size: 230, spawnWeight: 3, isValid: true },
+      manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'R', basePoints: 22, speed: 8.0, size: 250, spawnWeight: 3, isValid: true },
+      muc_mara: { id: 'muc_mara', svg: './svgs/game-3/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'R', basePoints: 28, speed: 7.5, size: 280, spawnWeight: 2, isValid: true },
+      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'L', basePoints: 50, speed: 10.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 150 }
     };
   }
 
@@ -2368,7 +2844,7 @@ class Game3FishingGame {
   }
 
   updateOrderDisplay() {
-    // Display fish image and name in centered card format
+    // Display fish image and name in centred card format
     const targetFishDisplay = document.getElementById('target-fish-display');
 
     if (!targetFishDisplay) return;
@@ -2378,10 +2854,8 @@ class Game3FishingGame {
     const fishName = this.fishNames[fishId];
 
     targetFishDisplay.innerHTML = `
-      <div class="target-fish-card">
-        <img src="${fishData.svg}" alt="${fishName}" class="target-fish-image" />
-        <div class="target-fish-name">${fishName}</div>
-      </div>
+      <img src="${fishData.svg}" alt="${fishName}" class="target-fish-image" />
+      <div class="target-fish-name">${fishName}</div>
     `;
   }
 
@@ -2463,48 +2937,63 @@ class Game3FishingGame {
     else if (zone === 'DEEP') this.maxFish = 3;     // Large (320-500px) + some MID_DEPTH
   }
 
+  // ===== DEPTH ZONE TRANSITIONS =====
+  // As the game progresses, you "descend" deeper into the ocean
+  // SHALLOW (0-45s) → MID_DEPTH (45-90s) → DEEP (90-135s)
+  // Each zone has different fish species and difficulty
+  // Transitions are animated to feel natural rather than jarring
   transitionZone(newZone) {
     const canvas = document.getElementById('game3-canvas');
     if (!canvas) return;
 
-    // Animate existing fish out of the scene
+    // First, make all the old fish swim away
+    // They escape upward (towards shallower water) - looks natural
     this.animateFishExitForZoneChange(this.currentDepth, newZone);
 
-    // Set flag to spawn new zone fish from bottom
+    // Set flags for transition state
+    // This makes new fish spawn from the bottom instead of sides
     this.isZoneTransitioning = true;
     this.transitionFishCount = 0;
 
+    // Brief dim effect during transition for visual feedback
     canvas.style.opacity = '0.5';
     setTimeout(() => {
+      // Actually change the zone
       this.updateZone(newZone);
-      // HCI: Force new order on zone change to prevent impossible orders
-      this.generateNewOrder();
-      canvas.style.opacity = '1';
 
-      // Reset transition flag after first 3 fish spawn
+      // IMPORTANT: Change the fish order immediately
+      // Otherwise Ruairidh might be asking for a fish that doesn't exist in this zone!
+      this.generateNewOrder();
+
+      canvas.style.opacity = '1';  // Restore brightness
+
+      // After a couple seconds, go back to normal spawning behaviour
       setTimeout(() => {
         this.isZoneTransitioning = false;
       }, 2000);
     }, 200);
   }
 
-  // Animate fish swimming away during zone transitions
+  // Makes old fish swim away during zone change
+  // They head upwards to "escape" to shallower water
+  // This looks way more natural than just deleteing them instantly
   animateFishExitForZoneChange(oldZone, newZone) {
-    // Make fish from the old zone swim upward (escaping to shallower water)
     this.activeFish.forEach((fish) => {
+      // Only affect fish from the zone we're leaving
       if (fish.data.zone === oldZone && !fish.caught) {
-        // Animate fish swimming upward rapidly
         fish.isExiting = true;
-        fish.exitSpeed = -8; // Negative = upward
+        fish.exitSpeed = -8;  // Negative Y = upward movement
 
-        // Visual indication - slight fade
+        // Fade them out gradually as they leave
         fish.element.style.transition = 'opacity 1s ease-out';
         fish.element.style.opacity = '0.4';
       }
     });
   }
 
-  // Zone transition warning with countdown in Scottish Gaelic
+  // ===== ZONE TRANSITION WARNING =====
+  // Shows a 5-second countdown before zone changes
+  // Gives player time to prepare for new fish types
   showZoneWarning(nextZone, countdownSeconds) {
     const canvas = document.getElementById('game3-canvas');
     if (!canvas) return;
@@ -2603,7 +3092,7 @@ class Game3FishingGame {
       }
     }
 
-    // Shoaling behavior: Spawn shrimp in groups
+    // Shoaling behaviour: Spawn shrimp in groups
     if (selectedFish.isShoaling) {
       const shoalSize = 3 + Math.floor(Math.random() * 3); // 3-5 shrimp
       for (let i = 0; i < shoalSize; i++) {
@@ -2720,7 +3209,7 @@ class Game3FishingGame {
           this.transitionFishCount < 4 &&
           (fishData.zone === 'MID_DEPTH' || fishData.zone === 'DEEP')) {
 
-        // Spawn from bottom center area, swimming upward initially
+        // Spawn from bottom centre area, swimming upward initially
         fish.style.left = `${canvasRect.width * 0.3 + Math.random() * (canvasRect.width * 0.4)}px`;
         verticalPos = canvasRect.height + 100; // Start below screen
 
@@ -2797,7 +3286,7 @@ class Game3FishingGame {
       wavyOffset: Math.random() * Math.PI * 2, // Random start phase
       direction: dir,
       baseScale: 1.0,
-      // Crab-specific timid behavior
+      // Crab-specific timid behaviour
       crabPhase: Math.random() * Math.PI * 2, // Random start phase for side-to-side
       crabTimer: 0,
       crabPauseTime: 0, // Track pause duration
@@ -3147,38 +3636,38 @@ class Game3FishingGame {
   }
 
   handleCorrectCatch(fishObj) {
-    this.comboStreak++;
     this.correctCatches++;
-    if (this.comboStreak > this.maxCombo) {
-      this.maxCombo = this.comboStreak;
-    }
 
-    const multiplier = this.getMultiplier(this.comboStreak);
-    const pointsEarned = Math.floor(fishObj.data.basePoints * multiplier);
+    // Award base points only (no multipliers)
+    const pointsEarned = fishObj.data.basePoints;
     this.points += pointsEarned;
     this.controller.totalPoints += pointsEarned;
     this.controller.updatePointsDisplayOnly();
 
-    this.updateComboDisplay();
-    // HCI: Pass multiplier to show in animation
-    this.animateCorrectCatch(fishObj, pointsEarned, multiplier);
+    // Track consecutive correct catches
+    this.correctStreakCount++;
+
+    // Only show encouragement message after 5 in a row
+    if (this.correctStreakCount >= 5) {
+      this.showEncouragementMessage();
+      this.correctStreakCount = 0;  // Reset streak after showing message
+    }
+
+    this.animateCorrectCatch(fishObj, pointsEarned);
 
     // Immediately change order after successful catch
     this.generateNewOrder();
-
-    if (this.comboStreak % 5 === 0) {
-      this.celebrateMilestone();
-    }
   }
 
   handleWrongCatch(fishObj) {
-    this.comboStreak = 0;
     const penalty = Math.abs(fishObj.data.basePoints);
     this.points = Math.max(0, this.points - penalty);
     this.controller.totalPoints = Math.max(0, this.controller.totalPoints - penalty);
     this.controller.updatePointsDisplayOnly();
 
-    this.updateComboDisplay();
+    // Reset streak counter on wrong catch
+    this.correctStreakCount = 0;
+
     this.animateWrongCatch(fishObj, penalty);
 
     // Special squid ink effect when clicking wrong squid
@@ -3251,35 +3740,53 @@ class Game3FishingGame {
   }
 
   handleGarbageCatch(fishObj) {
-    // Garbage always gives 1 point, doesn't affect combo
+    // Garbage always gives 1 point, but resets the streak
     const pointsEarned = 1;
     this.points += pointsEarned;
     this.controller.totalPoints += pointsEarned;
     this.controller.updatePointsDisplayOnly();
 
+    // Reset streak counter when catching garbage
+    this.correctStreakCount = 0;
+
     // Animate garbage catch with green points
     this.animateGarbageCatch(fishObj, pointsEarned);
   }
 
+  // ===== REMOVED: COMBO MULTIPLIER SYSTEM =====
+  // Multiplier system removed - now using base points only with encouragement messages
+  // Previous system caused score imbalance and was confusing for students
+  /*
   getMultiplier(combo) {
-    if (combo <= 1) return 1.0;
-    if (combo <= 3) return 1.5;
-    if (combo <= 6) return 2.0;
-    if (combo <= 10) return 3.0;
-    if (combo <= 15) return 4.0;
-    return 5.0;
+    if (combo <= 2) return 1.0;
+    if (combo <= 5) return 1.1;
+    if (combo <= 10) return 1.15;
+    return 1.2;
   }
+  */
 
-  updateComboDisplay() {
-    const comboDisplay = document.getElementById('game3-combo-display');
-    if (comboDisplay) {
-      if (this.comboStreak > 0) {
-        comboDisplay.textContent = `Combo: ${this.comboStreak}`;
-        comboDisplay.style.opacity = '1';
-      } else {
-        comboDisplay.style.opacity = '0';
-      }
-    }
+  // Show rotating encouragement messages when catching correct fish
+  // Creates a centre-screen popup that appears and fades out
+  showEncouragementMessage() {
+    const canvas = document.getElementById('game3-canvas');
+    if (!canvas) return;
+
+    // Get the next message in rotation
+    const message = this.encouragementMessages[this.currentMessageIndex];
+
+    // Create a new popup element (reuses the milestone-flash CSS styling)
+    const flash = document.createElement('div');
+    flash.className = 'milestone-flash';
+    flash.textContent = message;
+
+    // Add it to the canvas so it appears centre-screen
+    canvas.appendChild(flash);
+
+    // Move to next message for next time
+    this.currentMessageIndex = (this.currentMessageIndex + 1) % this.encouragementMessages.length;
+
+    // Remove the popup after 1.5 seconds
+    setTimeout(() => flash.remove(), 1500);
   }
 
   updateBackgroundDimming() {
@@ -3303,21 +3810,16 @@ class Game3FishingGame {
     }
   }
 
-  animateCorrectCatch(fishObj, points, multiplier = 1.0) {
+  animateCorrectCatch(fishObj, points) {
     const fish = fishObj.element;
 
     fish.style.transition = 'transform 0.1s ease';
     fish.style.transform = 'scale(1.4)';
 
-    // HCI: Show points text with multiplier
+    // HCI: Show points text
     const pointsText = document.createElement('div');
     pointsText.className = 'points-text';
-    // Show multiplier if > 1.0
-    if (multiplier > 1.0) {
-      pointsText.textContent = `+${points} (${multiplier.toFixed(1)}x)`;
-    } else {
-      pointsText.textContent = `+${points}`;
-    }
+    pointsText.textContent = `+${points}`;
     pointsText.style.left = fish.style.left;
     pointsText.style.top = fish.style.top;
     document.getElementById('game3-canvas').appendChild(pointsText);
@@ -3405,34 +3907,38 @@ class Game3FishingGame {
     }, 100);
   }
 
+  // ===== REMOVED: MILESTONE CELEBRATION =====
+  // Milestone bonus system removed in favour of simple encouragement messages
+  // Previous system created score imbalance across games
+  /*
   celebrateMilestone() {
-    // HCI: Restore milestone celebration with visual flash and bonus points
     const milestone = this.comboStreak;
-    const bonusPoints = milestone * 100; // 5 combo = 500, 10 = 1000, etc.
-
+    const bonusPoints = milestone * 100;
     this.points += bonusPoints;
     this.controller.totalPoints += bonusPoints;
     this.controller.updatePointsDisplayOnly();
-
-    // Visual: Flash screen with gold overlay
+    this.controller.playPointSound();
     const canvas = document.getElementById('game3-canvas');
     if (!canvas) return;
-
     const flash = document.createElement('div');
     flash.className = 'milestone-flash';
     flash.textContent = `🎉 ${milestone} COMBO! +${bonusPoints} BONUS`;
     canvas.appendChild(flash);
-
     setTimeout(() => flash.remove(), 2000);
   }
+  */
 
-  // Bubble system for underwater realism
+  // ===== UNDERWATER BUBBLE EFFECTS =====
+  // Decorative bubbles float up to make the scene feel more alive
+  // Frequency and size adjust based on depth for realism
+
   spawnBubblesIfNeeded(timestamp) {
-    // Adjust bubble frequency based on depth
+    // Deeper water = more bubbles (bit counterintuitive but looks better)
     let frequency = this.bubbleInterval;
     if (this.currentDepth === 'MID_DEPTH') frequency = 400;
-    else if (this.currentDepth === 'DEEP') frequency = 350; // More bubbles in deep for movement
+    else if (this.currentDepth === 'DEEP') frequency = 350;
 
+    // Check if it's time to spawn another bubble
     if (timestamp - this.lastBubbleSpawn >= frequency) {
       this.spawnBubble();
       this.lastBubbleSpawn = timestamp;
@@ -3445,14 +3951,15 @@ class Game3FishingGame {
 
     const canvasRect = canvas.getBoundingClientRect();
 
+    // Create bubble element
     const bubble = document.createElement('div');
     bubble.className = 'underwater-bubble';
 
-    // Random horizontal position
+    // Random starting position (horizontal across screen, bottom edge)
     const x = Math.random() * canvasRect.width;
-    const y = canvasRect.height + 20; // Start below screen
+    const y = canvasRect.height + 20;  // Start just below visible area
 
-    // Random size (smaller at deeper depths for realism)
+    // Bubble size - smaller in deeper water (less air pressure or somthing)
     let size = 8 + Math.random() * 12;
     if (this.currentDepth === 'MID_DEPTH') size *= 0.8;
     else if (this.currentDepth === 'DEEP') size *= 0.6;
@@ -3608,7 +4115,7 @@ class SmartHelpSystem {
         <div class="help-modal-header">
           <button class="modal-close" onclick="gameController.helpSystem.close()" aria-label="Close help">✕</button>
           <h2 class="help-modal-title" id="help-modal-title">
-            <span class="help-modal-title-icon"><img src="./svgs/lobster.svg" alt="" style="width: 40px; height: 40px;"></span>
+            <span class="help-modal-title-icon"><img src="./svgs/game-1/lobster.svg" alt="" style="width: 40px; height: 40px;"></span>
             <span>How to Play: Catch the Lobster</span>
           </h2>
           ${this.generateTabs()}
@@ -3622,10 +4129,10 @@ class SmartHelpSystem {
 
   generateTabs() {
     const tabs = [
-      { id: 'quickstart', icon: './svgs/lobster.svg', label: 'Quick Start', badge: this.playerContext.isFirstTime },
-      { id: 'rules', icon: './svgs/rock-wall.svg', label: 'Rules' },
-      { id: 'howto', icon: './svgs/cairn.svg', label: 'How to Play' },
-      { id: 'troubleshoot', icon: './svgs/clock.svg', label: 'Help' }
+      { id: 'quickstart', icon: './svgs/game-1/lobster.svg', label: 'Quick Start', badge: this.playerContext.isFirstTime },
+      { id: 'rules', icon: './svgs/game-1/rock-wall.svg', label: 'Rules' },
+      { id: 'howto', icon: './svgs/all-games/cairn.svg', label: 'How to Play' },
+      { id: 'troubleshoot', icon: './svgs/all-games/clock.svg', label: 'Help' }
     ];
 
     return `
@@ -3672,7 +4179,7 @@ class SmartHelpSystem {
       content += `
         <div class="context-suggestion">
           <div class="context-suggestion-title">
-            <span class="context-suggestion-icon"><img src="./svgs/lobster.svg" alt="" style="width: 24px; height: 24px;"></span>
+            <span class="context-suggestion-icon"><img src="./svgs/game-1/lobster.svg" alt="" style="width: 24px; height: 24px;"></span>
             <span>Welcome!</span>
           </div>
           <div class="context-suggestion-content">
@@ -3684,7 +4191,7 @@ class SmartHelpSystem {
       content += `
         <div class="context-suggestion">
           <div class="context-suggestion-title">
-            <span class="context-suggestion-icon"><img src="./svgs/rock-wall.svg" alt="" style="width: 24px; height: 24px;"></span>
+            <span class="context-suggestion-icon"><img src="./svgs/game-1/rock-wall.svg" alt="" style="width: 24px; height: 24px;"></span>
             <span>Having Trouble?</span>
           </div>
           <div class="context-suggestion-content">
@@ -3697,17 +4204,17 @@ class SmartHelpSystem {
     content += `
       <div class="help-section">
         <h3 class="help-section-title">
-          <span class="help-section-icon"><img src="./svgs/lobster.svg" alt=""></span>
+          <span class="help-section-icon"><img src="./svgs/game-1/lobster.svg" alt=""></span>
           <span>Game Goal</span>
         </h3>
         <div class="help-section-content">
-          <p><strong>Catch as many lobsters as you can in 5 minutes!</strong> Each lobster you catch gives you 1 point.</p>
+          <p><strong>Catch as many lobsters as you can in 4 minutes!</strong> Each lobster you catch gives you 1 point.</p>
         </div>
       </div>
 
       <div class="help-section">
         <h3 class="help-section-title">
-          <span class="help-section-icon"><img src="./svgs/rock-wall.svg" alt=""></span>
+          <span class="help-section-icon"><img src="./svgs/game-1/rock-wall.svg" alt=""></span>
           <span>How to Play</span>
         </h3>
         <ol class="help-steps">
@@ -3739,7 +4246,7 @@ class SmartHelpSystem {
       </div>
 
       <div class="help-tip">
-        <span class="help-tip-icon"><img src="./svgs/cairn.svg" alt="" style="width: 20px; height: 20px;"></span>
+        <span class="help-tip-icon"><img src="./svgs/all-games/cairn.svg" alt="" style="width: 20px; height: 20px;"></span>
         <p class="help-tip-content"><strong>Tip:</strong> Start placing rocks far away from the lobster, then slowly close in.</p>
       </div>
     `;
@@ -3751,11 +4258,11 @@ class SmartHelpSystem {
     return `
       <div class="help-section">
         <h3 class="help-section-title">
-          <span class="help-section-icon"><img src="./svgs/clock.svg" alt=""></span>
+          <span class="help-section-icon"><img src="./svgs/all-games/clock.svg" alt=""></span>
           <span>Time Limit</span>
         </h3>
         <div class="help-section-content">
-          <p>You have <strong>5 minutes</strong> to catch as many lobsters as you can.</p>
+          <p>You have <strong>4 minutes</strong> to catch as many lobsters as you can.</p>
           <p>The timer at the top changes color:</p>
           <ul>
             <li><strong style="color: white; background: #666; padding: 2px 8px; border-radius: 4px;">White</strong> - Lots of time left</li>
@@ -3768,7 +4275,7 @@ class SmartHelpSystem {
 
       <div class="help-section">
         <h3 class="help-section-title">
-          <span class="help-section-icon"><img src="./svgs/rock-wall.svg" alt=""></span>
+          <span class="help-section-icon"><img src="./svgs/game-1/rock-wall.svg" alt=""></span>
           <span>Placing Rocks</span>
         </h3>
         <div class="help-section-content">
@@ -3786,7 +4293,7 @@ class SmartHelpSystem {
 
       <div class="help-section">
         <h3 class="help-section-title">
-          <span class="help-section-icon"><img src="./svgs/lobster.svg" alt=""></span>
+          <span class="help-section-icon"><img src="./svgs/game-1/lobster.svg" alt=""></span>
           <span>How the Lobster Moves</span>
         </h3>
         <div class="help-section-content">
@@ -3802,19 +4309,19 @@ class SmartHelpSystem {
 
       <div class="help-section">
         <h3 class="help-section-title">
-          <span class="help-section-icon"><img src="./svgs/cairn.svg" alt=""></span>
+          <span class="help-section-icon"><img src="./svgs/all-games/cairn.svg" alt=""></span>
           <span>Winning & Scoring</span>
         </h3>
         <div class="help-section-content">
           <p><strong>Catching:</strong> Block all paths to the edge and you catch it!</p>
           <p><strong>Escaping:</strong> If the lobster reaches the edge, it escapes and a new one appears.</p>
           <p><strong>Points:</strong> Each lobster caught = 1 point (1 stone in your cairn)</p>
-          <p><strong>Your score:</strong> How many lobsters you caught in 5 minutes</p>
+          <p><strong>Your score:</strong> How many lobsters you caught in 4 minutes</p>
         </div>
       </div>
 
       <div class="help-tip">
-        <span class="help-tip-icon"><img src="./svgs/rock-wall.svg" alt="" style="width: 20px; height: 20px;"></span>
+        <span class="help-tip-icon"><img src="./svgs/game-1/rock-wall.svg" alt="" style="width: 20px; height: 20px;"></span>
         <p class="help-tip-content"><strong>Remember:</strong> Make sure there are no gaps! The lobster will find any opening.</p>
       </div>
     `;
@@ -3824,7 +4331,7 @@ class SmartHelpSystem {
     return `
       <div class="help-section">
         <h3 class="help-section-title">
-          <span class="help-section-icon"><img src="./svgs/rock-wall.svg" alt=""></span>
+          <span class="help-section-icon"><img src="./svgs/game-1/rock-wall.svg" alt=""></span>
           <span>Controls</span>
         </h3>
         <div class="help-section-content">
@@ -3844,7 +4351,7 @@ class SmartHelpSystem {
       </div>
 
       <div class="help-demo">
-        <div class="help-demo-title"><img src="./svgs/lobster.svg" alt="" style="width: 24px; height: 24px; vertical-align: middle;"> Try It! Click to Place Rocks</div>
+        <div class="help-demo-title"><img src="./svgs/game-1/lobster.svg" alt="" style="width: 24px; height: 24px; vertical-align: middle;"> Try It! Click to Place Rocks</div>
         <div class="help-demo-content">
           <p><strong>Practice here!</strong> Click on the yellow hexagons to place rocks:</p>
           <div id="rock-placement-demo" class="help-demo-grid"></div>
@@ -3856,7 +4363,7 @@ class SmartHelpSystem {
 
       <div class="help-section">
         <h3 class="help-section-title">
-          <span class="help-section-icon"><img src="./svgs/cairn.svg" alt=""></span>
+          <span class="help-section-icon"><img src="./svgs/all-games/cairn.svg" alt=""></span>
           <span>Your First Catch</span>
         </h3>
         <ol class="help-steps">
@@ -3915,7 +4422,7 @@ class SmartHelpSystem {
         </div>
         <div class="strategy-card-content">
           <p>Build three walls in a U-shape, then close the fourth side. This is efficient because you only need to block 3 directions before finishing the trap.</p>
-          <p><strong>Pro tip:</strong> Position the opening of the U toward the CENTER of the board, not toward an edge!</p>
+          <p><strong>Pro tip:</strong> Position the opening of the U toward the CENTRE of the board, not toward an edge!</p>
         </div>
       </div>
 
@@ -3955,7 +4462,7 @@ class SmartHelpSystem {
 
       <div class="help-tip">
         <span class="help-tip-icon">🏆</span>
-        <p class="help-tip-content"><strong>Expert Challenge:</strong> Can you catch 10 lobsters in 5 minutes? That's averaging one every 30 seconds - it requires both speed and smart trap placement!</p>
+        <p class="help-tip-content"><strong>Expert Challenge:</strong> Can you catch 10 lobsters in 4 minutes? That's averaging one every 24 seconds - it requires both speed and smart trap placement!</p>
       </div>
     `;
   }
@@ -4043,7 +4550,7 @@ class SmartHelpSystem {
       </div>
 
       <div class="help-tip">
-        <span class="help-tip-icon"><img src="./svgs/lobster.svg" alt="" style="width: 20px; height: 20px;"></span>
+        <span class="help-tip-icon"><img src="./svgs/game-1/lobster.svg" alt="" style="width: 20px; height: 20px;"></span>
         <p class="help-tip-content">The lobster sometimes says things like "haoi," "duda?," or "mach às mo rathad" - these are just fun Scottish Gaelic phrases!</p>
       </div>
     `;
@@ -4173,7 +4680,7 @@ class SmartHelpSystem {
     const hexSize = 25;
     const hexWidth = hexSize * 2;
     const hexHeight = hexSize * Math.sqrt(3);
-    const lobsterPos = { x: 2, y: 2 }; // Center position
+    const lobsterPos = { x: 2, y: 2 }; // Centre position
 
     let svg = '';
 
@@ -4197,7 +4704,7 @@ class SmartHelpSystem {
               stroke-width="2"
               class="demo-hex-bg"
             />
-            ${isLobster ? `<image href="./svgs/lobster.svg" x="${x - hexSize}" y="${y - hexSize}" width="${hexSize * 2}" height="${hexSize * 2}" />` : ''}
+            ${isLobster ? `<image href="./svgs/game-1/lobster.svg" x="${x - hexSize}" y="${y - hexSize}" width="${hexSize * 2}" height="${hexSize * 2}" />` : ''}
           </g>
         `;
       }
@@ -4235,7 +4742,7 @@ class SmartHelpSystem {
         // Visual feedback - add rock image
         const polygon = tile.querySelector('.demo-hex-bg');
         const rock = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        rock.setAttribute('href', './svgs/rock-wall.svg');
+        rock.setAttribute('href', './svgs/game-1/rock-wall.svg');
         const bounds = polygon.getBBox();
         rock.setAttribute('x', bounds.x);
         rock.setAttribute('y', bounds.y);

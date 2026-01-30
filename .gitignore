@@ -1,3 +1,7 @@
+.DS_Store
+.vscode/
+backup-copy-1/
+
 # Logs
 logs
 *.log

@@ -22,7 +22,7 @@
 
 /* Page background + base typography */
 /* Creates a radial gradient background (blue to dark blue) that covers full viewport */
-/* Flexbox centering ensures all child elements are centered on the page */
+/* Flexbox centring ensures all child elements are centred on the page */
 body {
   margin: 0;
   padding: 0;
@@ -101,7 +101,7 @@ body {
    ====================================== */
 
 
-/* Login screen container - Duolingo-inspired clean UI */
+/* Login screen container */
 /* White background with shadow creates depth; responsive width (90% on mobile, max 500px) */
 .login-screen {
   background: white;
@@ -276,7 +276,7 @@ body {
    ====================================== */
 
 
-/* Wrapper for intro screen - provides centering without visual artifacts */
+/* Wrapper for intro screen - provides centring without visual artifacts */
 .intro-screen-wrapper {
   flex: 1;
   display: flex;
@@ -554,7 +554,7 @@ body {
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: url('./svgs/clam-beach.svg') center/cover no-repeat;
+  background: url('./svgs/game-1/game-1-background.svg') center/cover no-repeat;
   color: white;
   background-attachment: fixed;
   padding: 0;
@@ -672,7 +672,7 @@ body {
 
 /* Main game board container - flex grows to fill available space */
 /* Overflow auto allows scrolling if board larger than viewport */
-/* Visual hierarchy: Subtle vignette draws focus to center */
+/* Visual hierarchy: Subtle vignette draws focus to centre */
 .game1-board {
   flex: 1;
   display: flex;
@@ -685,7 +685,7 @@ body {
   position: relative;
 }
 
-/* Subtle vignette effect to focus attention on game board center */
+/* Subtle vignette effect to focus attention on game board centre */
 .game1-board::after {
   content: '';
   position: absolute;
@@ -720,7 +720,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: url('./svgs/rock-wall.svg') center/cover no-repeat;
+  background: url('./svgs/game-1/rock-wall.svg') center/cover no-repeat;
   opacity: 0.4;
   pointer-events: none;
   z-index: 10;
@@ -1421,7 +1421,7 @@ body {
 }
 
 
-/* Modal heading - blue color matching game theme */
+/* Modal heading - blue colour matching game theme */
 .help-modal-content h2 {
   color: #1f4bff;
   font-size: 2rem;
@@ -1596,7 +1596,7 @@ body {
 }
 
 
-/* Banner center section - holds game title */
+/* Banner centre section - holds game title */
 .banner-title-container {
   display: flex;
   align-items: center;
@@ -1681,7 +1681,7 @@ body {
 }
 
 
-/* Timer display number - color changes based on time remaining */
+/* Timer display number - colour changes based on time remaining */
 #timer-display {
   color: white;
   font-size: clamp(1.2rem, 3vw, 1.8rem);
@@ -1726,7 +1726,7 @@ body {
 }
 
 
-/* Points counter number - orange color, responsive sizing */
+/* Points counter number - orange colour, responsive sizing */
 #points-counter {
   color: #ffb347;
   font-size: clamp(1.2rem, 3vw, 1.8rem);
@@ -1871,7 +1871,7 @@ body {
   background: linear-gradient(135deg, #ffb347, #ff7b22);
   color: #2b1300;
   border: 3px solid rgba(255, 244, 214, 0.9);
-  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+  font-size: clamp(1.5rem, 4vw, 2rem);
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
@@ -1896,6 +1896,55 @@ body {
 
 .ruairidh-pause-button.glowing {
   animation: help-button-glow 1.5s ease-in-out infinite;
+}
+
+/* Disabled pause button - clear visual feedback */
+.ruairidh-pause-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #999, #666);
+  border-color: rgba(150, 150, 150, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ruairidh-pause-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure SVG icons in pause button are properly sized and centred */
+.ruairidh-pause-button svg {
+  display: block;
+  width: clamp(20px, 4vw, 28px);
+  height: clamp(20px, 4vw, 28px);
+  pointer-events: none;
+}
+
+
+/* Layout tutorial step 3 - Beach background with very dark overlay */
+.layout-step3-beach-bg {
+  background: url('./svgs/game-1/game-1-background.svg') center/cover no-repeat;
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* Very dark overlay for beach background */
+.layout-step3-beach-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content appears above overlay */
+.layout-step3-beach-bg > * {
+  position: relative;
+  z-index: 1;
 }
 
 
@@ -2224,20 +2273,64 @@ svg.hexagon-grid {
 
 
 .game1-tutorial-text-section {
-  flex: 0 0 auto;
-  min-width: 0;
-  max-width: 700px;
-  width: 100%;
+  flex: 0 1 auto;
+  min-width: 280px;
+  max-width: min(700px, 45vw);
+  width: auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   background: white;
   border-radius: 20px;
-  padding: 2rem;
+  padding: clamp(1rem, 3vw, 2rem);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   overflow: visible;
   box-sizing: border-box;
+}
+
+/* Remove redundant white background from Ruairidh box in Game 1 tutorials */
+.game1-tutorial-text-section .ruairidh-intro-screen {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  max-width: 100%;
+  width: 100%;
+  overflow: visible;
+}
+
+/* Ensure Ruairidh content fills available width */
+.game1-tutorial-text-section .ruairidh-container {
+  width: 100%;
+  align-items: center;
+}
+
+.game1-tutorial-text-section .speech-bubble {
+  width: 100%;
+  max-width: 100%;
+}
+
+.game1-tutorial-text-section .arrow-buttons {
+  width: 100%;
+}
+
+/* Make seal icon responsive in Game 1 tutorials to prevent overflow */
+.game1-tutorial-text-section .seal-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 150px;
+  margin: 0 auto;
+}
+
+.game1-tutorial-text-section .seal-icon {
+  width: 100%;
+  height: auto;
+  max-width: 150px;
+  max-height: 150px;
+  object-fit: contain;
 }
 
 
@@ -2283,11 +2376,31 @@ svg.hexagon-grid {
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: url('./svgs/clam-beach.svg') center/cover no-repeat;
+  background: url('./svgs/game-1/game-1-background.svg') center/cover no-repeat;
   color: white;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative;
+}
+
+/* Dark overlay for Game 2 Ready Screen beach background */
+.game2-ready-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content appears above overlay */
+.game2-ready-screen > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Allow scrolling in game2-ready-screen content wrapper */
@@ -2309,7 +2422,7 @@ svg.hexagon-grid {
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: url('./svgs/underwater.svg') center/cover no-repeat;
+  background: url('./svgs/game-2/game-2-background.svg') center/cover no-repeat;
   color: white;
   overflow: hidden;
   position: relative;
@@ -2367,32 +2480,36 @@ svg.hexagon-grid {
   flex: 0 0 auto;
   min-width: 0;
   max-width: 400px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: url('./svgs/wooden-table.svg') center/cover no-repeat;
+  background: url('./svgs/game-2/wooden-table.svg') center/cover no-repeat;
   border-radius: 24px;
-  padding: 2.5rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+  box-sizing: border-box;
 }
 
 
 .tutorial-card-grid {
   display: flex;
-  gap: 2rem;
+  gap: clamp(1rem, 3vw, 2rem);
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .tutorial-card {
   position: relative;
-  width: 110px;
-  height: 110px;
+  width: clamp(80px, 15vw, 110px);
+  height: clamp(80px, 15vw, 110px);
   aspect-ratio: 1 / 1;
   perspective: 1000px;
-  border-radius: 12px;
+  border-radius: clamp(8px, 1.5vw, 12px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
   transition: transform 0.3s ease;
+  flex-shrink: 0;
 }
 
 .tutorial-card:hover {
@@ -2439,7 +2556,7 @@ svg.hexagon-grid {
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: url('./svgs/underwater.svg') center/cover no-repeat !important;
+  background: url('./svgs/game-2/game-2-background.svg') center/cover no-repeat !important;
   overflow: hidden;
   position: relative;
 }
@@ -2514,12 +2631,14 @@ svg.hexagon-grid {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  width: 90%;
-  max-width: min(90vw, 950px);
-  max-height: min(70vh, 650px);
+  width: clamp(300px, 90vw, 950px);
+  height: auto;
+  aspect-ratio: 4 / 3;
+  max-width: 90vw;
+  max-height: 70vh;
   box-sizing: border-box;
-  padding: clamp(2rem, 4vw, 3.5rem);
-  background: url('./svgs/wooden-table.svg') center/cover no-repeat;
+  padding: clamp(1.5rem, 3vw, 3rem);
+  background: url('./svgs/game-2/wooden-table.svg') center/cover no-repeat;
   border-radius: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   position: relative;
@@ -2538,20 +2657,31 @@ svg.hexagon-grid {
 .card-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(0.8rem, 1.5vw, 1.2rem);
-  max-width: 100%;
+  grid-template-rows: repeat(3, 1fr);
+  gap: clamp(0.6rem, 1.2vw, 1rem);
   width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   padding: 0;
+  box-sizing: border-box;
+  /* Use aspect-ratio to maintain proper proportions for 4x3 grid */
+  aspect-ratio: 4 / 3;
+  /* Fit within available space */
+  align-self: center;
+  justify-self: center;
 }
 
 
 .card {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   cursor: pointer;
   perspective: 1000px;
-  border-radius: 8px;
+  border-radius: clamp(6px, 1vw, 12px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.2);
   /* No transform animations - keeps cards stable and responsive */
 }
@@ -2594,8 +2724,8 @@ svg.hexagon-grid {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  padding: 1rem;
+  border-radius: clamp(6px, 1vw, 12px);
+  padding: clamp(0.5rem, 1.5vw, 1rem);
   box-sizing: border-box;
   -webkit-backface-visibility: hidden;
 }
@@ -2623,7 +2753,7 @@ svg.hexagon-grid {
 /* Card BACK (the image + label - shown when flipped) - aged paper look */
 .card-front {
   background: linear-gradient(135deg, #f5f1e8 0%, #e8e0d0 100%);
-  border: 3px solid #8b7355;
+  border: clamp(2px, 0.4vw, 3px) solid #8b7355;
   border-style: solid;
   transform: rotateY(180deg);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -2656,7 +2786,7 @@ svg.hexagon-grid {
     );
   opacity: 0.4;
   pointer-events: none;
-  border-radius: 8px;
+  border-radius: clamp(6px, 1vw, 12px);
 }
 
 
@@ -2664,7 +2794,7 @@ svg.hexagon-grid {
   width: 75%;
   height: 60%;
   object-fit: contain;
-  margin-bottom: 0.5rem;
+  margin-bottom: clamp(0.25rem, 1vw, 0.5rem);
   flex-shrink: 0;
   filter: sepia(0.1) saturate(0.95) contrast(0.95) brightness(0.98);
   opacity: 0.92;
@@ -2801,7 +2931,7 @@ svg.hexagon-grid {
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: url('./svgs/game 3 background.svg') center center / cover no-repeat;
+  background: url('./svgs/game-3/game-3-background.svg') center center / cover no-repeat;
   align-items: center;
   justify-content: center;
   overflow: hidden;
@@ -2817,7 +2947,7 @@ svg.hexagon-grid {
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: url('./svgs/game 3 background.svg') center center / cover no-repeat;
+  background: url('./svgs/game-3/game-3-background.svg') center center / cover no-repeat;
   overflow: hidden;
   position: relative;
 }
@@ -3168,152 +3298,87 @@ svg.hexagon-grid {
   }
 }
 
-/* Pause Button for Game 3 */
-.ruairidh-pause-button {
-  width: clamp(2.5rem, 5vw, 3rem);
-  height: clamp(2.5rem, 5vw, 3rem);
-  border-radius: 12px;
-  background: linear-gradient(135deg, #ffd700, #ffaa00);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  font-size: clamp(1.2rem, 3vw, 1.5rem);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-.ruairidh-pause-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-}
-
-.ruairidh-pause-button:active {
-  transform: scale(0.95);
-}
-
 /* ========================================
-   RUAIRIDH COMMAND CAPSULE (Game 3 Redesign - Centered)
+   RUAIRIDH SECTION FOR GAME 3 - Speech bubble with target fish
    ======================================== */
 
-.ruairidh-command-capsule {
-  width: 85%;
-  max-width: 500px;
-  margin: 0.4rem auto;
-  background: linear-gradient(135deg, rgba(31, 75, 255, 0.95), rgba(21, 57, 204, 0.95));
-  border-radius: 18px;
-  padding: 0.8rem 1.2rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-  border: 3px solid rgba(255, 255, 255, 0.25);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
+.game3-ruairidh-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 0.5rem auto;
+  padding: 0 1rem;
   z-index: 50;
   position: relative;
-  backdrop-filter: blur(10px);
 }
 
-/* Ruairidh avatar with thought bubble */
-.ruairidh-avatar-section {
+.game3-ruairidh-section .ruairidh-container {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  position: relative;
-}
-
-.ruairidh-avatar {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.5rem);
   justify-content: center;
-  border: 3px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  flex-wrap: nowrap;
+}
+
+.game3-ruairidh-section .seal-icon-wrapper {
   flex-shrink: 0;
-}
-
-.ruairidh-avatar .seal-icon {
-  width: 70%;
-  height: 70%;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
-}
-
-/* Thought bubble (like speech bubbles in tutorials) */
-.thinking-bubble {
+  width: clamp(80px, 18vw, 120px);
+  height: clamp(80px, 18vw, 120px);
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
   position: relative;
-  background: white;
-  border-radius: 15px;
-  padding: 0.4rem 0.8rem;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-  border: 2px solid #e0e0e0;
 }
 
-.thinking-bubble::before {
-  content: '';
+.game3-ruairidh-section .seal-icon {
+  width: 85%;
+  height: 85%;
+  object-fit: cover;
+  object-position: center 65%;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
   position: absolute;
-  left: -12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 10px 15px 10px 0;
-  border-color: transparent white transparent transparent;
-  filter: drop-shadow(-2px 0 0 #e0e0e0);
+  bottom: -1%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.thinking-dots {
-  font-size: 1.3rem;
-  font-weight: 900;
-  color: #666;
-  letter-spacing: 2px;
-  line-height: 1;
+.game3-ruairidh-section .speech-bubble {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 350px;
+  padding: clamp(0.6rem, 1.5vw, 1rem);
 }
 
-/* Target fish display - centered and large */
+/* Target fish display - inside speech bubble */
 .target-fish-display {
   width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.target-fish-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 15px;
-  padding: 0.8rem 1.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
-  min-width: 200px;
 }
 
 .target-fish-image {
-  width: 120px;
-  height: 120px;
+  width: clamp(80px, 18vw, 120px);
+  height: clamp(80px, 18vw, 120px);
   object-fit: contain;
-  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
   animation: fishBounce 2s ease-in-out infinite;
 }
 
 @keyframes fishBounce {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-8px) scale(1.05); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 .target-fish-name {
-  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
-  font-weight: 800;
-  color: white;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  color: #1565c0;
   letter-spacing: 0.3px;
   text-align: center;
+  margin: 0;
 }
 
 .target-phrase-card {

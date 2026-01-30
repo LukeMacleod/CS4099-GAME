@@ -22,7 +22,7 @@
 
 /* Page background + base typography */
 /* Creates a radial gradient background (blue to dark blue) that covers full viewport */
-/* Flexbox centering ensures all child elements are centered on the page */
+/* Flexbox centring ensures all child elements are centred on the page */
 body {
   margin: 0;
   padding: 0;
@@ -276,7 +276,7 @@ body {
    ====================================== */
 
 
-/* Wrapper for intro screen - provides centering without visual artifacts */
+/* Wrapper for intro screen - provides centring without visual artifacts */
 .intro-screen-wrapper {
   flex: 1;
   display: flex;
@@ -672,7 +672,7 @@ body {
 
 /* Main game board container - flex grows to fill available space */
 /* Overflow auto allows scrolling if board larger than viewport */
-/* Visual hierarchy: Subtle vignette draws focus to center */
+/* Visual hierarchy: Subtle vignette draws focus to centre */
 .game1-board {
   flex: 1;
   display: flex;
@@ -685,7 +685,7 @@ body {
   position: relative;
 }
 
-/* Subtle vignette effect to focus attention on game board center */
+/* Subtle vignette effect to focus attention on game board centre */
 .game1-board::after {
   content: '';
   position: absolute;
@@ -1421,7 +1421,7 @@ body {
 }
 
 
-/* Modal heading - blue color matching game theme */
+/* Modal heading - blue colour matching game theme */
 .help-modal-content h2 {
   color: #1f4bff;
   font-size: 2rem;
@@ -1596,7 +1596,7 @@ body {
 }
 
 
-/* Banner center section - holds game title */
+/* Banner centre section - holds game title */
 .banner-title-container {
   display: flex;
   align-items: center;
@@ -1681,7 +1681,7 @@ body {
 }
 
 
-/* Timer display number - color changes based on time remaining */
+/* Timer display number - colour changes based on time remaining */
 #timer-display {
   color: white;
   font-size: clamp(1.2rem, 3vw, 1.8rem);
@@ -1726,7 +1726,7 @@ body {
 }
 
 
-/* Points counter number - orange color, responsive sizing */
+/* Points counter number - orange colour, responsive sizing */
 #points-counter {
   color: #ffb347;
   font-size: clamp(1.2rem, 3vw, 1.8rem);
@@ -1943,7 +1943,7 @@ body {
 
 
 /* Centred orange button */
-.arrow-buttons.centered {
+.arrow-buttons.centred {
   justify-content: center;
 }
 
@@ -3274,7 +3274,7 @@ svg.hexagon-grid {
   line-height: 1;
 }
 
-/* Target fish display - centered and large */
+/* Target fish display - centred and large */
 .target-fish-display {
   width: 100%;
   display: flex;
