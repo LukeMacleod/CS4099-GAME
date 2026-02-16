@@ -3872,19 +3872,28 @@ class GameFlowController {
       input.disabled = true;
       input.placeholder = 'A\' dèanamh dearbhaidh...'; // Authenticating...
 
+      console.log('🔑 Calling Cloud Function with code:', code);
+
       // Call Cloud Function to validate code and get auth token
       const validateFunc = firebase.functions().httpsCallable('validateAndAuthenticate');
       const result = await validateFunc({ code });
 
+      console.log('✅ Cloud Function result:', result.data);
+
       // Sign in with custom token
       await firebase.auth().signInWithCustomToken(result.data.token);
 
+      console.log('🔐 Signed in successfully. Type:', result.data.type);
+
       // Route based on type
       if (result.data.type === 'teacher') {
+        console.log('👨‍🏫 TEACHER detected - redirecting to dashboard');
         // Redirect to teacher dashboard
         window.location.href = '/dashboard.html';
         return;
       }
+
+      console.log('👤 PARTICIPANT detected - starting game');
 
       // Participant flow - initialize data logger and continue to game
       this.participantCode = code;
@@ -3899,7 +3908,10 @@ class GameFlowController {
       this.setGameFlowState('RUAIRIDH_INTRO');
 
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ LOGIN ERROR:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Full error:', JSON.stringify(error, null, 2));
 
       // Re-enable input
       input.disabled = false;
