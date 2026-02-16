@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard - Geamaichean Gàidhlig</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Header -->
+    <header class="dashboard-header">
+      <h1>📊 Geamaichean Gàidhlig - Clàr-deasachaidh an Luchd-teagaisg</h1>
+      <div class="header-actions">
+        <span id="teacher-code" class="teacher-code"></span>
+        <button id="logout-button" class="logout-button">Clàraich a-mach</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+
+      <!-- Live Sessions Section -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2>🟢 Seiseanan Beò (Live Sessions)</h2>
+          <span id="live-count" class="badge">0 active</span>
+        </div>
+        <div id="live-sessions" class="live-sessions-grid">
+          <p class="empty-state">Chan eil cluicheadairean beò an-dràsta / No active players</p>
+        </div>
+      </section>
+
+      <!-- Filters Section -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2>📈 Eachdraidh Seiseanan (Session History)</h2>
+          <div class="filters">
+            <select id="participant-filter" class="filter-select">
+              <option value="all">Uile Chom-pàirtichean (All Participants)</option>
+            </select>
+            <select id="date-filter" class="filter-select">
+              <option value="today">An-diugh (Today)</option>
+              <option value="week">An t-seachdain seo chaidh (Last 7 days)</option>
+              <option value="month">Am mìos seo chaidh (Last 30 days)</option>
+              <option value="all">Uile (All time)</option>
+            </select>
+            <button id="refresh-button" class="action-button">🔄 Ath-nuadhaich</button>
+          </div>
+        </div>
+
+        <!-- Session Table -->
+        <div class="table-container">
+          <table id="sessions-table" class="sessions-table">
+            <thead>
+              <tr>
+                <th>Ceann-latha (Date)</th>
+                <th>Còd (Code)</th>
+                <th>Puingean (Score)</th>
+                <th>Geamaichean (Games)</th>
+                <th>Ùine (Duration)</th>
+                <th>Inbhe (Status)</th>
+                <th>Gnìomhan (Actions)</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-tbody">
+              <tr class="empty-state-row">
+                <td colspan="7">A' luchdachadh... / Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button id="prev-page" class="page-button" disabled>← Roimhe</button>
+          <span id="page-info">Duilleag 1</span>
+          <button id="next-page" class="page-button" disabled>Air adhart →</button>
+        </div>
+      </section>
+
+      <!-- Statistics Section -->
+      <section class="dashboard-section stats-grid">
+        <div class="stat-card">
+          <h3>Iomlan Chom-pàirtichean</h3>
+          <p class="stat-number" id="total-participants">-</p>
+          <p class="stat-label">Total Participants</p>
+        </div>
+        <div class="stat-card">
+          <h3>Iomlan Sheiseanan</h3>
+          <p class="stat-number" id="total-sessions">-</p>
+          <p class="stat-label">Total Sessions</p>
+        </div>
+        <div class="stat-card">
+          <h3>Ìre Crìochnachaidh</h3>
+          <p class="stat-number" id="completion-rate">-</p>
+          <p class="stat-label">Completion Rate</p>
+        </div>
+        <div class="stat-card">
+          <h3>Cuibheasach Puingean</h3>
+          <p class="stat-number" id="avg-score">-</p>
+          <p class="stat-label">Average Score</p>
+        </div>
+        <div class="stat-card">
+          <h3>Cuibheasach Ùine</h3>
+          <p class="stat-number" id="avg-duration">-</p>
+          <p class="stat-label">Average Duration</p>
+        </div>
+        <div class="stat-card">
+          <h3>Cleachdadh Cuideachadh</h3>
+          <p class="stat-number" id="help-usage">-</p>
+          <p class="stat-label">Help Clicks/Session</p>
+        </div>
+      </section>
+
+      <!-- Export Section -->
+      <section class="dashboard-section">
+        <div class="section-header">
+          <h2>📥 Às-phortaich Dàta (Export Data)</h2>
+        </div>
+        <div class="export-options">
+          <button id="export-csv" class="export-button">
+            📄 Às-phortaich CSV (Export CSV)
+          </button>
+          <button id="export-json" class="export-button">
+            📋 Às-phortaich JSON le Tachartasan (Export JSON with Events)
+          </button>
+          <p class="export-hint">
+            Includes all filtered sessions based on current selection
+          </p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Session Detail Modal -->
+  <div id="session-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Mion-fhiosrachadh Seisean (Session Details)</h2>
+        <button id="close-modal" class="close-button">✕</button>
+      </div>
+      <div id="session-detail" class="modal-body">
+        <!-- Populated dynamically by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+
+  <!-- Firebase Configuration & Dashboard Logic -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

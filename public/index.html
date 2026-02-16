@@ -10,6 +10,17 @@
   <!-- Everything renders here -->
   <div id="game-container"></div>
 
+  <!-- Firebase SDK - Compatibility mode for easier integration -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-functions-compat.js"></script>
+
+  <!-- Firebase Configuration & Data Logger -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/data-logger.js"></script>
+
+  <!-- Main Game Script -->
   <script src="game.js" defer></script>
 </body>
 </html>

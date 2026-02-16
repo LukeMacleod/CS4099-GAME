@@ -1,0 +1,2982 @@
+/* -----------------------------------------------
+   GEAMAICHEAN GÀIDHLIG - Main Stylesheet
+   ----------------------------------------------- */
+
+
+/* ------------------------------------------
+   1. CSS Variables
+   ------------------------------------------ */
+
+/* All the colours, shadows, z-indexes etc in one place */
+:root {
+  /* Primary Colours */
+  --primary-blue: #1f4bff;
+  --primary-blue-dark: #1539cc;
+  --primary-blue-darkest: #020863;
+  --primary-orange: #ffb347;
+  --primary-orange-dark: #ff7b22;
+  --accent-green: #4caf50;
+  --accent-green-dark: #2e7d32;
+  --accent-gold: #ffd700;
+  --accent-gold-dark: #e6c200;
+
+  /* Secondary Colours */
+  --secondary-yellow: #ffeb3b;
+  --secondary-yellow-outline: #ffe66d;
+  --secondary-yellow-bright: #ffff00;
+  --secondary-orange: #ff9800;
+  --secondary-blue-dark: #1976d2;
+  --secondary-blue-darker: #1565c0;
+  --secondary-red-bright: #ff4444;
+  --secondary-red-material: #f44336;
+  --secondary-green-success: #28a745;
+  --secondary-green-success-dark: #1e7e34;
+
+  /* Water Gradient Colours */
+  --water-deepest: #0a1a6e;
+  --water-deep: #122a8a;
+  --water-medium: #1839a6;
+  --water-light: #1c43c9;
+
+  /* Parchment/Paper Colours */
+  --parchment-bg: #f5f1e8;
+  --parchment-bg-dark: #e8e0d0;
+  --parchment-border: #8b7355;
+  --parchment-text: #5d4a37;
+
+  /* UI Colours */
+  --bg-light: #f8f9fa;
+  --bg-light-alt: #f0f0f0;
+  --bg-input: #e9ecef;
+
+  --text-dark: #2b1300;
+  --text-dark-secondary: #333;
+  --text-default: #2c3e50;
+  --text-medium: #666;
+  --text-light: #999;
+  --text-white: #ffffff;
+  --text-black: #000000;
+  
+  --border-light: rgba(255, 244, 214, 0.9);
+  --border-medium: rgba(255, 255, 255, 0.2);
+  --border-subtle: #e0e0e0;
+  --border-input: #e9ecef;
+  --disabled-bg: #ccc;
+
+  /* Shadow presets */
+  --shadow-light: rgba(0, 0, 0, 0.14);
+  --shadow-medium: rgba(0, 0, 0, 0.26);
+  --shadow-dark: rgba(0, 0, 0, 0.38);
+  --shadow-darker: rgba(0, 0, 0, 0.42);
+
+  /* Glow Effects */
+  --glow-orange: rgba(255, 183, 71, 0.6);
+  --glow-orange-strong: rgba(255, 183, 71, 1);
+
+  /* Transitions */
+  --transition-medium: 180ms ease-out;
+
+  /* Border Radius */
+  --radius-round: 50%;
+
+  /* Z-Index Scale - keeps things layered properly */
+  --z-behind: 0;
+  --z-base: 1;
+  --z-above-base: 2;
+  --z-stack-low: 3;
+  --z-stack-mid: 5;
+  --z-content: 10;
+  --z-element: 15;
+  --z-element-high: 20;
+  --z-floating: 50;
+  --z-dropdown: 90;
+  --z-interactive: 100;
+  --z-interactive-high: 101;
+  --z-popup: 999;
+  --z-popup-content: 1000;
+  --z-popup-above: 1001;
+  --z-tooltip: 9500;
+  --z-top: 10000;
+
+  /* Common Gradients */
+  --gradient-orange-btn: linear-gradient(135deg, var(--primary-orange), var(--primary-orange-dark));
+  --gradient-blue-btn: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+  --gradient-bg: radial-gradient(circle at 20% 20%, var(--primary-blue), var(--primary-blue-darkest));
+}
+
+/* Makes padding not add to element width */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Full page setup - gradient background, everything centered */
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for when window is compressed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  overflow: hidden;
+}
+
+
+/* Container for all game screens - fades in on load */
+#game-container {
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for for when window is compressed  */
+  max-width: 100vw;
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.35s ease-in;
+  overflow: hidden;
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+
+@keyframes text-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* --- Login Screen --- */
+
+.login-wrapper {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(to top, var(--water-deepest) 0%, var(--water-deep) 25%, var(--water-medium) 50%, var(--water-light) 75%, var(--primary-blue) 100%);
+  padding: clamp(1rem, 3vh, 2rem);
+}
+
+.game-main-title {
+  align-self: center;
+  margin-bottom: clamp(1.5rem, 4vh, 3rem);
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-weight: 900;
+  color: var(--text-white);
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.02em;
+  text-align: center;
+  white-space: nowrap;
+  transition: font-size 0.18s ease, margin 0.18s ease;
+}
+
+
+/* White card for login form */
+.login-screen {
+  background: var(--text-white);
+  border-radius: clamp(16px, 3vw, 24px);
+  padding: clamp(1.5rem, 4vh, 4rem) clamp(1.5rem, 4vw, 3rem);
+  max-width: min(500px, 90vw);
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.28);
+  position: relative;
+  z-index: var(--z-base);
+}
+
+
+.login-screen h2 {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 900;
+  margin: 0 0 clamp(0.5rem, 2vh, 1rem) 0;
+  color: var(--primary-blue);
+  letter-spacing: -0.02em;
+}
+
+.login-screen h1 {
+  font-size: clamp(2.5rem, 7vw, 4rem);
+  font-weight: 900;
+  margin: 0 0 clamp(0.5rem, 2vh, 1rem) 0;
+  color: var(--primary-blue);
+  letter-spacing: -0.02em;
+}
+
+
+.login-screen p {
+  font-size: 1.2rem;
+  color: var(--text-medium);
+  margin: 0 0 2.5rem 0;
+}
+
+.form-group {
+  margin-bottom: 2rem;
+}
+
+
+.form-group label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark-secondary);
+  margin-bottom: 0.8rem;
+  text-align: left;
+}
+
+
+.form-group input {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  font-size: 1.1rem;
+  border: 2px solid var(--border-subtle);
+  border-radius: 12px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(31, 75, 255, 0.1);
+}
+
+
+.form-group input::placeholder {
+  color: var(--text-light);
+}
+
+
+/* ------------------------------------------
+   2. Buttons
+   ------------------------------------------ */
+
+/* Main orange "play" button with the shine effct on hover */
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2.8rem;
+  border-radius: 999px;
+  border: none;
+  text-decoration: none;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--text-dark);
+  background: var(--gradient-orange-btn);
+  box-shadow: 0 0 0 2px rgba(255, 244, 214, 0.9), 0 11px 26px rgba(0, 0, 0, 0.42);
+  position: relative;
+  overflow: hidden;
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out, background-position 480ms ease-out;
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+}
+
+
+.play-button:focus-visible {
+  outline: 3px solid var(--secondary-yellow-outline);
+  outline-offset: 3px;
+}
+
+
+/* Shining light that slides across on hover */
+.play-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.0),
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.0)
+  );
+  transform: skewX(-20deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+.play-button:hover::before,
+.play-button:focus-visible::before {
+  animation: water-glide 650ms ease-out forwards;
+  opacity: 1;
+}
+
+
+.play-button:hover,
+.play-button:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(255, 248, 220, 0.95), 0 14px 32px rgba(0, 0, 0, 0.52);
+  background-position: 100% 50%;
+}
+
+
+.play-button:active {
+  transform: translateY(0);
+}
+
+
+@keyframes water-glide {
+  0% { transform: translateX(0) skewX(-20deg); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateX(250%) skewX(-20deg); opacity: 0; }
+}
+
+
+/* ------------------------------------------
+   3. Character & Speech Bubbles
+   ------------------------------------------ */
+
+/* Ruairidh the seal and his speech bubbles */
+
+.intro-screen-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.5rem, 2vh, 2rem) clamp(0.5rem, 2vw, 1rem);
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* White card that holds seal + speech bubble */
+.ruairidh-intro-screen {
+  background: var(--text-white);
+  border-radius: clamp(16px, 3vw, 24px);
+  padding: clamp(1rem, 2.5vh, 2rem);
+  max-width: min(700px, 90vw);
+  width: fit-content;
+  min-width: min(400px, 85vw);
+  max-height: 90vh;
+  max-height: 90dvh;
+  box-shadow: 0 10px 44px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  border: none;
+  overflow: visible;
+  box-sizing: border-box;
+  gap: clamp(0.75rem, 2vh, 1.5rem);
+  position: relative;
+}
+
+
+.ruairidh-container {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  margin-bottom: auto;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: nowrap;
+  flex: 1;
+  min-height: 0;
+  padding: clamp(0.5rem, 1.5vh, 1rem);
+}
+
+
+.seal-icon-wrapper {
+  flex-shrink: 0;
+}
+
+
+.seal-icon {
+  width: clamp(80px, 12vw, 140px);
+  height: clamp(80px, 12vw, 140px);
+  object-fit: contain;
+  filter: drop-shadow(0 3px 10px rgba(31, 75, 255, 0.18));
+  flex-shrink: 0;
+}
+
+
+.speech-bubble {
+  background: var(--bg-light);
+  border: 2px solid var(--border-input);
+  border-radius: clamp(12px, 2vw, 16px);
+  padding: clamp(0.8rem, 2vh, 1.3rem);
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.11), 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* Little triangle pointing at the seal 
+This i sjust the edge of the speech bubble*/
+.speech-bubble::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 12px solid var(--border-input);
+}
+
+/* Inner fill for the triangle
+Again, traingel of corner of speech bubble  */
+.speech-bubble::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid var(--bg-light);
+  z-index: var(--z-base);
+}
+
+
+.speech-bubble p {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.5vh, 1.4rem);
+  color: var(--text-default);
+  font-weight: 700;
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: left;
+  animation: text-fade-in 0.75s ease-out 0.15s forwards;
+  opacity: 0;
+}
+
+/* When seal is above the bubble (Game 1 tutorials) */
+.speech-bubble.tutorial-top-left {
+  overflow: visible;
+  margin-top: 14px;
+  position: relative;
+}
+
+.speech-bubble.tutorial-top-left::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 24px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 12px solid var(--border-input);
+  z-index: var(--z-base);
+}
+
+.speech-bubble.tutorial-top-left::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 26px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 10px solid var(--bg-light);
+  z-index: var(--z-above-base);
+}
+
+
+/* ------------------------------------------
+   4. Navigation Buttons
+   ------------------------------------------ */
+
+/* Blue buttons used in tutorials and intros
+TBD - May change to orange */
+.nav-btn {
+  padding: 0.8rem 1.6rem;
+  background: var(--primary-blue);
+  color: var(--text-white);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+
+.nav-btn:hover {
+  background: var(--primary-blue-dark);
+  transform: translateY(-2px);
+}
+
+
+.nav-btn:active {
+  transform: translateY(0);
+}
+
+
+.nav-btn:focus-visible {
+  outline: 3px solid var(--secondary-yellow-outline);
+  outline-offset: 2px;
+}
+
+
+.nav-btn:disabled {
+  background: var(--disabled-bg);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+/* ------------------------------------------
+   5. Game Screen Layouts
+   ------------------------------------------ */
+
+/* Base screen that all games use */
+.game-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for altered browsers screen size*/
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--gradient-bg);
+  overflow: hidden;
+}
+
+.game-screen > div[style*="flex: 1"] {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+
+/* Game 1 - beach background */
+.game1-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for for altered browsers screen size */
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/game-1/game-1-background.svg') center/cover no-repeat;
+  color: var(--text-white);
+  background-attachment: fixed;
+  padding: 0;
+  gap: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+
+/* Slight darkening overlay  on game 1
+This was added becaus ethe sand patches were a bit too close to the colour of the backgorund of the sandy beach*/
+.game1-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  z-index: var(--z-behind);
+}
+
+.game1-tutorial-content-wrapper,
+.game1-board,
+.game1-footer {
+  position: relative;
+  z-index: var(--z-above-base);
+}
+
+
+/* ------------------------------------------
+   6. Game 1 - Catch the Lobster
+   ------------------------------------------ */
+
+.game1-board {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Subtle blackened corner around the edges */
+.game1-board::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 38%, rgba(0, 0, 0, 0.12) 100%);
+  z-index: var(--z-base);
+}
+
+.hex-board-container {
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+  z-index: var(--z-above-base);
+}
+
+/* Faded  rock preview when hovering over a sand tile */
+.hex-tile.hover-preview::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('./svgs/game-1/rock-wall.svg') center/cover no-repeat;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: var(--z-content);
+  border-radius: 50%;
+  animation: previewPulse 1s infinite;
+}
+
+@keyframes previewPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.95); }
+  50% { opacity: 0.5; transform: scale(1); }
+}
+
+
+.hex-sand {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+
+.hex-rock {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  z-index: var(--z-interactive);
+}
+
+
+/* Lobster rotation is set by JS via --lobster-rotation variable */
+.lobster-svg {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+  transform: rotate(var(--lobster-rotation, 0deg));
+  transition: transform 200ms ease-out;
+}
+
+
+.lobster-turn .lobster-svg {
+  /* rotation handled by CSS variable */
+}
+
+
+/* Wiggle before moving */
+@keyframes lobsterWiggle {
+  0%   { transform: translateX(0) rotate(var(--lobster-rotation, 0deg)); }
+  25%  { transform: translateX(2px) rotate(var(--lobster-rotation, 0deg)); }
+  50%  { transform: translateX(-2px) rotate(var(--lobster-rotation, 0deg)); }
+  75%  { transform: translateX(1px) rotate(var(--lobster-rotation, 0deg)); }
+  100% { transform: translateX(0) rotate(var(--lobster-rotation, 0deg)); }
+}
+
+
+.lobster-wiggle .lobster-svg {
+  animation: lobsterWiggle 0.22s ease-in;
+}
+
+
+/* Lobsters  hop after wiggle */
+@keyframes lobsterJump {
+  0%   { transform: translateY(0) scale(1) rotate(var(--lobster-rotation, 0deg)); }
+  40%  { transform: translateY(-8px) scale(1.05) rotate(var(--lobster-rotation, 0deg)); }
+  70%  { transform: translateY(-4px) scale(1.02) rotate(var(--lobster-rotation, 0deg)); }
+  100% { transform: translateY(0) scale(1) rotate(var(--lobster-rotation, 0deg)); }
+}
+
+
+.lobster-jump .lobster-svg {
+  animation: lobsterJump 0.28s ease-out;
+}
+
+
+.game1-footer {
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+
+#round-status {
+  font-size: 1.3rem;
+  font-weight: 700;
+  min-height: 30px;
+}
+
+
+/* ------------------------------------------
+   7. Help & Pause Moduls
+   ------------------------------------------ */
+
+/* Dark overlay that covers the screen
+TBD NEEEDS TO BE COMBINED WITH OTHER POPUPS  */
+.help-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-top);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.help-modal.active {
+  display: flex;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* The white box inside the modal */
+.help-modal-content {
+  background: var(--text-white);
+  border-radius: 24px;
+  padding: 0;
+  max-width: 900px;
+  width: 92%;
+  max-height: 85vh;
+  position: relative;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6),
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideUp 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: var(--text-white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: var(--z-interactive-high);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close:active {
+  transform: rotate(90deg) scale(0.95);
+}
+
+/* Simpler version for quick help popups */
+.help-modal-content.simple-help {
+  display: block;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  max-width: 600px;
+  width: 94%;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 5px 22px rgba(0, 0, 0, 0.28);
+  border: none;
+  overflow: visible;
+}
+
+.simple-help-title {
+  font-size: clamp(1.3rem, 3vh, 1.6rem);
+  font-weight: 700;
+  color: var(--text-default);
+  margin: 0 0 1.5rem 0;
+  line-height: 1.3;
+}
+
+.simple-help-body {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.simple-help .help-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0;
+  background: none;
+  border-left: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.simple-help .help-tip-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: var(--primary-blue);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.simple-help .help-tip-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.simple-help .help-tip-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.simple-help .help-tip-content strong {
+  display: inline;
+  font-size: clamp(1rem, 2.5vh, 1.2rem);
+  font-weight: 700;
+  color: var(--primary-blue);
+}
+
+.simple-help .help-tip-content p {
+  font-size: clamp(1rem, 2.5vh, 1.2rem);
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text-default);
+  margin: 0;
+  display: inline;
+}
+
+.simple-help .arrow-btn {
+  margin-top: 0.5rem;
+  display: inline-flex;
+}
+
+
+.pause-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-top);
+}
+
+.pause-modal.active {
+  display: flex;
+}
+
+.pause-modal-content {
+  background: var(--text-white);
+  border-radius: 24px;
+  padding: 3rem 4rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.48);
+  animation: modal-pop-in 0.28s ease-out;
+}
+
+@keyframes modal-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.pause-modal-content h2 {
+  color: var(--primary-blue);
+  font-size: 2.5rem;
+  margin: 0 0 2rem 0;
+  font-weight: 900;
+}
+
+.pause-resume-btn {
+  background: linear-gradient(135deg, var(--secondary-green-success), var(--secondary-green-success-dark));
+  color: var(--text-white);
+  border: none;
+  padding: 1rem 3rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pause-resume-btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 28px rgba(40, 167, 69, 0.5);
+}
+
+.pause-resume-btn:active {
+  transform: translateY(-1px) scale(1);
+}
+
+
+/* --- Phrase Help Buttons --- */
+
+/* Underlined phrases that have explanations
+THIS IS SPECIFICALLY FOR IDIOAMTIC GAELIC PHRASES */
+.phrase-underline {
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 0, 0, 0.25);
+  text-underline-offset: 3px;
+}
+
+/* Little ? button next to phrases */
+.phrase-help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4em;
+  height: 1.4em;
+  padding: 0;
+  margin-left: 0.3em;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary-orange);
+  color: var(--text-default);
+  font-size: 0.75em;
+  font-weight: 800;
+  cursor: pointer;
+  vertical-align: middle;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.phrase-help-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Phrase explanation modal overlay */
+.phrase-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-top);
+  padding: 1rem;
+}
+
+.phrase-modal.active {
+  display: flex;
+}
+
+.phrase-modal-content {
+  background: var(--text-white);
+  border-radius: 24px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: modal-pop-in 0.28s ease-out;
+}
+
+/* Phrase title in blue at the top */
+.phrase-modal-title {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 800;
+  color: var(--primary-blue);
+  margin: 0 0 1.5rem 0;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+/* Ruairidh seal image */
+.phrase-modal-seal {
+  width: clamp(90px, 20vw, 120px);
+  height: clamp(90px, 20vw, 120px);
+  margin: 0 auto 1.5rem;
+  background: linear-gradient(135deg, var(--secondary-blue-dark), var(--secondary-blue-darker));
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.phrase-modal-seal img {
+  width: 85%;
+  height: 85%;
+  object-fit: cover;
+  object-position: center 65%;
+}
+
+/* Explanation text box */
+.phrase-modal-explanation {
+  background: var(--bg-light);
+  border-radius: 16px;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 2px solid var(--border-input);
+}
+
+.phrase-modal-explanation p {
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
+  font-weight: 600;
+  color: var(--text-default);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.phrase-modal-content .arrow-btn {
+  margin-top: 1.5rem;
+}
+
+
+/* ------------------------------------------
+   8. Shared Game UI Components
+   ------------------------------------------ */
+
+/* Blue banner at top of game screens 
+BUG FIXED: Newly chanegd to clear up previous technical debt*/
+.ruairidh-banner {
+  width: 95%;
+  margin: 1rem auto 0;
+  background: var(--gradient-blue-btn);
+  border-radius: 24px;
+  padding: clamp(0.6rem, 2vw, 1.2rem) clamp(0.8rem, 2vw, 1.5rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+  box-sizing: border-box;
+  box-shadow: 0 7px 22px rgba(0, 0, 0, 0.38), 0 0 55px rgba(31, 75, 255, 0.28);
+  position: relative;
+  z-index: var(--z-interactive);
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+
+.ruairidh-banner-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+
+/* Only shows on wider screens 
+Had issues where i didnt want the title to be squished so that onky some of the words were redable 
+- EITHER all there or NOT at all*/
+.banner-title-container {
+  display: none;
+}
+
+.game1-title-fun {
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-weight: 900;
+  color: var(--primary-orange);
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.05em;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  text-align: center;
+  line-height: 1.1;
+  margin: 0;
+  padding: 0 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* Only show on very wide screens */
+@media (min-width: 1400px) {
+  .banner-title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+
+/* Right: Points Box Container */
+.ruairidh-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-shrink: 0;
+}
+
+
+/* Points Counter Box */
+.points-box {
+  background: rgba(10, 31, 77, 0.95);
+  border-radius: 16px;
+  padding: clamp(0.6rem, 2vw, 0.9rem) clamp(0.9rem, 2vw, 1.2rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 0.8rem);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.28), 0 3px 10px rgba(0, 0, 0, 0.18);
+  border: 2px solid rgba(255, 183, 71, 0.2);
+  min-height: clamp(50px, 8vw, 70px);
+}
+
+.points-counter-text {
+  color: var(--text-white);
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  font-weight: 800;
+}
+
+
+/* Timer Box */
+.timer-box {
+  background: rgba(10, 31, 77, 0.95);
+  border-radius: 16px;
+  padding: clamp(0.6rem, 2vw, 0.9rem) clamp(0.9rem, 2vw, 1.2rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 0.8rem);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.28), 0 3px 10px rgba(0, 0, 0, 0.18);
+  border: 2px solid rgba(255, 183, 71, 0.2);
+  min-height: clamp(50px, 8vw, 70px);
+}
+
+
+.timer-icon {
+  width: clamp(50px, 10vw, 70px);
+  height: clamp(50px, 10vw, 70px);
+  object-fit: contain;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.22));
+  flex-shrink: 0;
+}
+
+
+.timer-text {
+  color: var(--secondary-yellow);
+  font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+
+/* Timer changes colour as time runs out */
+#timer-display {
+  color: var(--text-white);
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  min-width: 50px;
+  text-align: right;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+#timer-display.warning-yellow {
+  color: var(--secondary-yellow);
+  text-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
+}
+
+#timer-display.warning-orange {
+  color: var(--secondary-orange);
+  text-shadow: 0 0 10px rgba(255, 152, 0, 0.8);
+}
+
+#timer-display.warning-red {
+  color: var(--secondary-red-bright);
+  text-shadow: 0 0 12px rgba(255, 68, 68, 1);
+  animation: timerPulse 0.8s infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+
+.ruairidh-banner-text {
+  color: var(--secondary-yellow);
+  font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+
+#points-counter {
+  color: var(--text-white);
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  min-width: 50px;
+  text-align: right;
+}
+
+
+/* Cairn (stone stack) icon */
+.cairn-icon {
+  width: clamp(50px, 10vw, 70px);
+  height: clamp(50px, 10vw, 70px);
+  object-fit: contain;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.22));
+  flex-shrink: 0;
+}
+
+
+/* --- Banner Buttons (help, sound, pause) 
+--- */
+
+.ruairidh-help-button,
+.ruairidh-sound-button,
+.ruairidh-pause-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(54px, 10vw, 66px);
+  height: clamp(54px, 10vw, 66px);
+  border-radius: var(--radius-round);
+  background: var(--gradient-orange-btn);
+  color: var(--text-dark);
+  border: 3px solid var(--border-light);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px var(--shadow-medium);
+  transition: all var(--transition-medium);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ruairidh-help-button { font-size: clamp(1.5rem, 4vw, 2rem); }
+.ruairidh-sound-button {
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+  position: relative;
+}
+.ruairidh-pause-button { font-size: clamp(1.5rem, 4vw, 2rem); }
+
+.sound-icon {
+  width: clamp(28px, 6vw, 36px);
+  height: clamp(28px, 6vw, 36px);
+  object-fit: contain;
+}
+
+.sound-mute-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(28px, 6vw, 36px);
+  height: clamp(28px, 6vw, 36px);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Shared hover state (lift and scale )*/
+.ruairidh-help-button:hover,
+.ruairidh-sound-button:hover,
+.ruairidh-pause-button:hover {
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 10px 28px var(--shadow-dark);
+}
+
+/* Shared active/pressed state */
+.ruairidh-help-button:active,
+.ruairidh-sound-button:active,
+.ruairidh-pause-button:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.ruairidh-help-button:focus-visible,
+.ruairidh-sound-button:focus-visible,
+.ruairidh-pause-button:focus-visible {
+  outline: 3px solid var(--secondary-yellow-bright);
+  outline-offset: 4px;
+}
+
+/* Disabled state - greyed out appearance 
+i.e when a user tries to puse button when not in an active game etc */
+.ruairidh-help-button:disabled,
+.ruairidh-pause-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, var(--text-light), var(--text-medium));
+  border-color: rgba(150, 150, 150, 0.5);
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.ruairidh-help-button:disabled:hover,
+.ruairidh-pause-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+/* Glowing pulse for tutorial at begining  */
+.ruairidh-help-button.glowing,
+.ruairidh-sound-button.glowing,
+.ruairidh-pause-button.glowing {
+  animation: banner-button-glow 1.5s ease-in-out infinite;
+  z-index: var(--z-interactive);
+}
+
+.ruairidh-help-button.glowing:disabled,
+.ruairidh-pause-button.glowing:disabled {
+  opacity: 1;
+  background: var(--gradient-orange-btn);
+  border-color: var(--border-light);
+  animation: banner-button-glow 1.5s ease-in-out infinite;
+  z-index: var(--z-interactive);
+}
+
+/* Not sre whether needed TBD*/
+@keyframes banner-button-glow {
+  0%, 100% {
+    box-shadow: 0 6px 20px var(--shadow-dark), 0 0 20px var(--glow-orange), 0 0 40px rgba(255, 183, 71, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 8px 30px var(--shadow-darker), 0 0 50px var(--glow-orange-strong), 0 0 80px var(--glow-orange);
+    transform: scale(1.1);
+  }
+}
+
+.ruairidh-pause-button svg {
+  display: block;
+  width: clamp(20px, 4vw, 28px);
+  height: clamp(20px, 4vw, 28px);
+  pointer-events: none;
+}
+
+
+/* Tutorial step 3 - dark overlay on beach */
+.layout-step3-beach-bg {
+  background: url('./svgs/game-1/game-1-background.svg') center/cover no-repeat;
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* Very dark overlay for beach background */
+.layout-step3-beach-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  z-index: var(--z-behind);
+}
+
+/* Ensure content appears above overlay */
+.layout-step3-beach-bg > * {
+  position: relative;
+  z-index: var(--z-base);
+}
+
+
+/* Arrow navigation buttons
+(should be consistent) */
+.arrow-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: auto;
+  padding-top: clamp(0.8rem, 2vw, 1.2rem);
+  gap: clamp(0.6rem, 2vw, 1rem);
+  flex-shrink: 0;
+  border-top: 2px solid var(--bg-light-alt);
+}
+
+
+.arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.6rem, 1.5vw, 1rem) clamp(1rem, 2.5vw, 2rem);
+  border-radius: 999px;
+  border: none;
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  color: var(--text-dark);
+  background: var(--gradient-orange-btn);
+  box-shadow: 0 0 0 2px rgba(255, 244, 214, 0.9), 0 11px 26px rgba(0, 0, 0, 0.42);
+  transition: transform 220ms ease-out, box-shadow 220ms ease-out;
+  flex-shrink: 0;
+}
+
+
+.arrow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(255, 248, 220, 0.95), 0 14px 32px rgba(0, 0, 0, 0.52);
+}
+
+
+.arrow-btn:active {
+  transform: translateY(0);
+}
+
+
+/* Centred orange button */
+.arrow-buttons.centred {
+  justify-content: center;
+}
+
+
+/* Green shining play button */
+.play-green-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.8rem, 2vw, 1rem) clamp(1.5rem, 4vw, 2.5rem);
+  border-radius: 999px;
+  border: none;
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  color: var(--text-white);
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-green-dark));
+  box-shadow: 0 0 0 2px rgba(200, 255, 200, 0.9), 0 12px 28px rgba(0, 0, 0, 0.45);
+  animation: greenPulse 1.5s ease-in-out infinite;
+  transition: transform 220ms ease-out, box-shadow 220ms ease-out;
+}
+
+
+
+
+.play-green-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(220, 255, 220, 0.95), 0 16px 34px rgba(0, 0, 0, 0.55);
+}
+
+
+@keyframes greenPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(200, 255, 200, 0.9), 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(200, 255, 200, 0.9), 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(76, 175, 80, 0.6);
+  }
+}
+
+
+@keyframes cairn-glow {
+  0%, 100% {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 15px rgba(255, 200, 100, 0.5)) drop-shadow(0 0 30px rgba(255, 183, 71, 0.3));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 40px rgba(255, 200, 100, 1)) drop-shadow(0 0 60px rgba(255, 183, 71, 0.7));
+    transform: scale(1.15);
+  }
+}
+
+
+.cairn-icon.pulsing {
+  animation: cairn-glow 1.5s ease-in-out infinite;
+}
+
+
+/* Glowing box highlight in tutorials */
+.points-box.tutorial-highlight {
+  position: relative;
+  z-index: var(--z-popup-above);
+  box-shadow:
+    0 0 0 4px rgba(255, 183, 71, 0.9),
+    0 0 20px rgba(255, 183, 71, 0.8),
+    0 0 40px rgba(255, 183, 71, 0.5),
+    0 0 60px rgba(255, 183, 71, 0.3);
+  animation: box-highlight-pulse 1s ease-in-out infinite;
+}
+
+@keyframes box-highlight-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 4px rgba(255, 183, 71, 0.9),
+      0 0 20px rgba(255, 183, 71, 0.8),
+      0 0 40px rgba(255, 183, 71, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(255, 183, 71, 1),
+      0 0 30px rgba(255, 183, 71, 1),
+      0 0 60px rgba(255, 183, 71, 0.7),
+      0 0 80px rgba(255, 183, 71, 0.4);
+  }
+}
+
+
+.hex-tile {
+  cursor: pointer;
+  /* No animations - rock preview handled by .hover-preview::after */
+}
+
+/* Rocks don't react to hover */
+.hex-tile.has-rock {
+  cursor: default;
+  transition: none;
+}
+
+.hex-tile.has-rock:hover {
+  transform: none;
+  filter: none;
+}
+
+.hex-rock {
+  pointer-events: none;
+  user-select: none;
+}
+
+
+.hex-sand polygon {
+  fill: var(--accent-gold);
+  stroke: var(--accent-gold-dark);
+  stroke-width: 2;
+}
+
+
+/* Lobster runs off screen when escaping 
+TBD - too fast at the moment with NO rotation - Bug here I need to fix */
+.lobster-escape .lobster-svg {
+  animation: lobsterScurryOff 1.4s ease-out forwards;
+}
+
+@keyframes lobsterScurryOff {
+  0% {
+    transform: translate(0, 0) rotate(var(--lobster-rotation, 0deg));
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(var(--escape-x), var(--escape-y)) rotate(var(--lobster-rotation, 0deg));
+    opacity: 0;
+  }
+}
+
+
+
+
+/* Speech bubble above lobster */
+.lobster-speech {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-white);
+  border: 3px solid var(--text-black);
+  border-radius: 16px;
+  padding: 10px 16px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-black); /* Pure black is intentional */
+  white-space: nowrap;
+  animation: bubble-pop 0.25s ease-out;
+  z-index: var(--z-top);
+  pointer-events: none;
+  isolation: isolate;
+}
+
+/* Speech bubble tail pointing to lobster 
+TBD - Case where bubble is blocking the sand bloxk where a user could put down. stone - misleading?*/
+.lobster-speech::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 15px solid var(--text-black);
+  z-index: var(--z-base);
+}
+
+/* Inner tip of speech bubble - create white fill */
+.lobster-speech::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 12px solid white;
+  z-index: var(--z-above-base);
+}
+
+
+/* Stone flies to cairn animation */
+.stone-fly {
+  width: 50px;
+  height: 50px;
+  z-index: var(--z-tooltip);
+}
+
+
+.stone-fly-animate {
+  animation: stone-float 0.75s ease-out forwards;
+}
+
+
+@keyframes stone-float {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--fly-x), var(--fly-y)) scale(1); opacity: 1; }
+}
+
+
+@keyframes bubble-pop {
+  0% { transform: translateX(-50%) scale(0); opacity: 0; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* No animation on persistent bubbles */
+.lobster-speech.persistent-bubble {
+  animation: none;
+}
+
+
+.points-reward {
+  animation: pointsBurst 1.15s ease-out;
+  will-change: transform, color;
+}
+
+/* Points earned burst effect */
+@keyframes pointsBurst {
+  0%   { transform: scale(1); color: var(--text-white); text-shadow: none; }
+  20%  { transform: scale(1.6) rotate(-5deg); color: var(--secondary-yellow);
+         text-shadow: 0 0 10px var(--secondary-yellow), 0 0 20px var(--primary-orange); }
+  50%  { transform: scale(1.3) rotate(5deg); color: var(--primary-orange);
+         text-shadow: 0 0 15px var(--primary-orange), 0 0 30px var(--primary-orange-dark); }
+  80%  { transform: scale(1.1); color: var(--text-white);
+         text-shadow: 0 0 8px var(--text-white); }
+  100% { transform: scale(1); color: var(--text-white); text-shadow: none; }
+}
+
+
+/* Game 1 Tutorials */
+.game1-tutorial-content-wrapper {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+  overflow: hidden;
+}
+
+
+.game1-tutorial-text-section {
+  flex: 0 1 auto;
+  min-width: 280px;
+  max-width: min(700px, 45vw);
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  background: var(--text-white);
+  border-radius: 20px;
+  padding: clamp(1rem, 3vw, 2rem);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: visible;
+}
+
+.game1-tutorial-text-section .ruairidh-intro-screen {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  max-width: 100%;
+  width: 100%;
+  overflow: visible;
+}
+
+.game1-tutorial-text-section .ruairidh-container {
+  width: 100%;
+  align-items: center;
+}
+
+.game1-tutorial-text-section .speech-bubble {
+  width: 100%;
+  max-width: 100%;
+}
+
+.game1-tutorial-text-section .arrow-buttons {
+  width: 100%;
+}
+
+.game1-tutorial-text-section .arrow-btn,
+.game1-tutorial-text-section .play-green-btn {
+  flex-grow: 0;
+  flex-shrink: 0;
+  max-width: fit-content;
+}
+
+.game1-tutorial-text-section .seal-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 150px;
+  margin: 0 auto;
+}
+
+.game1-tutorial-text-section .seal-icon {
+  width: 100%;
+  height: auto;
+  max-width: 150px;
+  max-height: 150px;
+  object-fit: contain;
+}
+
+
+.game1-tutorial-board-section,
+.game1-tutorial-board-section-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+}
+
+
+#game1-board-tutorial {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+
+#game1-board-tutorial svg {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+
+/* ------------------------------------------
+   9. Game 2 - Memory Card Game
+   ------------------------------------------ */
+
+.game2-ready-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for reduced width  browsers */
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/game-1/game-1-background.svg') center/cover no-repeat;
+  color: var(--text-white);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.game2-ready-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: var(--z-behind);
+}
+
+.game2-ready-screen > * {
+  position: relative;
+  z-index: var(--z-base);
+}
+
+.game2-ready-screen > div[style*="flex: 1"] {
+  overflow-y: auto;
+  padding: 1rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+
+/* Game 2 Tutorial */
+.game2-tutorial-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for reduced wdith browsers */
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/game-2/game-2-background.svg') center/cover no-repeat;
+  color: var(--text-white);
+  overflow: hidden;
+  position: relative;
+}
+
+.game2-tutorial-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+.game2-tutorial-screen > * {
+  position: relative;
+  z-index: var(--z-above-base);
+}
+
+
+/* Game 2 Tutorial Layout */
+.game2-tutorial-content-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  padding: 2rem;
+  flex: 1;
+}
+
+.game2-tutorial-text-section {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game2-tutorial-screen .ruairidh-intro-screen {
+  max-width: 600px;
+}
+
+.game2-tutorial-screen .arrow-btn,
+.game2-tutorial-screen .play-green-btn {
+  padding: clamp(0.6rem, 1.5vw, 1rem) clamp(1rem, 2.5vw, 2rem);
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
+}
+
+.game2-tutorial-cards-section {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 400px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url('./svgs/game-2/wooden-table.svg') center/cover no-repeat;
+  border-radius: 24px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+}
+
+
+.tutorial-card-grid {
+  display: flex;
+  gap: clamp(1rem, 3vw, 2rem);
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.tutorial-card {
+  position: relative;
+  width: clamp(80px, 15vw, 110px);
+  height: clamp(80px, 15vw, 110px);
+  aspect-ratio: 1 / 1;
+  perspective: 1000px;
+  border-radius: clamp(8px, 1.5vw, 12px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.38);
+  transition: transform 0.28s ease;
+  flex-shrink: 0;
+}
+
+.tutorial-card:hover {
+  transform: translateY(-5px) scale(1.05);
+}
+
+
+.tutorial-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+
+.tutorial-card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.tutorial-card-face img {
+  width: 110%;
+  height: 110%;
+  object-fit: cover;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+
+.game2-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/game-2/game-2-background.svg') center/cover no-repeat;
+  overflow: hidden;
+  position: relative;
+}
+
+.game2-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.32);
+  pointer-events: none;
+  z-index: var(--z-behind);
+}
+
+
+.game2-content-wrapper {
+  position: relative;
+  z-index: var(--z-base);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 3vh, 3rem) clamp(1rem, 2vw, 2rem);
+  min-height: 0;
+}
+
+.game2-board {
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: clamp(300px, 90vw, 950px);
+  height: auto;
+  aspect-ratio: 4 / 3;
+  max-width: 90vw;
+  max-height: 70vh;
+  box-sizing: border-box;
+  padding: clamp(1.5rem, 3vw, 3rem);
+  background: url('./svgs/game-2/wooden-table.svg') center/cover no-repeat;
+  border-radius: 24px;
+  box-shadow: 0 7px 28px rgba(0, 0, 0, 0.38);
+  position: relative;
+  z-index: var(--z-base);
+}
+
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 0;
+  box-sizing: border-box;
+  /* 4x3 grid proportions */
+  aspect-ratio: 4 / 3;
+  /* Fit within available space */
+  align-self: center;
+  justify-self: center;
+}
+
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  cursor: pointer;
+  perspective: 1000px;
+  border-radius: clamp(6px, 1vw, 12px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.card:hover:not(.matched):not(.flipped) {
+  filter: brightness(1.15);
+}
+
+.card:active:not(.matched):not(.flipped) {
+  filter: brightness(1.1);
+}
+
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+
+/* Card always starts face down */
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card.flipped:not(.matched) {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: clamp(6px, 1vw, 12px);
+  padding: clamp(0.5rem, 1.5vw, 1rem);
+  box-sizing: border-box;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+
+/* Card front - tweed pattern */
+.card-back {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+
+.card-back img {
+  width: 110%;
+  height: 110%;
+  object-fit: cover;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) sepia(0.15) saturate(0.9);
+}
+
+
+/* Card back - the image side */
+.card-front {
+  background: linear-gradient(135deg, var(--parchment-bg) 0%, var(--parchment-bg-dark) 100%);
+  border: clamp(2px, 0.4vw, 3px) solid var(--parchment-border);
+  border-style: solid;
+  transform: rotateY(180deg);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.3);
+  /* I wanted an aged paper  effect  */
+  position: relative;
+}
+
+/* Add subtle texture/aging to card front */
+.card-front::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(139, 115, 85, 0.03) 2px,
+      rgba(139, 115, 85, 0.03) 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(139, 115, 85, 0.03) 2px,
+      rgba(139, 115, 85, 0.03) 4px
+    );
+  opacity: 0.4;
+  pointer-events: none;
+  border-radius: clamp(6px, 1vw, 12px);
+}
+
+
+.card-image {
+  width: 75%;
+  height: 60%;
+  object-fit: contain;
+  margin-bottom: clamp(0.25rem, 1vw, 0.5rem);
+  flex-shrink: 0;
+  filter: sepia(0.1) saturate(0.95) contrast(0.95) brightness(0.98);
+  opacity: 0.92;
+}
+
+
+.card-label {
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  font-weight: 700;
+  color: var(--parchment-text);
+  text-align: center;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+
+.card.matched {
+  pointer-events: none;
+  opacity: 0.7;
+  filter: saturate(0.7) brightness(0.9);
+  animation: matchSuccess 0.5s ease;
+}
+
+.card.matched .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card.card-mismatch {
+  animation: cardWiggle 0.4s ease;
+}
+
+@keyframes matchSuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cardWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+
+/* ------------------------------------------
+   10. Game 3 - Fishing Game
+   ------------------------------------------ */
+
+.game3-ready-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/game-3/game-3-background.svg') center center / cover no-repeat;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.game3-screen {
+  width: 100%;
+  max-width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: url('./svgs/game-3/game-3-background.svg') center center / cover no-repeat;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Gets darker as player goes deeper */
+.game3-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  transition: background 1.8s ease;
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+.game3-screen.zone-shallow::before {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.game3-screen.zone-mid::before {
+  background: rgba(0, 0, 0, 0.52);
+}
+
+.game3-screen.zone-deep::before {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.game3-screen .ruairidh-banner {
+  background: var(--gradient-blue-btn);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.38), 0 0 35px rgba(31, 75, 255, 0.26);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.game3-title {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 900;
+  color: var(--text-white);
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+.game3-canvas-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  z-index: var(--z-above-base);
+}
+
+/* Fish Elements */
+.game3-fish {
+  position: absolute;
+  cursor: pointer;
+  transition: filter 0.1s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  z-index: var(--z-stack-mid);
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, left, top;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  padding: 20px;
+  margin: -20px;
+}
+
+.game3-fish:hover {
+  filter: brightness(1.15) drop-shadow(0 2px 6px rgba(255, 255, 255, 0.4));
+}
+
+.game3-fish img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+
+/* Points Text Animation */
+.points-text {
+  position: absolute;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--secondary-yellow);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: var(--z-element);
+  animation: pointsFloat 0.9s ease-out forwards;
+}
+
+.points-text.penalty {
+  color: var(--secondary-red-material);
+}
+
+.points-text.garbage {
+  color: var(--accent-green);
+  font-size: 1.8rem;
+}
+
+@keyframes pointsFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Underwater Bubbles  for some realistic physics */
+.underwater-bubble {
+  position: absolute;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.1));
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  z-index: var(--z-stack-low);
+  animation: bubbleShimmer 2s ease-in-out infinite;
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes bubbleShimmer {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Milestone Flash Celebration */
+.milestone-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--secondary-yellow);
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9);
+  background: rgba(255, 215, 0, 0.2);
+  padding: 2rem 4rem;
+  border-radius: 20px;
+  border: 4px solid var(--secondary-yellow);
+  animation: milestoneFlash 2s ease-out forwards;
+  z-index: var(--z-interactive);
+  pointer-events: none;
+  backdrop-filter: blur(5px);
+}
+
+@keyframes milestoneFlash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/*  Zone Transition Warning */
+.zone-warning {
+  position: absolute;
+  top: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--secondary-orange);
+  background: rgba(0, 0, 0, 0.8);
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  border: 3px solid var(--secondary-orange);
+  animation: warningPulse 1s ease-in-out infinite;
+  z-index: var(--z-floating);
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.05);
+  }
+}
+
+/* --- Ruairidh Section in Game 3 --- */
+
+.game3-ruairidh-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 0.5rem auto;
+  padding: 0 1rem;
+  z-index: var(--z-floating);
+  position: relative;
+}
+
+.game3-ruairidh-section .ruairidh-container {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.5rem);
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.game3-ruairidh-section .seal-icon-wrapper {
+  flex-shrink: 0;
+  width: clamp(80px, 18vw, 120px);
+  height: clamp(80px, 18vw, 120px);
+  background: linear-gradient(135deg, var(--secondary-blue-dark), var(--secondary-blue-darker));
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  position: relative;
+}
+
+.game3-ruairidh-section .seal-icon {
+  width: 85%;
+  height: 85%;
+  object-fit: cover;
+  object-position: center 65%;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+  position: absolute;
+  bottom: -1%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.game3-ruairidh-section .speech-bubble {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 350px;
+  padding: clamp(0.6rem, 1.5vw, 1rem);
+}
+
+/* Fish to catch display 
+*/
+.target-fish-display {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.target-fish-image {
+  width: clamp(80px, 18vw, 120px);
+  height: clamp(80px, 18vw, 120px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+  animation: fishBounce 2s ease-in-out infinite;
+}
+
+@keyframes fishBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.target-fish-name {
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  color: var(--secondary-blue-darker);
+  letter-spacing: 0.3px;
+  text-align: center;
+  margin: 0;
+}
+
+/* Game 3 Tutorial Preview Layout */
+.game3-tutorial-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+.game3-tutorial-preview::before {
+  display: none;
+}
+
+.game3-tutorial-preview .game3-ruairidh-section {
+  margin-top: 1.5rem;
+}
+
+.tutorial-highlight {
+  animation: tutorialPulse 2s ease-in-out infinite;
+}
+
+@keyframes tutorialPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.tutorial-pointer {
+  text-align: center;
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  font-weight: 800;
+  color: var(--secondary-yellow);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  margin-top: 1rem;
+  animation: pointerBounce 1s ease-in-out infinite;
+}
+
+@keyframes pointerBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.game3-tutorial-explanation {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.tutorial-message-box {
+  background: var(--text-white);
+  border-radius: 20px;
+  padding: clamp(1.2rem, 3vw, 2rem) clamp(1.5rem, 4vw, 2.5rem);
+  box-shadow: 0 5px 22px rgba(0, 0, 0, 0.28);
+  max-width: 600px;
+}
+
+.tutorial-message-box p {
+  font-size: clamp(1.1rem, 2.5vh, 1.4rem);
+  font-weight: 700;
+  color: var(--text-default);
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tutorial-message-box .arrow-buttons {
+  margin-top: 1.5rem;
+  padding: 0;
+  justify-content: center;
+  gap: 1rem;
+  border-top: none;
+  width: auto;
+}
+
+.game3-tutorial-preview .arrow-buttons {
+  padding: 1rem 2rem 2rem;
+}
+
+/* --- 10.1 Squid Ink Bubble Effect -
+-- */
+
+.ink-bubble {
+  position: absolute;
+  background: radial-gradient(circle at 30% 30%,
+    rgba(10, 10, 15, 0.95) 0%,
+    rgba(5, 5, 10, 0.98) 40%,
+    rgba(0, 0, 0, 1) 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s ease-out;
+  pointer-events: none;
+  z-index: var(--z-dropdown);
+  filter: blur(8px);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8),
+              inset -10px -10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.game1-tutorial-step1 .game1-board {
+  background: rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+
+/* Using double class selector for higher specificity
+ to avoid 
+ */
+.game1-tutorial-step1 .game1-board .hex-tile:not([data-lobster="true"]) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.game1-tutorial-step1 .game1-board .hex-tile[data-lobster="true"] {
+  opacity: 1;
+}
+
+
+/* Game 1 Tutorial - Highlight board in step 2 */
+.game1-tutorial-step2 .game1-board {
+  position: relative;
+}
+
+
+.game1-tutorial-step2 .game1-board::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: var(--z-floating);
+}
+
+
+/* Game 1 Tutorial - Step 3 board */
+.game1-tutorial-step3 .game1-board {
+  position: relative;
+}
+
+
+/* ------------------------------------------
+   11. Responsive Design
+   ------------------------------------------ */
+
+/* Short screens like the Chromebooks tested on site during iteration 1*/
+@media (max-height: 700px) {
+  .game-main-title {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    margin-bottom: clamp(0.5rem, 2vh, 1rem);
+  }
+
+  .login-screen {
+    padding: 1.5rem 2rem;
+  }
+
+  .login-screen h2 {
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .play-button {
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+  }
+
+  /* Tutorial screens - compact for short viewports */
+  .ruairidh-intro-screen {
+    padding: clamp(0.75rem, 2vh, 1.5rem);
+    gap: clamp(0.5rem, 1.5vh, 1rem);
+  }
+
+  .ruairidh-container {
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+    padding: clamp(0.3rem, 1vh, 0.75rem);
+  }
+
+  .speech-bubble {
+    padding: 0.8rem 1rem;
+  }
+
+  .speech-bubble p {
+    font-size: clamp(1rem, 2.2vh, 1.2rem);
+    line-height: 1.45;
+  }
+
+  .seal-icon {
+    width: clamp(50px, 8vw, 90px);
+    height: clamp(50px, 8vw, 90px);
+  }
+
+  .arrow-btn, .play-green-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .arrow-buttons {
+    padding-top: 0.6rem;
+  }
+
+  /* Game screens */
+  .ruairidh-banner {
+    padding: 0.8rem 1rem;
+    border-radius: 16px;
+  }
+
+  .game1-title-fun {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+  }
+}
+
+/* Very short screens */
+@media (max-height: 550px) {
+  .game-main-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .login-screen {
+    padding: 1rem 1.5rem;
+  }
+
+  .login-screen h2 {
+    font-size: 1.8rem;
+  }
+
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .form-group input {
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .play-button {
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  /* Tutorial screens - very compact */
+  .ruairidh-intro-screen {
+    padding: 0.6rem 0.8rem;
+    gap: 0.4rem;
+    border-radius: 14px;
+  }
+
+  .ruairidh-container {
+    gap: 0.5rem;
+    padding: 0.25rem;
+  }
+
+  .ruairidh-banner {
+    padding: 0.5rem 0.8rem;
+    gap: 0.5rem;
+  }
+
+  .seal-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  .speech-bubble {
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+  }
+
+  .speech-bubble p {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .arrow-btn, .play-green-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .arrow-buttons {
+    padding-top: 0.4rem;
+    border-top-width: 1px;
+  }
+}
+
+/* Wide screens - prevents content from feeling lost */
+@media (min-width: 1400px) {
+  .login-screen {
+    max-width: 550px;
+    padding: 3rem 4rem;
+  }
+
+  .game-main-title {
+    font-size: 5.5rem;
+  }
+
+  .login-screen h2 {
+    font-size: 3.5rem;
+  }
+}
+
+/* Landscape orientation on tablets/Chromebooks - title stays  */
+@media (orientation: landscape) and (max-height: 600px) {
+  .game-main-title {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .login-screen {
+    max-width: 400px;
+    padding: 1.5rem;
+  }
+
+  .login-screen h2 {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .form-group label {
+    font-size: 1rem;
+  }
+
+  .form-group input {
+    padding: 0.6rem;
+    font-size: 1rem;
+  }
+
+  .play-button {
+    padding: 0.7rem 1.5rem;
+    font-size: 1.2rem;
+  }
+
+  /* Tutorial screens - landscape compact */
+  .ruairidh-intro-screen {
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .ruairidh-container {
+    gap: 0.75rem;
+    padding: 0.4rem;
+  }
+
+  .seal-icon {
+    width: clamp(45px, 8vh, 70px);
+    height: clamp(45px, 8vh, 70px);
+  }
+
+  .speech-bubble {
+    padding: 0.6rem 0.85rem;
+  }
+
+  .speech-bubble p {
+    font-size: clamp(0.95rem, 2vh, 1.15rem);
+  }
+
+  .arrow-btn, .play-green-btn {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+  }
+}
+
