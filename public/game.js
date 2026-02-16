@@ -3,32 +3,32 @@
 // GEAMAICHEAN GÀIDHLIG - (GAELIC GAMES)
 // ------------------------------------------------------------
 //
-// This JavaScript file contains the main game controller and logic for the Gaelic 
-// Games web app. It manages everything from the game's flow to audio playback, 
-// and user interactions. The code is structured to be modular and maintainable, with 
+// This JavaScript file contains the main game controller and logic for the Gaelic
+// Games web app. It manages everything from the game's flow to audio playback,
+// and user interactions. The code is structured to be modular and maintainable, with
 // clear separation of different game parts.
 //
-// Note that some areas are not fully developed (CS4099 Interim Demo Submission), and 
-// I normally makrk things i need to do with 'TBD, and just cntrl F for those tags to 
-// filter out my work to be done 
+// Note that some areas are not fully developed (CS4099 Interim Demo Submission), and
+// I normally makrk things i need to do with 'TBD, and just cntrl F for those tags to
+// filter out my work to be done
 //
-// I havce added commenst to explain sections and, where necessary, some of the 
+// I havce added commenst to explain sections and, where necessary, some of the
 // challenges and tradeoffs that led to some decisions.
 //
 // ----------------------------------------------------------------
-// GAME FLOW: 
+// GAME FLOW:
 // LOGIN → INTRO → TUTORIAL → GAME1 → GAME2 → GAME3 → RESULTS
 // ----------------------------------------------------------------
-// 
+//
 // TABLE OF CONTENTS:
 //
 // 1. CONFIGURATION
-// 2. UTILITY FUNCTIONS
-// 3. MAIN GAME CONTROLLER (GameFlowController)
+// 2. UTILITY FUNCTIONS & AUDIO MANAGER
+// 3. HELP SYSTEM (SmartHelpSystem)
 // 4. GAME 1 - Glac an Giomach (Catch the Lobster)
 // 5. GAME 2 - Cho Coltach Ris an Dà Sgadan (Memory Card Game)
 // 6. GAME 3 - Cho Luath ris a' Bhradan (Fish catching Game)
-// 7. HELP SYSTEM
+// 7. MAIN GAME CONTROLLER (GameFlowController)
 // 8. INITIALISATION
 //
 // --------------------------------------------------------------------
@@ -40,7 +40,7 @@
 const GAME_SETTINGS = {
 
   // Audio volumes (0.0 to 1.0) - This just centralises all volume settings in one place
-  //  for easy tweaking 
+  //  for easy tweaking
   AUDIO: {
     backgroundMusic: 0.3,
     game1TutorialMusic: 0.1,
@@ -187,7 +187,7 @@ const LAYOUT_TUTORIAL_STEPS = {
   }
 };
 
-// Tutorial rock positions for Game 1 board demo 
+// Tutorial rock positions for Game 1 board demo
 const TUTORIAL_ROCK_POSITIONS = ['2,1', '3,1', '4,1', '5,2']; // - no need to randmise rock positions for demo
 
 // --------------------------------------------------------
@@ -198,9 +198,9 @@ const TUTORIAL_ROCK_POSITIONS = ['2,1', '3,1', '4,1', '5,2']; // - no need to ra
 // Returns array of "x,y" strings for 6 vertices
 // https://stackoverflow.com/questions/52172067/create-svg-hexagon-points-with-only-only-a-length
 /*
-The implementation of the regular hexagon vertices builds on a standard approach found in online resources. 
+The implementation of the regular hexagon vertices builds on a standard approach found in online resources.
 Hexagons are just six points evenly spaced around a circle. I used the standard cos/sin formula to calculate
-each corner at 60° intervals, with a -30° offset so the hexagon sits flat-topped rather than pointy-topped. 
+each corner at 60° intervals, with a -30° offset so the hexagon sits pointy-topped (vertex at top and bottom).
 The function returns coordinates ready for SVG polygons.
 */
 function calculateHexPoints(centreX, centreY, radius) {
@@ -230,7 +230,7 @@ class AudioManager {
   initTracks() {
 
     // https://www.kevssite.com/seamless-audio-looping/ - using .ogg over mp3 for beter looping
-    
+
     // Music tracks - which are looped
     this.tracks.background = this.createTrack('background', './music/non-game.ogg', GAME_SETTINGS.AUDIO.backgroundMusic, true);
     this.tracks.game1Tutorial = this.createTrack('game1Tutorial', './music/game-1-tutorial.ogg', GAME_SETTINGS.AUDIO.game1TutorialMusic, true);
@@ -406,8 +406,8 @@ class AudioManager {
   }
 
   // Toggle sound on/off - (mutes volume, keeps music playing to stay in sync)
-  // I had aligned teh music so that the music ends at the same time as the timer runs out. 
-  // For example, in game 3, as the fish get faster, so too does the music. 
+  // I had aligned teh music so that the music ends at the same time as the timer runs out.
+  // For example, in game 3, as the fish get faster, so too does the music.
   // Without this fuction, if a player mutes the music, then unmutes it later,
   //  the music would be out of sync with the gameplay and impact the experience.
 
@@ -441,1572 +441,181 @@ class AudioManager {
 }
 
 
-// ------------------------------------------
-// 3. MAIN GAME CONTROLLER
-// ------------------------------------------------------------------------
+// ----------------------------------------------------------------
+// 3. HELP SYSTEM
+// ----------------------------------------------------------------
+// This handles the "?" help button that appears during gameplay.
+// When clicked, it shows a modal with the step by step instructions
+// in Gaelic explaining how to play the current game.
+// The game pauses while reading help so the player doesn't lose time.
 
-class GameFlowController {
-  constructor() {
-    // State tracking
-    this.currentState = 'LOGIN';
-    this.gameContainer = document.getElementById('game-container');
+class SmartHelpSystem {
+  constructor(gameController) {
+    this.controller = gameController;
+    this.modalElement = null;
+    this.isOpen = false;
 
-    // Player data
-    // TBD - Player information will record info such as their participant code, 
-    // whetehr they clicked for help, took interest in finding out mroe about Gaelic phrases etc.
-    // Another throught was tracking navigation of tutorials, do they have to go back, why? Could 
-    // the cognitive load be too high? Are they getting lost/confused at certain points etc.
-    this.participantCode = null;
-    this.gameData = {};
-    this.totalPoints = 0;
-
-    // Tutorial step counters - Just Tracks progress through each tutorial section
-    this.layoutTutorialStep = 0;
-    this.game1TutorialStep = 0;
-    this.game2TutorialStep = 0;
-    this.game3TutorialStep = 0;
-
-    // Game board instances (created when each game starts)
-    this.game1Board = null;
-    this.game2Board = null;
-
-    // Timer (4 minute countdown for Game 1)
-    this.gameTimer = null;
-    this.timeRemaining = GAME_SETTINGS.TIMING.game1Duration;
-
-    // state
-    this.gamePaused = false;
-
-    // Centralised audio management
-    this.audio = new AudioManager();
-    // 
+    // I originally planned to track player stats (lobsters caught/escaped)
+    // in localStorage so I could give personalised help tips based on
+    // how well they were doing. Ran out of time to implement this properly
+    // so it's commented out for now - maybe for a future version.
   }
 
-  // Builds the top banner (buttons, timer, points) - options control what's shown
-  // This fucntion was used to replace duplicate banner implementations which beagn to 
-  // show technical debt when making changes to the banner
-  buildBannerHTML(options = {}) {
-    const {
-      showPause = true,
-      pauseDisabled = true,
-      pauseButtonGlowing = false,
-      pauseHandler = null,
-      showHelp = true,
-      helpDisabled = true,
-      helpButtonGlowing = false,
-      helpHandler = 'gameController.toggleInGameHelpModal()',
-      showTimer = false,
-      timerDisplay = '5:00',
-      showTitle = false,
-      title = '',
-      titleClass = 'game1-title-fun',
-      cairnGlowing = false,
-      cairnId = '',
-      soundButtonGlowing = false
-    } = options;
-
-    // Build the sound button - adds 'glowing' class if it should pulsate during tutorial
-    let soundBtnClass = 'ruairidh-sound-button';
-    if (soundButtonGlowing) {
-      soundBtnClass = 'ruairidh-sound-button glowing';
+  // Called when the "?" help button is clicked during gameplay
+  toggle() {
+    if (this.isOpen) {
+      this.close();
+    } else {
+      this.open();
     }
-    const soundBtn = `<button class="${soundBtnClass}" id="sound-button" onclick="gameController.toggleSound()">
-      <img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" />
-      <img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" />
-    </button>`;
-
-    // Build pause button - this one's a bit more complex because it behaves differently
-    // during the tutorial (glowing, not clickable) vs during actual gameplay (clickable)
-    let pauseBtn = '';
-    if (showPause) {
-      let pauseBtnClass = 'ruairidh-pause-button'; // start with defaults, then override
-      let pauseStyle = '';
-      let pauseIdAttr = '';
-      let disabledAttr = '';
-      let onclickAttr = '';
-
-      // During tutorial, the button glows but shouldn't be clickable
-      if (pauseButtonGlowing) {
-        pauseBtnClass = 'ruairidh-pause-button glowing';
-        pauseStyle = ' style="cursor: default;"';
-        pauseIdAttr = ' id="layout-pause-btn"';
-      } else if (pauseHandler) {
-        pauseIdAttr = ' id="pause-button"'; // different ID so togglePause can find it
-      }
-
-      if (pauseDisabled) {
-        disabledAttr = ' disabled';
-      }
-
-      // Only add the click handler if the pausebutton should actually be doing smething
-      if (pauseHandler && !pauseDisabled) {
-        onclickAttr = ` onclick="${pauseHandler}"`;
-      }
-
-      pauseBtn = `<button class="${pauseBtnClass}"${pauseIdAttr}${disabledAttr}${pauseStyle}${onclickAttr}>${SVG_ICONS.pause}</button>`;
-    }
-
-    // Build help button - similar logic to pause, but simpler
-    let helpBtn = '';
-    if (showHelp) {
-      let helpBtnClass = 'ruairidh-help-button';
-      let helpIdAttr = '';
-      let disabledAttr = '';
-      let onclickAttr = '';
-
-      // Glowing during tutorial to draw attention
-      if (helpButtonGlowing) {
-        helpBtnClass = 'ruairidh-help-button glowing';
-        helpIdAttr = ' id="layout-help-btn"';
-      }
-
-      // Either disabled (no click) or enabled (shows help box) aferr click
-      if (helpDisabled) {
-        disabledAttr = ' disabled';
-      } else {
-        onclickAttr = ` onclick="${helpHandler}"`;
-      }
-
-      helpBtn = `<button class="${helpBtnClass}"${helpIdAttr}${disabledAttr}${onclickAttr}>?</button>`;
-    }
-
-    // Build timer section - only shown during timed games (Game 1 and Game 3)
-    let timerSection = '';
-    if (showTimer) {
-      timerSection = `
-            <div class="timer-box">
-              <img src="./svgs/all-games/clock.svg" alt="Uaireadair" class="timer-icon" />
-              <div class="timer-text">ÙINE:</div>
-              <span id="timer-display">${timerDisplay}</span>
-            </div>`;
-    }
-
-    // Build title section - shows the game name like "Glac an Giomach"
-    let titleSection = '';
-    if (showTitle && title) {
-      titleSection = `
-          <div class="banner-title-container">
-            <div class="${titleClass}">${title}</div>
-          </div>`;
-    }
-
-    // Build cairn/points section - the cairn icon pulsates when Ruairidh explains it
-    let cairnClass = 'cairn-icon';
-    if (cairnGlowing) {
-      cairnClass = cairnClass + ' pulsing';
-    }
-    let cairnIdAttr = '';
-    if (cairnId) {
-      cairnIdAttr = ` id="${cairnId}"`;
-    }
-
-    return `
-        <div class="ruairidh-banner">
-          <div class="ruairidh-banner-left">
-            ${soundBtn}
-            ${pauseBtn}
-            ${helpBtn}
-          </div>
-          ${titleSection}
-          <div class="ruairidh-banner-right">
-            ${timerSection}
-            <div class="points-box">
-              <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="${cairnClass}"${cairnIdAttr} />
-              <div class="ruairidh-banner-text">PUINGEAN:</div>
-              <span id="points-counter" class="points-counter-text">${this.totalPoints}</span>
-            </div>
-          </div>
-        </div>`;
   }
 
-  // Builds the speech bubble with Ruairidh the seal
-  buildSpeechBubbleHTML(speechText, sealSize = null) {
-    let sealStyle = '';
-    if (sealSize) {
-      sealStyle = ` style="width: ${sealSize}px; height: ${sealSize}px;"`;
-    }
-    return `
-          <div class="ruairidh-container">
-            <div class="seal-icon-wrapper">
-              <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon"${sealStyle} />
-            </div>
-            <div class="speech-bubble">
-              <p>${speechText}</p>
-            </div>
-          </div>`;
+  // Show the help modal - doesn't pause the game, just overlays it
+  // (matching the public version which works correctly)
+  open() {
+    this.createModal();
+    this.isOpen = true;
+    document.body.style.overflow = 'hidden';  // stop background from scrolling
   }
 
-  // Builds the back/forward arrow buttons (or the green "play" button on the final tutorial step)
-  buildNavButtonsHTML(backAction, forwardAction, showPlayButton = false, playAction = null) {
-    let buttons = '';
+  // Hide the modal
+  close() {
+    // Set isOpen to false immediately to prevent double-close issues
+    this.isOpen = false;
+    document.body.style.overflow = '';  // restore scrolling immediately
 
-    if (backAction) {
-      buttons += `<button class="arrow-btn" onclick="${backAction}">← Air ais</button>`;
-    }
+    if (this.modalElement) {
+      const modalToRemove = this.modalElement;  // capture reference to avoid race condition
 
-    if (showPlayButton) {
-      let action = "gameController.setGameFlowState('GAME1_TUTORIAL')";
-      if (playAction) {
-        action = playAction;
+      // Remove event listeners to prevent any lingering handlers
+      if (this._boundKeydownHandler) {
+        modalToRemove.removeEventListener('keydown', this._boundKeydownHandler);
       }
-      buttons += `<button class="play-green-btn" onclick="${action}">Cluich an Geama</button>`;
-    } else if (forwardAction) {
-      buttons += `<button class="arrow-btn" onclick="${forwardAction}">Air adhart →</button>`;
+      if (this._boundClickHandler) {
+        modalToRemove.removeEventListener('click', this._boundClickHandler);
+      }
+
+      modalToRemove.classList.remove('active');
+
+      // Clear pointer events immediately to ensure clicks go through to game board
+      modalToRemove.style.pointerEvents = 'none';
+
+      setTimeout(() => {
+        // Only remove this specific modal, not a newly created one
+        if (modalToRemove && modalToRemove.parentNode) {
+          modalToRemove.remove();
+        }
+        // Only clear the reference if it's still the same modal
+        if (this.modalElement === modalToRemove) {
+          this.modalElement = null;
+        }
+      }, 300);  // matches CSS transition duration
     }
 
-    // Centre the buttons if there's only a play button (no back arrow)
-    let containerClass = 'arrow-buttons';
-    if (showPlayButton && !backAction) {
-      containerClass = 'arrow-buttons centred';
+    // Ensure focus returns to the game by blurring any focused element in the modal
+    if (document.activeElement && document.activeElement.closest('.help-modal')) {
+      document.activeElement.blur();
     }
-
-    return `<div class="${containerClass}">${buttons}</div>`;
   }
 
-  // --------------------------------------------------------
-  // UNIFIED LAYOUT TUTORIAL RENDERER
-  // Avoids duplication of renderGameIntro_LayoutStep functions
-  // ------------------------------------------------------------
-  renderLayoutTutorialStep(stepIndex) {
-    // Look up which tutorial step to show (e.g. stepIndex 0 = SOUND_BUTTON, 1 = PAUSE_BUTTON, etc)
-    const stepKeys = Object.keys(LAYOUT_TUTORIAL_STEPS);
-    const stepKey = stepKeys[stepIndex];
-    const config = LAYOUT_TUTORIAL_STEPS[stepKey];
+  // Builds the modal DOM element and adds it to the page
+  createModal() {
+    const existing = document.getElementById('smart-help-modal');
+    if (existing) existing.remove();
 
-    // Safety check in case something goes wrong (tessted)
-    if (!config) {
-      console.error(`Invalid layout tutorial step index: ${stepIndex}`);
-      return;
-    }
+    const modal = document.createElement('div');
+    modal.id = 'smart-help-modal';
+    modal.className = 'help-modal';
+    modal.innerHTML = this.generateModalHTML();
+    document.body.appendChild(modal);
 
-    this.layoutTutorialStep = config.step;
+    this.modalElement = modal;
+    this.attachEventListeners();
 
-    // Build banner with appropriate glowing states
-    const bannerHTML = this.buildBannerHTML({
-      soundButtonGlowing: config.soundButtonGlowing,
-      showPause: true,
-      pauseDisabled: true,
-      pauseButtonGlowing: config.pauseButtonGlowing,
-      showHelp: true,
-      helpDisabled: true,
-      helpButtonGlowing: config.helpButtonGlowing,
-      cairnGlowing: config.cairnGlowing
+    // The active class has opacity:1 in CSS, so adding it triggers a fadein.
+    // But if I add it immediately after appending to DOM, the browser skips
+    // the transition. requestAnimationFrame delays it by one frame so it works
+    requestAnimationFrame(() => {
+      modal.classList.add('active');
     });
+  }
 
-    // Build speech bubble
-    const speechHTML = this.buildSpeechBubbleHTML(config.speechText);
+  // Returns the HTML for Game 1's help module
+  // "Ciamar a chluicheas tu?" = "How do you play?"
+  // The tips explain in Gaelic how to trap the lobster
+  generateModalHTML() {
+    return `
+      <div class="help-modal-content simple-help">
+        <button class="modal-close" onclick="gameController.helpSystem.close()">✕</button>
 
-    // Build navigation buttons
-    const navHTML = this.buildNavButtonsHTML(
-      config.backAction,
-      config.forwardAction,
-      config.showPlayButton || false
-    );
+        <h2 class="simple-help-title">Ciamar a chluicheas tu?</h2>
 
-    // Some steps have a special background class (e.g. beach background on the final step)
-    let screenClass = '';
-    if (config.screenClass) {
-      screenClass = ` ${config.screenClass}`;
-    }
+        <div class="simple-help-body">
+          <div class="help-tip">
+            <span class="help-tip-number">1</span>
+            <div class="help-tip-content">
+              <strong>Coimhead!</strong> <p>Faic dè an oir den bhòrd as fhaisge air a' ghiomach - sin far a bheil e airson dol!</p>
+            </div>
+          </div>
 
-    // Put it all together and render to the page
-    const html = `
-      <div class="game-screen${screenClass}">
-        ${bannerHTML}
-        <div class="intro-screen-wrapper" style="position: relative; z-index: 1000;">
-          <div class="ruairidh-intro-screen">
-            ${speechHTML}
-            ${navHTML}
+          <div class="help-tip">
+            <span class="help-tip-number">2</span>
+            <div class="help-tip-content">
+              <strong>Tog balla!</strong> <p>Cuir clachan sìos fada air falbh bhon ghiomach. Na tèid ro fhaisg aig an toiseach!</p>
+            </div>
+          </div>
+
+          <div class="help-tip">
+            <span class="help-tip-number">3</span>
+            <div class="help-tip-content">
+              <strong>Dùin na beàrnan!</strong> <p>Teichidh a' ghiomach tron toll as lugha - cum ort gus nach bi beàrn sam bith!</p>
+            </div>
+          </div>
+
+          <div class="help-tip">
+            <span class="help-tip-number">4</span>
+            <div class="help-tip-content">
+              <strong>Glac e!</strong> <p>Nuair nach urrainn dha na h-oirean a ruighinn, tha thu ga ghlacadh!</p>
+            </div>
           </div>
         </div>
+
+        <button class="arrow-btn" onclick="gameController.helpSystem.close()">Dùin</button>
       </div>
     `;
-
-    this.gameContainer.innerHTML = html;
   }
 
-  // Called when player clicks "Air adhart" (forward) during the layout tutorial
-  advanceLayoutTutorialStep() {
-    // Find where we are in the tutorial steps
-    const stepKeys = Object.keys(LAYOUT_TUTORIAL_STEPS);
-    let currentIndex = -1;
-    for (let i = 0; i < stepKeys.length; i++) {
-      const key = stepKeys[i];
-      if (LAYOUT_TUTORIAL_STEPS[key].step === this.layoutTutorialStep) {
-        currentIndex = i;
-        break;
-      }
-    }
+  // Keyboard and mouse shortcuts to close the modal
+  attachEventListeners() {
+    if (!this.modalElement) return;
 
-    // If we're not at the last step, go to the next one
-    if (currentIndex < stepKeys.length - 1) {
-      this.renderLayoutTutorialStep(currentIndex + 1);
-    }
-  }
-
-  // Called when player clicks the sound button
-  toggleSound() {
-    const nowEnabled = this.audio.toggle(); // flips audio on/off and returns new state
-    const muteOverlay = document.getElementById('sound-mute-overlay');
-
-    // Show or hide the red X over the speaker icon
-    if (muteOverlay) {
-      if (nowEnabled) {
-        muteOverlay.style.display = 'none';
-      } else {
-        muteOverlay.style.display = 'block'; // shows the muted indicator
-      }
-    }
-
-    if (nowEnabled) {
-      this.audio.startForState(this.currentState); // restart music for current screen
-    }
-  }
-
-  // When the player clicks the "?" next to one of the seleted idiomatic Gaelic phrases, this shows a popup
-  // explaining what the phrase means (with Ruairidh the seal)
-  showPhraseExplanation(phraseId) {
-    // The phrases used in the game and their explanations
-    const phrases = {
-      cairn: {
-        phrase: "Nithear càirn mòr bho chlachan bheaga", // "Big cairns are made from small stones"
-        explanation: "Tha an abairt seo a' ciallachadh gun urrainn dhut rudeigin mòr a choileanadh le bhith a' cur ris, beag air bheag. Tha na ceumannan beaga cudromach!"
-      },
-      earrach: {
-        phrase: "San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar", // "In Spring, when the sheep is thin, the shellfish is fat"
-        explanation: "Tha an abairt seo a' ciallachadh gur e àm math a th' anns an Earrach dhuinn. Aig toiseach na bliadhna, tha na caoraich caol, ach tha na maoraich, 's e sin na giomaich is na crùbagan, gu math reamhar. Tha a mhuir agus an tìr a' toirt biadh dhuinn fad na bliadhna, fiùs ma tha rudeigin eile lag no gann!"
-      }
+    // Store bound handlers so they can be removed later
+    this._boundKeydownHandler = (e) => {
+      if (e.key === 'Escape') this.close();
+    };
+    this._boundClickHandler = (e) => {
+      if (e.target === this.modalElement) this.close();
     };
 
-    const data = phrases[phraseId];
-    if (!data) return; // just in case an invalid phraseId is passed
+    // Press Escape to close - Extra feature added when teacher tried to press escape from the pop up
+    this.modalElement.addEventListener('keydown', this._boundKeydownHandler);
 
-    // Create the  popup box
-    const modal = document.createElement('div');
-    modal.className = 'phrase-modal active';
-    modal.id = 'phrase-modal';
-    modal.innerHTML = `
-      <div class="phrase-modal-content">
-        <h3 class="phrase-modal-title">"${data.phrase}"</h3>
-        <div class="phrase-modal-seal">
-          <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh" />
-        </div>
-        <div class="phrase-modal-explanation">
-          <p>${data.explanation}</p>
-        </div>
-        <button class="arrow-btn" onclick="gameController.closePhraseExplanation()">Dùin</button>
-      </div>
-    `;
-    document.body.appendChild(modal); // add it to the page
+    // Click the dark background area to close - Extra feature added on top pf the above
+    this.modalElement.addEventListener('click', this._boundClickHandler);
   }
 
-  closePhraseExplanation() {
-    const modal = document.getElementById('phrase-modal');
-    if (modal) {
-      modal.remove(); // takes it off the page
-    }
+  // ---------------------------------------------------------------
+  // ANALYTICS (stub functions - full implementation not finished)
+  // ---------------------------------------------------------------
+  // These functions are called by the game code but the full analytics
+  // feature wasn't completed. Keeping as empty stubs to prevent errors.
+
+  recordLobsterCaught() {
+    // Stub - would track caught lobsters for personalised help tips
   }
 
-  // Pauses or resumes Game 1 - stops the timer and freezes the lobster
-  togglePause() {
-    this.gamePaused = !this.gamePaused;
-    const button = document.getElementById('pause-button');
-    const modal = document.getElementById('pause-modal');
-
-    if (this.gamePaused) {
-      if (this.gameTimer) clearInterval(this.gameTimer); // stop the countdown
-      if (this.game1Board) this.game1Board.isAnimating = true; // freeze the lobster
-      if (button) button.innerHTML = SVG_ICONS.play;
-      if (modal) modal.classList.add('active');
-      this.audio.pauseGameSounds(this.currentState);
-    } else {
-      if (this.game1Board) {
-        this.game1Board.isAnimating = false; // unfreeze the lobster
-      }
-
-      // Restart the countdown timer
-      if (this.gameTimer) clearInterval(this.gameTimer);
-      this.gameTimer = setInterval(() => {
-        this.timeRemaining--;
-        this.updateGame1TimerDisplay();
-        if (this.timeRemaining <= 0) {
-          clearInterval(this.gameTimer);
-          setTimeout(() => this.setGameFlowState('GAME2_READY'), GAME_SETTINGS.TIMING.stateTransitionDelay);
-        }
-      }, 1000);
-
-      if (button) button.innerHTML = SVG_ICONS.pause;
-      if (modal) modal.classList.remove('active');
-      this.audio.resumeForState(this.currentState);
-    }
-  }
-
-  // Pauses or resumes Game 3 - same idea as togglePause but for the fish sorting game
-  // (I kept these separate because Game 1 has the timer logic and Game 3 doesn't)
-  toggleGame3Pause() {
-    if (!this.game3Board) return;
-    this.game3Board.isPaused = !this.game3Board.isPaused;
-    const button = document.getElementById('pause-button');
-    const modal = document.getElementById('pause-modal');
-
-    if (this.game3Board.isPaused) {
-      if (button) button.innerHTML = SVG_ICONS.play;
-      if (modal) modal.classList.add('active');
-      this.audio.pauseGameSounds(this.currentState);
-    } else {
-      if (button) button.innerHTML = SVG_ICONS.pause;
-      if (modal) modal.classList.remove('active');
-      this.audio.resumeGameSounds(this.currentState);
-    }
-  }
-
-  // ============================================================================
-  //
-  //                           MAIN STATE MACHINE
-  //
-  //   This is the heart of the app. It controls which screen is showing and when
-  //   Every screen transition goes through this function
-  //
-  //   As i stated in the begining, the game flow goes like this:
-  //
-  //   LOGIN → RUAIRIDH_INTRO → PREGAME_TUTORIAL 
-  //         → GAME1_TUTORIAL → GAME1
-  //         → GAME2_READY → GAME2_TUTORIAL → GAME2
-  //         → GAME3_READY → GAME3_TUTORIAL → GAME3 → RESULTS
-  //
-  // ============================================================================
-  setGameFlowState(newState) {
-    this.currentState = newState;
-
-    // Clear what was on screen before
-    this.gameContainer.innerHTML = '';
-
-    // ===== AUDIO MANAGEMENT =====
-    // Each state has different audio requirements
-    // First anbd foremost kill everything that's currently playing:
-    this.audio.stopAll();
-
-    // Then start the appropriate tracks for this new state
-    if (newState === 'GAME1_TUTORIAL') {
-      // Tutorial has quieter music + ocean ambience
-      this.audio.startGame1Tutorial();
-      this.audio.startAmbience();
-    } else if (newState === 'GAME1') {
-      // Ambiance for game 1 only here
-      this.audio.startGame1();
-      this.audio.startAmbience();
-    } else if (newState === 'GAME2') {
-      // Matching game music
-      this.audio.startGame2();
-    } else if (newState === 'GAME3') {
-      // Fishing game music
-      this.audio.startGame3();
-    } else if (['RUAIRIDH_INTRO', 'PREGAME_TUTORIAL', 'GAME2_READY', 'GAME2_TUTORIAL', 'GAME3_READY', 'GAME3_TUTORIAL', 'RESULTS'].includes(newState)) {
-      // Menu and tutorial screens use generic background music
-      this.audio.startBackground();
-    }
-    // LOGIN screen stays silent (no music)
-
-    switch (newState) {
-      case 'LOGIN':
-        this.renderLoginScreen();
-        break;
-      case 'RUAIRIDH_INTRO':
-        this.renderIntroduction_RuairidhIntro();
-        break;
-      case 'PREGAME_TUTORIAL':
-        this.renderLayoutTutorialStep(0);
-        break;
-      case 'GAME1_TUTORIAL':
-        this.renderGame1TutorialFlow();
-        break;
-      case 'GAME1':
-        this.renderGame1_Main();
-        break;
-      case 'GAME2_READY':
-        this.renderInterval_TransitionToGame2();
-        break;
-      case 'GAME2_TUTORIAL':
-        this.renderGame2TutorialScreen();
-        break;
-      case 'GAME2':
-        this.renderGame2_Main();
-        break;
-      case 'GAME3_READY':
-        this.renderInterval_TransitionToGame3();
-        break;
-      case 'GAME3_TUTORIAL':
-        this.renderGame3_Tutorial();
-        break;
-      case 'GAME3':
-        this.renderGame3_Main();
-        break;
-      case 'RESULTS':
-        this.renderResultsScreen();
-        break;
-    }
-
-    // Update sound button icon to match current sound state
-    this.updateSoundButtonIcon();
-  }
-
-  updateSoundButtonIcon() {
-    const muteOverlay = document.getElementById('sound-mute-overlay');
-    if (muteOverlay) {
-      muteOverlay.style.display = this.audio.isEnabled() ? 'none' : 'block';
-    }
-  }
-
-  // Sets up a smaller version of the Game 1 board for the tutorial screens
-  initGame1TutorialBoard(options = {}) {
-    let withRocks = false;
-    if (options.withRocks) {
-      withRocks = true;
-    }
-
-    // Create a new board with smaller dimensions for the tutorial
-    this.game1TutorialBoard = new Game1Board(5, this);
-    this.game1TutorialBoard.isAnimating = true; // starts frozen so player can read instructions
-    this.game1TutorialBoard.gridWidth = GAME_SETTINGS.GRID.tutorialWidth;
-    this.game1TutorialBoard.gridHeight = GAME_SETTINGS.GRID.tutorialHeight;
-    this.game1TutorialBoard.boardSquares.clear();
-    this.game1TutorialBoard.initialiseBoard();
-    this.game1TutorialBoard.spawnLobster();
-
-    // Some tutorial steps show rocks, others don't
-    if (withRocks) {
-      const lobsterX = this.game1TutorialBoard.lobster.position.x;
-      const lobsterY = this.game1TutorialBoard.lobster.position.y;
-      const lobsterKey = lobsterX + ',' + lobsterY;
-
-      // Add each rock position, but skip if the lobster is there 
-      // This was a bug fix where a stone would sometimes spawn on top of the lobster during the tutorial,
-      //  which was confusing for users given the fact taht isay the lobser can't jump over rocks
-      for (let i = 0; i < TUTORIAL_ROCK_POSITIONS.length; i++) {
-        const pos = TUTORIAL_ROCK_POSITIONS[i];
-        if (pos !== lobsterKey) {
-          this.game1TutorialBoard.blockedSet.add(pos);
-        }
-      }
-    } else {
-      this.game1TutorialBoard.blockedSet.clear();
-    }
-
-    return this.game1TutorialBoard;
-  }
-
-  // ----------------------------------------------------------
-  // 1 - LOGIN (player enters their participant code before starting)
-  // ----------------------------------------------------------
-  renderLoginScreen() {
-    const html = `
-      <div class="login-wrapper">
-        <h1 class="game-main-title">Geamaichean Gàidhlig</h1>
-        <div class="login-screen">
-          <h2>Fàilte!</h2>
-          <div class="form-group">
-            <label for="participant-code">Còd an cluicheadar:</label>
-            <input type="text" id="participant-code" placeholder="Cuir a-steach do chòd an seo" autocomplete="off" />
-          </div>
-          <button class="play-button" onclick="gameController.handleLoginSubmit()">Tòisich</button>
-        </div>
-      </div>
-    `;
-    this.gameContainer.innerHTML = html;
-
-    // Allow Enter key to submit // When being tested by teacher afetr iteration 1 and she
-    // tried pressing enter and it didnt work, decided to implement this
-    const input = document.getElementById('participant-code');
-    if (input) {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          this.handleLoginSubmit();
-        }
-      });
-    }
-  }
-
-  // This is TBD
-  // Very basic validation until i get the number of partucpants and can aclly test with real codes 
-  handleLoginSubmit() {
-    const input = document.getElementById('participant-code');
-    if (!input) return;
-
-    const code = input.value.trim();
-
-    // Validate input: alphanumeric and basic punctuation only, max 50 chars
-    const sanitizedCode = code.replace(/[^a-zA-Z0-9\-_]/g, '');
-
-    if (sanitizedCode.length === 0) {
-      alert('Feuch gun cuir thu a-steach an còd ceart agad!');
-      return;
-    }
-
-    if (sanitizedCode.length > 50) {
-      alert('Tha an còd ro fhada. Feuch còd nas giorra.');
-      return;
-    }
-
-    this.participantCode = sanitizedCode;
-    this.gameData = { participantCode: sanitizedCode, score: 0, gameStartTime: new Date() };
-    this.setGameFlowState('RUAIRIDH_INTRO');
-  }
-
-  // ----------------------------------------------------------
-  // 2 - INTRODUCTION (Ruairidh the seal introduces himself)
-  // ----------------------------------------------------------
-  renderIntroduction_RuairidhIntro() {
-    const html = `
-      <div class="ruairidh-intro-screen">
-        <div class="ruairidh-container">
-          <div class="seal-icon-wrapper">
-            <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
-          </div>
-          <div class="speech-bubble">
-            <p>Halo! Is mise Ruairidh an Ròn, 's tha mi an seo airson do chuideachadh leis a' gheama seo.</p>
-          </div>
-        </div>
-        <div class="arrow-buttons centred">
-          <button class="arrow-btn" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">Air adhart →</button>
-        </div>
-      </div>
-    `;
-    this.gameContainer.innerHTML = html;
-  }
-
-  // ----------------------------------------------------------
-  // 3 - GAME 1 TUTORIAL (Ruairidh explains how to catch lobsters)
-  //
-  // This is split into multiple steps so the player isn't overwhelmed:
-  //   Step 1  - Welcome to the beach + Gaelic phrase
-  //   Step 1b - Shows the lobster moving around
-  //   Step 2  - Explains the board and sand tiles
-  //   Step 3  - Explains rocks and how to trap lobsters
-  //   Step 4  - Final tips, then "Play" button
-  // ----------------------------------------------------------
-
-  renderGame1TutorialFlow() {
-    this.game1TutorialStep = 0;
-    this.renderGame1Tutorial_Step1();
-  }
-
-  // When moving from Step 1b to Step 2, we need to stop the lobster animation first -
-  // this bug actually stopped the gameboard from apeparing in the next step because the lobster animation hadn't finsiehd
-// hence the need for this cleanup fucntion
-  cleanupAndNavigateToStep2() {
-    if (this.game1TutorialBoard) {
-      this.game1TutorialBoard.stopTutorialAnimation();
-    }
-    this.game1TutorialStep = 1;
-    this.renderGame1Tutorial_Step2();
-  }
-
-  // Step 1: Welcome message with a Gaelic phrase about springtime
-  renderGame1Tutorial_Step1() {
-    this.game1TutorialStep = 0;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
-    const html = `
-      <div class="game1-screen game1-tutorial-step1">
-        ${banner}
-        <div class="intro-screen-wrapper">
-          <div class="ruairidh-intro-screen">
-            ${this.buildSpeechBubbleHTML('Fàilte dhan tràigh, a charaid!<br><br>Bidh iad ag ràdh…<span class="phrase-underline">San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar.</span> <button class="phrase-help-btn" onclick="gameController.showPhraseExplanation(\'earrach\')">?</button>')}
-            <div class="arrow-buttons">
-              <button class="arrow-btn" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">← Air ais</button>
-              <button class="arrow-btn" onclick="gameController.renderGame1Tutorial_Step1b();">Air adhart →</button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    this.gameContainer.innerHTML = html;
-  }
-
-  // Step 1b: Shows the lobster moving around - just on the sand
-  renderGame1Tutorial_Step1b() {
-    this.game1TutorialStep = 0;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
-    const html = `
-      <div class="game1-screen game1-tutorial-step1">
-        ${banner}
-        <div class="game1-tutorial-content-wrapper">
-          <div class="game1-tutorial-text-section">
-            <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("'S fìor thoil leam giomaich, ach tha iad cho duilich an glacadh!<br><br>Le sin, tha mi ag iarraidh do chuideachadh.", 150)}
-              <div class="arrow-buttons">
-                <button class="arrow-btn" onclick="gameController.renderGame1Tutorial_Step1();">← Air ais</button>
-                <button class="arrow-btn" onclick="gameController.cleanupAndNavigateToStep2();">Air adhart →</button>
-              </div>
-            </div>
-          </div>
-          <div class="game1-tutorial-board-section">
-            <div id="game1-board-tutorial"></div>
-          </div>
-        </div>
-      </div>`;
-    this.gameContainer.innerHTML = html;
-
-    // Set up the demo board and start the lobster moving slowly
-    this.initGame1TutorialBoard();
-    this.game1TutorialBoard.renderTutorialOnlyLobster('game1-board-tutorial');
-    this.game1TutorialBoard.startSlowLobsterAnimation(1000); // moves every 1 second
-  }
-
-  // Step 2: Explains what the board looks like (lobster + sand tiles)
-  renderGame1Tutorial_Step2() {
-    this.game1TutorialStep = 1;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
-    const html = `
-      <div class="game1-screen game1-tutorial-step2">
-        ${banner}
-        <div class="game1-tutorial-content-wrapper game1-tutorial-step2">
-          <div class="game1-tutorial-text-section">
-            <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("Ri mo thaobh chì thu giomach agus blocaichean gainmhich bhuidhe. Seo far a bheil sinn a' dol a dh' fheuchainn giomaich a ghlacadh!", 150)}
-              <div class="arrow-buttons">
-                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 0; gameController.renderGame1Tutorial_Step1();">← Air ais</button>
-                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">Air adhart →</button>
-              </div>
-            </div>
-          </div>
-          <div class="game1-tutorial-board-section-right">
-            <div id="game1-board-tutorial"></div>
-          </div>
-        </div>
-      </div>`;
-    this.gameContainer.innerHTML = html;
-
-    this.initGame1TutorialBoard();
-    this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
-  }
-
-  // Step 3: Explains how placing rocks traps lobsters
-  renderGame1Tutorial_Step3() {
-    this.game1TutorialStep = 2;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
-    const html = `
-      <div class="game1-screen game1-tutorial-step3">
-        ${banner}
-        <div class="game1-tutorial-content-wrapper game1-tutorial-step3">
-          <div class="game1-tutorial-text-section">
-            <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("Nuair a bhrùthas tu air an gainmheach bhuidhe, 's urrainn dhut clach a chur sìos. Chan urrainn do na giomaich a' dhol thairis air na clachan!<br><br>Airson a h-uile giomach a gheibh thu, thèid clach a chur air an càirn agad.", 150)}
-              <div class="arrow-buttons">
-                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 1; gameController.renderGame1Tutorial_Step2();">← Air ais</button>
-                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 3; gameController.renderGame1Tutorial_Step4();">Air adhart →</button>
-              </div>
-            </div>
-          </div>
-          <div class="game1-tutorial-board-section-right">
-            <div id="game1-board-tutorial"></div>
-          </div>
-        </div>
-      </div>`;
-    this.gameContainer.innerHTML = html;
-
-    this.initGame1TutorialBoard({ withRocks: true }); // show rocks on this step
-    this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
-  }
-
-  // Step 4: Final tips and the "Play" button to start the actual game
-  renderGame1Tutorial_Step4() {
-    this.game1TutorialStep = 3;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
-    const html = `
-      <div class="game1-screen game1-tutorial-step4">
-        ${banner}
-        <div class="game1-tutorial-content-wrapper game1-tutorial-step4">
-          <div class="game1-tutorial-text-section">
-            <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("Cuimhnich, tha na giomaich ann an Leòdhas gu math seòlta!<br><br>Chan eil ach ceithir mionaidean againn! Steall ort!", 150)} // "Remember, the lobsters in Lewis are very clever! We only have 4 minutes! Get cracking!"
-              <div class="arrow-buttons">
-                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">← Air ais</button>
-                <button class="play-green-btn" onclick="gameController.setGameFlowState('GAME1');">Cluich an Geama</button>
-              </div>
-            </div>
-          </div>
-          <div class="game1-tutorial-board-section-right">
-            <div id="game1-board-tutorial"></div>
-          </div>
-        </div>
-      </div>`;
-    this.gameContainer.innerHTML = html;
-
-    this.initGame1TutorialBoard({ withRocks: true });
-    this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
-  }
-
-
-
-
-  // ----------------------------------------------------------
-  // 4 - GAME 1 - GLAC AN GIOMACH (the actual lobster catching game)
-  // ----------------------------------------------------------
-  renderGame1_Main() {
-    const banner = this.buildBannerHTML({
-      showTitle: true, title: 'Glac an Giomach',
-      showTimer: true, timerDisplay: '4:00',
-      pauseDisabled: false, pauseHandler: 'gameController.togglePause()',
-      helpDisabled: false, cairnId: 'cairn-points'
-    });
-
-    const html = `
-      <div class="game1-screen">
-        ${banner}
-        <div class="game1-board" id="game1-board"></div>
-        <div class="game1-footer">
-          <div id="round-status"></div>
-          <button class="nav-btn" onclick="gameController.resetGame1Round()">Tòisich a-rithist</button>
-          <button class="nav-btn dev-skip-btn" onclick="gameController.setGameFlowState('GAME2_READY')" style="background: #ff6b6b; margin-left: 10px;">DEV: Skip to Game 2 →</button>
-        </div>
-      </div>
-      <div class="pause-modal" id="pause-modal">
-        <div class="pause-modal-content">
-          <h2>Geama air stad</h2>
-          <button class="pause-resume-btn" onclick="gameController.togglePause()">Tòisich</button>
-        </div>
-      </div>`;
-
-    this.gameContainer.innerHTML = html;
-
-    // Create the game board and start the 4-minute countdown
-    this.game1Board = new Game1Board(5, this);
-    this.game1Board.render();
-    this.updatePointsDisplayOnly();
-    this.startGame1Timer();
-  }
-
-
-  // ===== GAME 1 TIMER SYSTEM =====
-  // Starts a 4-minute countdown timer for the cairn building game
-  // Originally was 5 minutes but that felt too long, so we reduced it
-  // Timer shows warnings at 60s, 30s, and 10s to create urgency
-  startGame1Timer() {
-    this.timeRemaining = GAME_SETTINGS.TIMING.game1Duration;  // 4 minutes (240 seconds)
-    this.updateGame1TimerDisplay();
-
-    // Analytics call 
-    // This would mark the player as having started a game,
-    // useful for knowing if they're a returning player
-    // if (this.helpSystem) {
-    //   this.helpSystem.markAsPlayed();
-    // }
-
-    // Clear any existing timer first (safety check)
-    if (this.gameTimer) clearInterval(this.gameTimer);
-
-    // Start the countdown - ticks every second
-    this.gameTimer = setInterval(() => {
-      this.timeRemaining--;
-      this.updateGame1TimerDisplay();  // Update the visual display
-
-      // Check if time's up
-      if (this.timeRemaining <= 0) {
-        clearInterval(this.gameTimer);  // Stop the timer
-        // Brief pause before transitioning to next screen
-        setTimeout(() => {
-          this.setGameFlowState('GAME2_READY');
-        }, 500);
-      }
-    }, 1000);  // Run every 1000ms (1 second)
-  }
-
-  // Updates the timer display and adds visual warnings when time is running out
-  // Colour-coded warnings help players manage their time effectivly
-  updateGame1TimerDisplay() {
-    const display = document.getElementById('timer-display');
-    if (display) {
-      // Format as MM:SS (e.g., "4:00")
-      const minutes = Math.floor(this.timeRemaining / 60);
-      const seconds = this.timeRemaining % 60;
-      display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-      // Clear any old warning styles before we check again
-      display.classList.remove('warning-yellow', 'warning-orange', 'warning-red', 'warning');
-
-      // Traffic light system for time warnings:
-      // - Yellow: under 1 minute left
-      // - Orange: under 30 second
-      // - Red: final 10 seconds, like a panic mode
-      if (this.timeRemaining <= 10) {
-        display.classList.add('warning-red');  // 
-      } else if (this.timeRemaining <= 30) {
-        display.classList.add('warning-orange');  
-      } else if (this.timeRemaining <= 60) {
-        display.classList.add('warning-yellow');  
-      }
-      // if more than 60 seconds left, no warning class needed
-    }
-  }
-
-  // Opens the smart help system for Game 1
-  toggleInGameHelpModal() {
-    if (!this.helpSystem) {
-      this.helpSystem = new SmartHelpSystem(this);
-    }
-    this.helpSystem.toggle();
-  }
-
-  // Resets Game 1 board if player wants to start fresh
-  resetGame1Round() {
-    if (this.game1Board) {
-      this.game1Board.reset();
-      this.game1Board.render();
-    }
-  }
-
-  // ----------------------------------------------------------
-  // 5 - INTERVAL 1 (transition between games)
-  // ----------------------------------------------------------
-  // This is a quick breather screen between Game 1 and Game 2.
-  // Ruairidh thanks the player for helping catch lobsters and
-  // asks if they're ready for the next challenge. Gives the suers
-  // a moment to relax before jumping into the memory game.
-  renderInterval_TransitionToGame2() {
-    const html = `
-      <div class="game2-ready-screen">
-        <div class="intro-screen-wrapper">
-          <div class="ruairidh-intro-screen">
-            <div class="ruairidh-container">
-              <div class="seal-icon-wrapper">
-                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
-              </div>
-              <div class="speech-bubble">
-                <!-- "Thank you for helping me! Are you ready for the next game?" -->
-                <p>Tapadh leibh airson mo chuideachadh! A bheil sibh deiseil airson an ath gheama?</p>
-              </div>
-            </div>
-            <div class="arrow-buttons centred">
-              <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">Air adhart →</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    this.gameContainer.innerHTML = html;
-  }
-
-  // ----------------------------------------------------------
-  // 6 - GAME 2 TUTORIAL
-  // ----------------------------------------------------------
-  // Game 2 is "Cho Coltach ris an Dà Sgadan" which translates to
-  // "As alike as two herrings", the  Scottish Gaelic saying
-  // similar to "like two peas in a pod". Chosen as the name for a memory matching game
-  //
-  // The tutorial has 2 steps:
-  //   Step 1: Ruairidh explains the basic concept
-  //   Step 2: Shows example cards with Harris Tweed patterns
-
-  // STEP 1: Introduction to the matching game concept
-  renderGame2TutorialScreen() {
-    this.game2TutorialStep = 0;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan' });
-
-    // Ruairidh says: "In this game, you need to help me make pairs  of things we can find on the beach or at sea."
-    const html = `
-      <div class="game2-tutorial-screen">
-        ${banner}
-        <div class="intro-screen-wrapper">
-          <div class="ruairidh-intro-screen">
-            ${this.buildSpeechBubbleHTML("Anns an geama seo, feumaidh tu mo chuideachadh paidhrichean a dhèanamh de rudan as urrainn dhuinn a' lorg air an tràigh neo aig muir.")}
-            <div class="arrow-buttons">
-              <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_READY')">← Air ais</button>
-              <button class="arrow-btn" onclick="gameController.renderGame2TutorialScreen_Step2()">Air adhart →</button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    this.gameContainer.innerHTML = html;
-  }
-
-  // STEP 2: Show example cards so players know what to expect TBD - Put in some actual examples of the cards instead of just placeholders
-  renderGame2TutorialScreen_Step2() {
-    this.game2TutorialStep = 1;
-
-    // Pick random tweed patterns to display as examples - TBD  -noticed performance issue with diffrent tweed types, perhaos revert to just one
-    // These are the card backs asnd Harris Tweed is iconic to the Outer Hebrides
-    const availableTweeds = [2, 5, 6];
-    const tweed1 = availableTweeds[Math.floor(Math.random() * availableTweeds.length)];
-    const tweed2 = availableTweeds[Math.floor(Math.random() * availableTweeds.length)];
-
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan' });
-
-    // Ruairidh says: "There will be pieces of Harris Tweed on the table
-    // beside me. Press them to see what's behind them and you need to
-    // make pairs from them."
-    const html = `
-      <div class="game2-tutorial-screen">
-        ${banner}
-        <div class="game2-tutorial-content-wrapper">
-          <div class="game2-tutorial-text-section">
-            <div class="ruairidh-intro-screen" style="max-width: 600px;">
-              ${this.buildSpeechBubbleHTML("Bidh pìosan clò Hearaich air a' bhòrd ri mo thaobh. Brùth orra gus faicinn dè a tha air an cùlaibh agus feumaidh sibh paidhrichean a dhèanamh asta.", 120)}
-              <div class="arrow-buttons">
-                <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">← Air ais</button>
-                <button class="play-green-btn" onclick="gameController.setGameFlowState('GAME2')">Air adhart</button>
-              </div>
-            </div>
-          </div>
-          <div class="game2-tutorial-cards-section">
-            <div class="tutorial-card-grid">
-              <div class="tutorial-card"><div class="tutorial-card-inner"><div class="tutorial-card-face"><img src="./svgs/game-2/tweeds/tweed-${tweed1}.svg" alt="Card back" /></div></div></div>
-              <div class="tutorial-card"><div class="tutorial-card-inner"><div class="tutorial-card-face"><img src="./svgs/game-2/tweeds/tweed-${tweed2}.svg" alt="Card back" /></div></div></div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    this.gameContainer.innerHTML = html;
-  }
-
-  // ----------------------------------------------------------
-  // 7 - GAME 2 - CARD MATCHING GAME
-  // ----------------------------------------------------------
-  // The main memory matching game screen. Players will lcikc to flip cards to
-  // find matching pairs. This is a classic memory game but with a Hebridean
-  // theme. I have chosen not ot hve a time presure as it could negatively impact the 
-  // memory element for some users, making it feel stressful rather than fun.
-  renderGame2_Main() {
-    // Note: pause button is disabled because there's no timer in this game
-    const html = `
-      <div class="game2-screen">
-        <div class="ruairidh-banner">
-          <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
-            <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
-            <button class="ruairidh-help-button" onclick="gameController.toggleGame2HelpModal()">?</button>
-          </div>
-          <div class="banner-title-container">
-            <h1 class="game1-title-fun">Cho Coltrach ris an Dà Sgadan</h1>
-          </div>
-          <div class="ruairidh-banner-right">
-            <div class="points-box">
-              <img src="./svgs/all-games/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-points" />
-              <div class="ruairidh-banner-text">PUINGEAN:</div>
-              <span id="points-counter">${this.totalPoints}</span>
-            </div>
-          </div>
-        </div>
-        <div class="game2-content-wrapper">
-          <div class="game2-board" id="game2-board"></div>
-          <div class="game2-footer" style="text-align: center; margin-top: 10px;">
-            <button class="nav-btn dev-skip-btn" onclick="gameController.setGameFlowState('GAME3_READY')" style="background: #ff6b6b;">DEV: Skip to Game 3 →</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Help modal with step-by-step instructions in Gaelic -->
-      <!-- "Ciamar a chluicheas tu?" = "How do you play?" -->
-      <div class="help-modal" id="game2-help-modal">
-        <div class="help-modal-content simple-help">
-          <button class="modal-close" onclick="gameController.toggleGame2HelpModal()">✕</button>
-
-          <h2 class="simple-help-title">Ciamar a chluicheas tu?</h2>
-
-          <div class="simple-help-body">
-            <div class="help-tip">
-              <span class="help-tip-number">1</span>
-              <div class="help-tip-content">
-                <!-- "Goal: Find all matching pairs of cards" -->
-                <strong>Amas:</strong> <p>Lorg gach paidhir chairtean a tha co-ionann.</p>
-              </div>
-            </div>
-
-            <div class="help-tip">
-              <span class="help-tip-number">2</span>
-              <div class="help-tip-content">
-                <!-- "How to do it: Press a card to flip it" -->
-                <strong>Mar a nì thu e:</strong> <p>Brùth air cairt gus a thionndaidh.</p>
-              </div>
-            </div>
-
-            <div class="help-tip">
-              <span class="help-tip-number">3</span>
-              <div class="help-tip-content">
-                <!-- "Flip two cards at the same time" -->
-                <p>Tionndaidh dà chairt aig an aon àm.</p>
-              </div>
-            </div>
-
-            <div class="help-tip">
-              <span class="help-tip-number">4</span>
-              <div class="help-tip-content">
-                <!-- "If they match, you get a point!" -->
-                <p>Ma tha iad co-ionann, gheibh thu puing!</p>
-              </div>
-            </div>
-
-            <div class="help-tip">
-              <span class="help-tip-number">5</span>
-              <div class="help-tip-content">
-                <!-- "If they're different, they flip back over" -->
-                <p>Ma tha iad diofraichte, tionndaidhidh iad air ais.</p>
-              </div>
-            </div>
-
-            <div class="help-tip">
-              <span class="help-tip-number">6</span>
-              <div class="help-tip-content">
-                <!-- "If you find all pairs, you've won the game!" -->
-                <p>Ma lorgas tu gach paidhir, tha thu air a' gheama a bhuannachadh!</p>
-              </div>
-            </div>
-          </div>
-
-          <button class="arrow-btn" onclick="gameController.toggleGame2HelpModal()">Dùin</button>
-        </div>
-      </div>
-    `;
-    this.gameContainer.innerHTML = html;
-
-    // Create the card game board &  render it
-    this.game2Board = new CardMatchingGame(this);
-    this.game2Board.render();
-  }
-
-  // Opens/closes the help box for Game 2
-  // Also pauses/resumes the game so players can read without pressure
-  toggleGame2HelpModal() {
-    const modal = document.getElementById('game2-help-modal');
-    if (modal) {
-      const isOpening = !modal.classList.contains('active');
-      modal.classList.toggle('active');
-
-      if (isOpening) {
-        // TBD - Remove this because no timer on game 2?
-        // Freeze the game while reading help - i had this in here from when it was timed
-        if (this.game2Board) {
-          this.game2Board.isPaused = true;
-        }
-        this.audio.pauseGameSounds(this.currentState);
-      } else {
-
-        if (this.game2Board) {
-          this.game2Board.isPaused = false;
-        }
-        this.audio.resumeGameSounds(this.currentState);
-      }
-    }
-  }
-
-  // ----------------------------------------------------------
-  // POINTS & SCORING SYSTEM
-  // ----------------------------------------------------------
-  // These functions handle the scoring across all games.
-  // The cairn (stone pile) is used as the visual points counter,
-  // and stones fly to it when players earn points.
-
-  // Just updates the points number on screen - no common animation as:
-  // game 1 - merges from centre of board 
-  // game 2 - comes from midle of card macth
-  // game 3, decided it was overstimulating to keep having stones animated along with moving fish
-  updatePointsDisplayOnly() {
-    const counter = document.getElementById('points-counter');
-    if (counter) {
-      counter.textContent = `${this.totalPoints}`;
-    }
-  }
-
-  // -------------------------------------------------------
-  // STONE ANIMATION -  visual reward for scoring
-  // -------------------------------------------------------
-  // When a player earns a point, a stone flies from wherever they
-  // scored (like a caught lobster or matched card) up to the cairn
-  // in the banner. The cairn pulses and the counter bumps up.
-  // This gives a satisfying visual feedback
-
-  animateStoneToCairn(startX, startY, onComplete) {
-    // Saved a stone image element to animate
-    const stone = document.createElement('img');
-    stone.src = './svgs/all-games/stone.svg';
-    stone.classList.add('stone-fly');
-
-    // Position it at the starting point (where the point was earned)
-    stone.style.position = 'fixed';
-    stone.style.width = '50px';
-    stone.style.height = '50px';
-    stone.style.left = `${startX}px`;
-    stone.style.top = `${startY}px`;
-    stone.style.zIndex = '9999';  // Make sure it's on top of everything
-    stone.style.pointerEvents = 'none';  // Don't block clicks
-    document.body.appendChild(stone);
-
-    // Find the cairn icon to fly towards
-    const cairn = document.getElementById('cairn-points');
-    if (!cairn) {
-      // Fallback if cairn not found - just add the point without animation (when resized window had this issue)
-      stone.remove();
-      this.addPointToCairn();
-      if (onComplete) onComplete();
-      return;
-    }
-
-    // Calculate how far the stone needs to travel
-    const cairnRect = cairn.getBoundingClientRect();
-    stone.style.setProperty('--fly-x', `${cairnRect.left - startX}px`);
-    stone.style.setProperty('--fly-y', `${cairnRect.top - startY}px`);
-    stone.classList.add('stone-fly-animate');  // CSS animation takes over
-
-    // When the flying animation finishes:
-    stone.addEventListener('animationend', () => {
-      stone.remove();  // Clean up the flying stone
-
-      // Make the cairn pulse to show it "received" the stone
-      cairn.classList.add('pulsing');
-      setTimeout(() => cairn.classList.remove('pulsing'), GAME_SETTINGS.TIMING.cairnPulsingDuration);
-
-      this.addPointToCairn();  //  add the point to the total and update the display
-
-      // Make the counter do a little bounce 
-      const counter = document.getElementById('points-counter');
-      if (counter) {
-        counter.classList.add('points-reward');
-        setTimeout(() => counter.classList.remove('points-reward'), GAME_SETTINGS.TIMING.rewardAnimationDuration);
-      }
-
-      if (onComplete) onComplete();  // Let caller know we're done
-    });
-  }
-
-  // This increments the score and plays the sound
-  addPointToCairn() {
-    this.totalPoints++;
-    this.updatePointsDisplayOnly();
-    this.audio.playPointSound();  // Gives user feedback that theyve recieced thhat point
-  }
-
-  // ----------------------------------------------------------
-  // 8 - INTERVAL 2 (transition to Game 3)
-  // ----------------------------------------------------------
-  // Another breather/transiion screen, this time between Game 2 and Game 3.
-  // Ruairidh introduces the final game: "Cho luath ris a' bhradan"
-  // which means "As fast as the salmon" - a fishing game where
-  // players need quick reflexes to catch the right fish
-
-  renderInterval_TransitionToGame3() {
-    this.game3TutorialStep = 0;  // Reset tutorial step counter
-
-    // Note: pause and help buttons are disabled on this screen
-    // since it's just an intro, not actual gameplay
-    const html = `
-      <div class="game3-ready-screen">
-        <div class="ruairidh-banner">
-          <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
-            <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
-            <button class="ruairidh-help-button" disabled>?</button>
-          </div>
-          <div class="banner-title-container">
-            <!-- "As fast as the salmon" -->
-            <div class="game3-title">Cho luath ris a' bhradan</div>
-          </div>
-          <div class="ruairidh-banner-right">
-            <div class="points-box">
-              <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
-              <div class="ruairidh-banner-text">PUINGEAN:</div>
-              <span id="points-counter">${this.totalPoints}</span>
-            </div>
-          </div>
-        </div>
-        <div class="intro-screen-wrapper">
-          <div class="ruairidh-intro-screen">
-            <div class="ruairidh-container">
-              <div class="seal-icon-wrapper">
-                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
-              </div>
-              <div class="speech-bubble">
-                <!-- "The next game is: 'As fast as the salmon!' Come and I'll tell you more!" -->
-                <p>'S e an ath gheama: <strong>"Cho luath ris a' bhradan!"</strong> Trobhad gus an innis mi barrachd dhuibh!</p>
-              </div>
-            </div>
-            <div class="arrow-buttons centred">
-              <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME3_TUTORIAL')">Air adhart →</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    this.gameContainer.innerHTML = html;
-  }
-
-  // ----------------------------------------------------------
-  // 8b - GAME 3 TUTORIAL (multi-step instructions)
-  // ----------------------------------------------------------
-  // This tutorial teaches players how the fishing game works.
-  // Again, It's split into 3 steps so we don't overwhelm users with info:
-  //   Step 0: Shows where Ruairidh appears and that he'll show the target fish (already getting them used to loooking up)
-  //   Step 1: Explains that catching the right fish earns points
-  //   Step 2: Bonus tip - you can also collect rubbish for extra points (adding that extra ethical dimension about keeping the beaches clean)
-  renderGame3_Tutorial() {
-    const isLastStep = this.game3TutorialStep >= 2;
-
-    // Each step has:
-    // - bubbleContent: what appears in Ruairidh's speech bubble (particular fish image)
-    // - the arrow pointing upat the bubble to draw attention (only on step 0 to show where to look)
-    // - message i.e the instruction text explaining this step
-    const tutorialSteps = [
-      // STEP 0: "Look here! I'll be up here at the top. I'll show you what fish I want!"
-      {
-        bubbleContent: `<img src="./svgs/game-3/game-3-fish/sgadan-L.svg" alt="Sgadan" class="target-fish-image" />`,
-        pointer: `↑ Coimhead an seo! ↑`,  // "Look here!"
-        message: `Bidh mise an seo aig a' mhulach. Seallaidh mi dhuibh dè an t-iasg a tha mi ag iarraidh!`
-      },
-      // STEP 1: "If you catch the right fish that I want, you'll get points!"
-      {
-        bubbleContent: `<img src="./svgs/game-3/game-3-fish/sgadan-L.svg" alt="Sgadan" class="target-fish-image" />`,
-        pointer: null,
-        message: `Ma gheibh sibh an t-iasg cheart a tha mise ag iarraidh, gheibh sibh puingean!`
-      },
-      // STEP 2: "Keep an eye out for rubbish! If you tap on rubbish you'll get points too!"
-      // This adds an environmental awareness element to the game
-      {
-        bubbleContent: `<img src="./svgs/game-3/game-3-garbage/plastic-bottle-1.svg" alt="Sgudal" class="target-fish-image" />`,
-        pointer: null,
-        message: `Cùm do shùil a-mach airson sgudal! Ma bhrùthas tu air sgudal gheibh sibh puingean cuideachd!`
-      }
-    ];
-
-    const step = tutorialSteps[this.game3TutorialStep];
-
-    const html = `
-      <div class="game3-screen game3-tutorial-preview">
-        <div class="ruairidh-banner">
-          <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
-            <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
-            <button class="ruairidh-help-button" disabled>?</button>
-          </div>
-          <div class="banner-title-container">
-            <div class="game3-title">Cho luath ris a' bhradan</div>
-          </div>
-          <div class="ruairidh-banner-right">
-            <div class="points-box">
-              <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
-              <div class="ruairidh-banner-text">PUINGEAN:</div>
-              <span id="points-counter">${this.totalPoints}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- On step 0, Ruairidh's section gets a highlight glow to draw the usrs eye in -->
-        <div class="game3-ruairidh-section${this.game3TutorialStep === 0 ? ' tutorial-highlight' : ''}">
-          <div class="ruairidh-container">
-            <div class="seal-icon-wrapper">
-              <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh" class="seal-icon" />
-            </div>
-            <div class="speech-bubble">
-              ${step.bubbleContent}
-            </div>
-          </div>
-          ${step.pointer ? `<div class="tutorial-pointer">${step.pointer}</div>` : ''}
-        </div>
-
-        <div class="game3-tutorial-explanation">
-          <div class="tutorial-message-box">
-            <p>${step.message}</p>
-            <div class="arrow-buttons">
-              <button class="arrow-btn" onclick="gameController.game3TutorialBack()">← Air ais</button>
-              ${isLastStep
-                ? `<button class="play-green-btn" onclick="gameController.setGameFlowState('GAME3')">Cluich an Geama</button>`  // "Play the Game"
-                : `<button class="arrow-btn" onclick="gameController.game3TutorialNext()">Air adhart →</button>`
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    this.gameContainer.innerHTML = html;
-  }
-
-  // Go back a step, or exit to the intro if already at step 0
-  game3TutorialBack() {
-    if (this.game3TutorialStep > 0) {
-      this.game3TutorialStep--;
-      this.renderGame3_Tutorial();
-    } else {
-      this.setGameFlowState('GAME3_READY');
-    }
-  }
-
-  // Move to the next tutorial step
-  game3TutorialNext() {
-    this.game3TutorialStep++;
-    this.renderGame3_Tutorial();
-  }
-
-  // ----------------------------------------------------------
-  // 9 - GAME 3 MAIN (Cho luath ris a' bhradan)
-  // ----------------------------------------------------------
-  // The fishing game, where players tap fish swimming across the screen
-  // to catch what Ruairidh asks for and it has a 3-minute timer.
-
-
-  renderGame3_Main() {
-    const html = `
-      <div class="game3-screen">
-        <div class="ruairidh-banner">
-          <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
-            <button class="ruairidh-pause-button" id="pause-button" onclick="gameController.toggleGame3Pause()">${SVG_ICONS.pause}</button>
-            <button class="ruairidh-help-button" onclick="gameController.toggleGame3HelpModal()">?</button>
-          </div>
-          <div class="banner-title-container">
-            <div class="game3-title">Cho luath ris a' bhradan</div>
-          </div>
-          <div class="ruairidh-banner-right">
-            <div class="timer-box">
-              <img src="./svgs/all-games/clock.svg" alt="Uaireadair" class="timer-icon" />
-              <div class="timer-text">ÙINE:</div>
-              <span id="timer-display" class="timer-display">3:00</span>
-            </div>
-            <div class="points-box">
-              <img src="./svgs/all-games/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-points" />
-              <div class="ruairidh-banner-text">PUINGEAN:</div>
-              <span id="points-counter">${this.totalPoints}</span>
-            </div>
-          </div>
-        </div>
-        <div class="game3-ruairidh-section">
-          <div class="ruairidh-container">
-            <div class="seal-icon-wrapper">
-              <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh" class="seal-icon" />
-            </div>
-            <div class="speech-bubble">
-              <!-- This is where Ruairidh shows what fish he wants -->
-              <div id="target-fish-display" class="target-fish-display"></div>
-            </div>
-          </div>
-        </div>
-        <!-- The Game3FishingGame class renders the swimming fish here -->
-        <div class="game3-canvas-container" id="game3-canvas"></div>
-        <div class="game3-footer" style="text-align: center; margin-top: 10px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 100;">
-          <button class="nav-btn dev-skip-btn" onclick="gameController.skipToResults()" style="background: #ff6b6b;">DEV: Skip to Results →</button>
-        </div>
-      </div>
-
-      <!-- Pause modal: "Game paused" / "Start" -->
-      <div class="pause-modal" id="pause-modal">
-        <div class="pause-modal-content">
-          <h2>Geama air stad</h2>
-          <button class="pause-resume-btn" onclick="gameController.toggleGame3Pause()">Tòisich</button>
-        </div>
-      </div>
-
-      <!-- Help modal: "How do you play?" -->
-      <div class="help-modal" id="game3-help-modal">
-        <div class="help-modal-content simple-help">
-          <button class="modal-close" onclick="gameController.toggleGame3HelpModal()">✕</button>
-
-          <h2 class="simple-help-title">Ciamar a chluicheas tu?</h2>
-
-          <div class="simple-help-body">
-            <!-- 1: "Look at Ruairidh the Seal: Look at the fish picture Ruairidh shows you" -->
-            <div class="help-tip">
-              <span class="help-tip-number">1</span>
-              <div class="help-tip-content">
-                <strong>Coimhead air Ruairidh an Ròn:</strong> <p>Coimhead air an dealbh èisg a sheallas Ruairidh dhut.</p>
-              </div>
-            </div>
-
-            <!-- 2: "Find the right fish: Tap on the fish in the sea that matches what Ruairidh wants" -->
-            <div class="help-tip">
-              <span class="help-tip-number">2</span>
-              <div class="help-tip-content">
-                <strong>Lorg an t-iasg ceart:</strong> <p>Brùth air an t-iasg anns a' mhuir a tha co-ionann ris an fhear a tha Ruairidh ag iarraidh.</p>
-              </div>
-            </div>
-
-            <!-- 3: "If you get the right fish, you get points!" -->
-            <div class="help-tip">
-              <span class="help-tip-number">3</span>
-              <div class="help-tip-content">
-                <p>Ma tha an t-iasg ceart, gheibh thu puingean!</p>
-              </div>
-            </div>
-
-            <!-- 4: "If you get the wrong fish, you lose points" -->
-            <div class="help-tip">
-              <span class="help-tip-number">4</span>
-              <div class="help-tip-content">
-                <p>Ma tha an t-iasg ceàrr, caillidh sibh puingean.</p>
-              </div>
-            </div>
-
-            <!-- 5: "You can also pick up rubbish (plastic, bottles) for extra points" -->
-            <div class="help-tip">
-              <span class="help-tip-number">5</span>
-              <div class="help-tip-content">
-                <p>Faodaidh tu sgudal a thogail cuideachd (stuthan plastaig, botail) airson barrachd phuingean.</p>
-              </div>
-            </div>
-
-            <!-- 6: "The fish Ruairidh wants changes all the time, so keep your eye on Ruairidh!" -->
-            <div class="help-tip">
-              <span class="help-tip-number">6</span>
-              <div class="help-tip-content">
-                <p>Tha an t-iasg a tha Ruairidh ag iarraidh ag atharrachadh fad na h-ùine, mar sin cùm sùil air Ruairidh!</p>
-              </div>
-            </div>
-          </div>
-
-          <button class="arrow-btn" onclick="gameController.toggleGame3HelpModal()">Dùin</button>
-        </div>
-      </div>
-    `;
-    this.gameContainer.innerHTML = html;
-
-    // Create and start the fishing game
-    this.game3Board = new Game3FishingGame(this);
-    this.game3Board.init();
-  }
-
-  // Opens/closes the help module for Game 3
-  // Pauses the fishing game while reading so fish don't swim away.
-  toggleGame3HelpModal() {
-    const modal = document.getElementById('game3-help-modal');
-    if (modal) {
-      const isOpening = !modal.classList.contains('active');
-      modal.classList.toggle('active');
-
-      if (isOpening) {
-        // Freeze the game while reading help module
-        if (this.game3Board) {
-          this.game3Board.isPaused = true;
-        }
-        this.audio.pauseGameSounds(this.currentState);
-      } else {
-        // Back to gamepaly
-        if (this.game3Board) {
-          this.game3Board.isPaused = false;
-        }
-        this.audio.resumeGameSounds(this.currentState);
-      }
-    }
-  }
-
-  skipToResults() {
-    // Dev function to skip to results
-    if (this.gameTimer) {
-      clearInterval(this.gameTimer);
-    }
-    this.setGameFlowState('RESULTS');
-  }
-
-  // ----------------------------------------------------------
-  // Final results screen after all games
-  // ----------------------------------------------------------
-  renderResultsScreen() {
-    if (this.gameTimer) clearInterval(this.gameTimer);
-    
-    const html = `
-      <div class="login-screen">
-        <h1>Deiseil!</h1>
-        <p>Cluicheadair: ${this.participantCode}</p>
-        <div class="game-complete-emoji">🦞</div>
-        <p class="game-complete-score">Puingean: ${this.totalPoints} Giomaich</p>
-        <p class="game-complete-message">Ceud taing airson an geama seo a' chluich, tha na puingean agad air a' shàbhaladh.</p>
-        <button class="play-button" onclick="location.reload()">Cluich a-rithist!</button>
-      </div>
-    `;
-    this.gameContainer.innerHTML = html;
+  recordLobsterEscaped() {
+    // Stub - would track escaped lobsters for personalised help tips
   }
 }
 
@@ -2019,7 +628,7 @@ class GameFlowController {
 // board. If you surround it completely, you catch it, gaining a point.
 //
 // I chose a hexagonal grid because it looks more interesting than squares,
-// and it's a common pattern in strategy games. It was difficult figuring out 
+// and it's a common pattern in strategy games. It was difficult figuring out
 // how hexagons connect to each other and then opening up 6 directions for the lobster to move in.
 
 // -------------------------------------------------------
@@ -2155,7 +764,7 @@ class LobsterToken {
       const [cx, cy] = key.split(',').map(Number);
       const current = new HexGridSquare(cx, cy);
 
-      // Have we reached the edge of the board? 
+      // Have we reached the edge of the board?
       if (current.x === 0 || current.x === gridWidth - 1 || current.y === 0 || current.y === gridHeight - 1) {
         // Found esapce, Now trace back to build the full path
         const path = [];
@@ -2195,7 +804,7 @@ class LobsterToken {
   //         |
   //  270° --|-- 90°
   //  (left) |  (right)
-  //        180° 
+  //        180°
   //       (down)
 
   // But because hex grids have 6 directions (not 4), we also use
@@ -2273,7 +882,7 @@ class LobsterToken {
     }
 
 
-    
+
     // So path[0] where the current position is, path[1] is where we want to go next
     const nextPos = path[1];
 
@@ -2319,8 +928,8 @@ class Game1Board {
 
     // ===== LOBSTER DIALOGUE =====
     // The lobster says things when caught or while moving around.
-    // Adds personality and also encorporates one of the priamry goals of the project 
-    // to include idioamtic Gaelic phrases 
+    // Adds personality and also encorporates one of the priamry goals of the project
+    // to include idioamtic Gaelic phrases
 
     // What the lobster says when caught:
     // English translation - "You caught me!", "What on earth?", "Terrible!", "Oh dear...", "Help me!", "I'll get you!"
@@ -2418,7 +1027,7 @@ class Game1Board {
   }
 
   // Scatter some rocks around to make it more interesting
-  // Chose 15% coverage which felt about right 
+  // Chose 15% coverage which felt about right
   // Important: can never let the user put rocks on the lobster or spawn in the exact centre
   placeRandomRocks() {
     const squareArray = Array.from(this.boardSquares.values());
@@ -2438,7 +1047,7 @@ class Game1Board {
       do {
         square = squareArray[Math.floor(Math.random() * squareArray.length)];
         squareHash = square.hash();
-      } while (squareHash === lobsterPosHash || squareHash === centrePosHash);
+      } while (squareHash === lobsterPosHash || squareHash === centrePosHash || this.blockedSet.has(squareHash));
 
       this.blockedSet.add(squareHash);
     }
@@ -2449,7 +1058,7 @@ class Game1Board {
   // It blocks that tile, then the lobster responds
 
   clickHexTile(x, y) {
-    // Ignore clicks if in the middle of something - change of game state / animation 
+    // Ignore clicks if in the middle of something - change of game state / animation
     if (this.gameOver || this.gameLost || this.isAnimating || this.isEscaping || this.isOnEdge) return;
 
     const square = new HexGridSquare(x, y);
@@ -2759,7 +1368,7 @@ class Game1Board {
           }
         });
 
-        // Hover effect - show preview of where rock will go 
+        // Hover effect - show preview of where rock will go
         // added during teacher session 1, used a combination of mosue and touch screen
         // for mouse and stylus pen teh hover can be done
         tile.addEventListener('mouseenter', () => {
@@ -2875,7 +1484,7 @@ class Game1Board {
   }
 
   // Mostly copy&pasted from render() above,  not ideal but
-  // trying to make a shared function with different options 
+  // trying to make a shared function with different options
   // got messy. This version just shows the lobster, nothing else.
 
   renderTutorialOnlyLobster(elementId) {
@@ -2953,9 +1562,9 @@ class Game1Board {
     }, interval);
   }
 
-  // Stops the slow lobster animation when leaving the tutorial 
-  // Bug fix - was leaving the interval running and it would keep moving the lobster around even when not in tutorial, 
-  // causing nothing to appear on the next screens for the tutorial 
+  // Stops the slow lobster animation when leaving the tutorial
+  // Bug fix - was leaving the interval running and it would keep moving the lobster around even when not in tutorial,
+  // causing nothing to appear on the next screens for the tutorial
   stopTutorialAnimation() {
     if (this.tutorialAnimationInterval) {
       clearInterval(this.tutorialAnimationInterval);
@@ -3075,7 +1684,7 @@ class CardMatchingGame {
     const board = document.getElementById('game2-board');
     if (!board) return;
 
-    // Crd images, and their names in english are the filenames 
+    // Crd images, and their names in english are the filenames
     const cardImages = [
       { name: 'Guga', src: './svgs/game-2/card-items/gannet.svg' },
       { name: 'Portan', src: './svgs/game-2/card-items/shorecrab.svg' },
@@ -3089,7 +1698,7 @@ class CardMatchingGame {
     // The [...arr, ...arr] spreads the array twice, sort(() => Math.random() - 0.5) shuffles it
     this.cards = [...cardImages, ...cardImages].sort(() => Math.random() - 0.5);
 
-    // Each card back shows a random  tweed pattern - only using 2, 5, 6 - TBD theyre lowest filesizes 
+    // Each card back shows a random  tweed pattern - only using 2, 5, 6 - TBD theyre lowest filesizes
     const availableTweeds = [2, 5, 6];
 
     // Build the HTML for all cards
@@ -3174,7 +1783,7 @@ class CardMatchingGame {
         this.matched.add(index2);
         cards[index1].classList.add('matched');
         cards[index2].classList.add('matched');
-        this.animateStoneTocairn(cards[index1]);  // visual feedback - stone flies to cairn
+        this.animateStoneToCairn(cards[index1]);  // visual feedback - stone flies to cairn
         this.flipped.clear();
         this.isProcessing = false;
 
@@ -3197,7 +1806,7 @@ class CardMatchingGame {
   }
 
   // Triggers the stone-flying-to-cairn animation starting from the matched card
-  animateStoneTocairn(cardElement) {
+  animateStoneToCairn(cardElement) {
     let startX, startY;
 
     // Get the centre point of the card (or fallback to board centre if no card)
@@ -3253,7 +1862,7 @@ class Game3FishingGame {
     // ===== GAME STATE =====
     this.gameActive = false;
     this.isPaused = false;
-    this.timeRemaining = 135;  // 2 minutes 15 seconds total
+    this.timeRemaining = 180;  // 2 minutes 15 seconds total
     this.elapsedTime = 0;      // tracks how long user has been playing (for zone transitions)
     this.currentDepth = 'SHALLOW';  // starts in shallow water, goes deeper as time passes
 
@@ -3287,7 +1896,7 @@ class Game3FishingGame {
     this.bubbleInterval = 300;
 
     // ===== SHOALING FISH =====
-    // Some fish swim in groups (i.e for shrimp) 
+    // Some fish swim in groups (i.e for shrimp)
     this.shrimpShoal = [];
     this.lastShoalSpawn = 0;
 
@@ -3307,24 +1916,24 @@ class Game3FishingGame {
 
     // ===== GAELIC FISH NAMES =====
     // English translations for reference:
-    // Carran=Shrimp, 
+    // Carran=Shrimp,
     // Crùbag=Crab,
     //  Giomach=Lobster,
-    //  Banag= Trout, 
+    //  Banag= Trout,
     // Creachann=Scallop,
-    // Stroilleag=Cuttlefish, 
+    // Stroilleag=Cuttlefish,
     // Creagag=Rock fish,
     //  Cuiteag=Cuddies,
     //  Cùdan=Cudden,
-    // Sgadan=Herring, 
+    // Sgadan=Herring,
     // Leòbag=Flounder,
-    //  Breac Geal=White Trout, 
+    //  Breac Geal=White Trout,
     // Sgeit=Skate,
-    // Breac Garbh=Brown Trout, 
-    // Trosg=Cod, 
+    // Breac Garbh=Brown Trout,
+    // Trosg=Cod,
     // Cat-mara=Catfish,
     //  Manach=Monkfish,
-    // Muc-mhara=whale, 
+    // Muc-mhara=whale,
     // Tùna=Tuna
 
     this.fishNames = {
@@ -3386,7 +1995,7 @@ class Game3FishingGame {
       cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 18, speed: 9.0, size: 230, spawnWeight: 3, isValid: true },
       manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 22, speed: 8.0, size: 250, spawnWeight: 3, isValid: true },
       muc_mara: { id: 'muc_mara', svg: './svgs/game-3/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 28, speed: 7.5, size: 280, spawnWeight: 2, isValid: true },
-      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 50, speed: 10.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 150 }
+      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 50, speed: 10.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 165 }
     };
   }
 
@@ -3489,7 +2098,7 @@ class Game3FishingGame {
       this.controller.updateGame1TimerDisplay();
 
       // Give the player a warning 5 seconds before we go deeper
-      
+
       if (this.elapsedTime === 40 && this.currentDepth === 'SHALLOW') {
         this.showZoneWarning('MID_DEPTH', 5);
       } else if (this.elapsedTime === 85 && this.currentDepth === 'MID_DEPTH') {
@@ -3557,7 +2166,7 @@ class Game3FishingGame {
   // ===== DEPTH ZONE TRANSITIONS =====
   // As the game progresses, you decend deeper into the ocean
   // SHALLOW (0-45s) THEN
-  // MID_DEPTH (45-90s) THEN 
+  // MID_DEPTH (45-90s) THEN
   // DEEP (90-135s)
   // Each zone has different fish species and difficulty
   // Transitions are animated to feel natural rather than jarring
@@ -3844,7 +2453,7 @@ class Game3FishingGame {
       // Normal speed for multi-directional movement
       actualSpeed = fishData.speed + speedVariation;
     } else {
-      // Regular fish - swim 
+      // Regular fish - swim
       // in middle area
       const topMargin = 150;
       const bottomMargin = 20; // Small padding from bottom
@@ -3909,7 +2518,7 @@ class Game3FishingGame {
     fish.style.transform = 'scale(1)';
 
     // H hitbox padding based on fish size to reduce finger errors
-    // Also made it easier for children 
+    // Also made it easier for children
     const paddingSize = Math.max(5, Math.min(15, fishSize * 0.05));
     fish.style.padding = `${paddingSize}px`;
     fish.style.margin = `-${paddingSize}px`;
@@ -4050,7 +2659,7 @@ class Game3FishingGame {
           }
           // Phase 3: Quick dart (20 frames)
           else if (fish.crabTimer < 110) {
-            fish.x += fish.speed * 3; // Fast darting 
+            fish.x += fish.speed * 3; // Fast darting
           }
           // Reset cycle
           else {
@@ -4231,7 +2840,7 @@ class Game3FishingGame {
         fish.wavyOffset += 0.15;
         fish.y += Math.sin(fish.wavyOffset) * 3.5;
       } else {
-        // Natural swimming - subtle up/down bobbing 
+        // Natural swimming - subtle up/down bobbing
         fish.wavyOffset += 0.08;
         fish.y += Math.sin(fish.wavyOffset) * 1.2;
       }
@@ -4257,7 +2866,7 @@ class Game3FishingGame {
     fishObj.caught = true;
     fishObj.caughtTime = Date.now(); // Track when caught for cleanup
 
-    // Handle garbage specially - always gives 1 point, (doesn't affect combo) as dont ant to make trash the focus 
+    // Handle garbage specially - always gives 1 point, (doesn't affect combo) as dont ant to make trash the focus
     if (fishObj.data.zone === 'GARBAGE') {
       this.handleGarbageCatch(fishObj);
       return;
@@ -4635,177 +3244,1656 @@ class Game3FishingGame {
   }
 }
 
-// ----------------------------------------------------------------
-// 7. HELP SYSTEM
-// ----------------------------------------------------------------
-// This handles the "?" help button that appears during gameplay.
-// When clicked, it shows a modal with the step by step instructions
-// in Gaelic explaining how to play the current game.
-// The game pauses while reading help so the player doesn't lose time.
+// ================================================================
+// 7. MAIN GAME CONTROLLER (GameFlowController)
+// ================================================================
+// This is the main state machine that controls the entire game flow.
+// It manages transitions between screens, handles audio, and
+// coordinates all three games.
+//
+// The game flow goes like this:
+//   LOGIN → RUAIRIDH_INTRO → PREGAME_TUTORIAL
+//         → GAME1_TUTORIAL → GAME1
+//         → GAME2_READY → GAME2_TUTORIAL → GAME2
+//         → GAME3_READY → GAME3_TUTORIAL → GAME3 → RESULTS
 
-class SmartHelpSystem {
-  constructor(gameController) {
-    this.controller = gameController;
-    this.modalElement = null;
-    this.isOpen = false;
+class GameFlowController {
+  constructor() {
+    // State tracking
+    this.currentState = 'LOGIN';
+    this.gameContainer = document.getElementById('game-container');
 
-    // I originally planned to track player stats (lobsters caught/escaped)
-    // in localStorage so I could give personalised help tips based on
-    // how well they were doing. Ran out of time to implement this properly
-    // so it's commented out for now - maybe for a future version.
+    // Player data
+    // TBD - Player information will record info such as their participant code,
+    // whetehr they clicked for help, took interest in finding out mroe about Gaelic phrases etc.
+    // Another throught was tracking navigation of tutorials, do they have to go back, why? Could
+    // the cognitive load be too high? Are they getting lost/confused at certain points etc.
+    this.participantCode = null;
+    this.gameData = {};
+    this.totalPoints = 0;
+
+    // Tutorial step counters - Just Tracks progress through each tutorial section
+    this.layoutTutorialStep = 0;
+    this.game1TutorialStep = 0;
+    this.game2TutorialStep = 0;
+    this.game3TutorialStep = 0;
+
+    // Game board instances (created when each game starts)
+    this.game1Board = null;
+    this.game2Board = null;
+
+    // Timer (4 minute countdown for Game 1)
+    this.gameTimer = null;
+    this.timeRemaining = GAME_SETTINGS.TIMING.game1Duration;
+
+    // state
+    this.gamePaused = false;
+
+    // Centralised audio management
+    this.audio = new AudioManager();
+    //
   }
 
-  // Called when the "?" help button is clicked during gameplay
-  toggle() {
-    if (this.isOpen) {
-      this.close();
-    } else {
-      this.open();
+  // Builds the top banner (buttons, timer, points) - options control what's shown
+  // This fucntion was used to replace duplicate banner implementations which beagn to
+  // show technical debt when making changes to the banner
+  buildBannerHTML(options = {}) {
+    const {
+      showPause = true,
+      pauseDisabled = true,
+      pauseButtonGlowing = false,
+      pauseHandler = null,
+      showHelp = true,
+      helpDisabled = true,
+      helpButtonGlowing = false,
+      helpHandler = 'gameController.toggleInGameHelpModal()',
+      showTimer = false,
+      timerDisplay = '5:00',
+      showTitle = false,
+      title = '',
+      titleClass = 'game1-title-fun',
+      cairnGlowing = false,
+      cairnId = '',
+      soundButtonGlowing = false
+    } = options;
+
+    // Build the sound button - adds 'glowing' class if it should pulsate during tutorial
+    let soundBtnClass = 'ruairidh-sound-button';
+    if (soundButtonGlowing) {
+      soundBtnClass = 'ruairidh-sound-button glowing';
+    }
+    const soundBtn = `<button class="${soundBtnClass}" id="sound-button" onclick="gameController.toggleSound()">
+      <img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" />
+      <img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" />
+    </button>`;
+
+    // Build pause button - this one's a bit more complex because it behaves differently
+    // during the tutorial (glowing, not clickable) vs during actual gameplay (clickable)
+    let pauseBtn = '';
+    if (showPause) {
+      let pauseBtnClass = 'ruairidh-pause-button'; // start with defaults, then override
+      let pauseStyle = '';
+      let pauseIdAttr = '';
+      let disabledAttr = '';
+      let onclickAttr = '';
+
+      // During tutorial, the button glows but shouldn't be clickable
+      if (pauseButtonGlowing) {
+        pauseBtnClass = 'ruairidh-pause-button glowing';
+        pauseStyle = ' style="cursor: default;"';
+        pauseIdAttr = ' id="layout-pause-btn"';
+      } else if (pauseHandler) {
+        pauseIdAttr = ' id="pause-button"'; // different ID so togglePause can find it
+      }
+
+      if (pauseDisabled) {
+        disabledAttr = ' disabled';
+      }
+
+      // Only add the click handler if the pausebutton should actually be doing smething
+      if (pauseHandler && !pauseDisabled) {
+        onclickAttr = ` onclick="${pauseHandler}"`;
+      }
+
+      pauseBtn = `<button class="${pauseBtnClass}"${pauseIdAttr}${disabledAttr}${pauseStyle}${onclickAttr}>${SVG_ICONS.pause}</button>`;
+    }
+
+    // Build help button - similar logic to pause, but simpler
+    let helpBtn = '';
+    if (showHelp) {
+      let helpBtnClass = 'ruairidh-help-button';
+      let helpIdAttr = '';
+      let disabledAttr = '';
+      let onclickAttr = '';
+
+      // Glowing during tutorial to draw attention
+      if (helpButtonGlowing) {
+        helpBtnClass = 'ruairidh-help-button glowing';
+        helpIdAttr = ' id="layout-help-btn"';
+      }
+
+      // Either disabled (no click) or enabled (shows help box) aferr click
+      if (helpDisabled) {
+        disabledAttr = ' disabled';
+      } else {
+        onclickAttr = ` onclick="${helpHandler}"`;
+      }
+
+      helpBtn = `<button class="${helpBtnClass}"${helpIdAttr}${disabledAttr}${onclickAttr}>?</button>`;
+    }
+
+    // Build timer section - only shown during timed games (Game 1 and Game 3)
+    let timerSection = '';
+    if (showTimer) {
+      timerSection = `
+            <div class="timer-box">
+              <img src="./svgs/all-games/clock.svg" alt="Uaireadair" class="timer-icon" />
+              <div class="timer-text">ÙINE:</div>
+              <span id="timer-display">${timerDisplay}</span>
+            </div>`;
+    }
+
+    // Build title section - shows the game name like "Glac an Giomach"
+    let titleSection = '';
+    if (showTitle && title) {
+      titleSection = `
+          <div class="banner-title-container">
+            <div class="${titleClass}">${title}</div>
+          </div>`;
+    }
+
+    // Build cairn/points section - the cairn icon pulsates when Ruairidh explains it
+    let cairnClass = 'cairn-icon';
+    if (cairnGlowing) {
+      cairnClass = cairnClass + ' pulsing';
+    }
+    let cairnIdAttr = '';
+    if (cairnId) {
+      cairnIdAttr = ` id="${cairnId}"`;
+    }
+
+    return `
+        <div class="ruairidh-banner">
+          <div class="ruairidh-banner-left">
+            ${soundBtn}
+            ${pauseBtn}
+            ${helpBtn}
+          </div>
+          ${titleSection}
+          <div class="ruairidh-banner-right">
+            ${timerSection}
+            <div class="points-box">
+              <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="${cairnClass}"${cairnIdAttr} />
+              <div class="ruairidh-banner-text">PUINGEAN:</div>
+              <span id="points-counter" class="points-counter-text">${this.totalPoints}</span>
+            </div>
+          </div>
+        </div>`;
+  }
+
+  // Builds the speech bubble with Ruairidh the seal
+  buildSpeechBubbleHTML(speechText, sealSize = null) {
+    let sealStyle = '';
+    if (sealSize) {
+      sealStyle = ` style="width: ${sealSize}px; height: ${sealSize}px;"`;
+    }
+    return `
+          <div class="ruairidh-container">
+            <div class="seal-icon-wrapper">
+              <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon"${sealStyle} />
+            </div>
+            <div class="speech-bubble">
+              <p>${speechText}</p>
+            </div>
+          </div>`;
+  }
+
+  // Builds the back/forward arrow buttons (or the green "play" button on the final tutorial step)
+  buildNavButtonsHTML(backAction, forwardAction, showPlayButton = false, playAction = null) {
+    let buttons = '';
+
+    if (backAction) {
+      buttons += `<button class="arrow-btn" onclick="${backAction}">← Air ais</button>`;
+    }
+
+    if (showPlayButton) {
+      let action = "gameController.setGameFlowState('GAME1_TUTORIAL')";
+      if (playAction) {
+        action = playAction;
+      }
+      buttons += `<button class="play-green-btn" onclick="${action}">Cluich an Geama</button>`;
+    } else if (forwardAction) {
+      buttons += `<button class="arrow-btn" onclick="${forwardAction}">Air adhart →</button>`;
+    }
+
+    // Centre the buttons if there's only a play button (no back arrow)
+    let containerClass = 'arrow-buttons';
+    if (showPlayButton && !backAction) {
+      containerClass = 'arrow-buttons centred';
+    }
+
+    return `<div class="${containerClass}">${buttons}</div>`;
+  }
+
+  // --------------------------------------------------------
+  // UNIFIED LAYOUT TUTORIAL RENDERER
+  // Avoids duplication of renderGameIntro_LayoutStep functions
+  // ------------------------------------------------------------
+  renderLayoutTutorialStep(stepIndex) {
+    // Look up which tutorial step to show (e.g. stepIndex 0 = SOUND_BUTTON, 1 = PAUSE_BUTTON, etc)
+    const stepKeys = Object.keys(LAYOUT_TUTORIAL_STEPS);
+    const stepKey = stepKeys[stepIndex];
+    const config = LAYOUT_TUTORIAL_STEPS[stepKey];
+
+    // Safety check in case something goes wrong (tessted)
+    if (!config) {
+      console.error(`Invalid layout tutorial step index: ${stepIndex}`);
+      return;
+    }
+
+    this.layoutTutorialStep = config.step;
+
+    // Build banner with appropriate glowing states
+    const bannerHTML = this.buildBannerHTML({
+      soundButtonGlowing: config.soundButtonGlowing,
+      showPause: true,
+      pauseDisabled: true,
+      pauseButtonGlowing: config.pauseButtonGlowing,
+      showHelp: true,
+      helpDisabled: true,
+      helpButtonGlowing: config.helpButtonGlowing,
+      cairnGlowing: config.cairnGlowing
+    });
+
+    // Build speech bubble
+    const speechHTML = this.buildSpeechBubbleHTML(config.speechText);
+
+    // Build navigation buttons
+    const navHTML = this.buildNavButtonsHTML(
+      config.backAction,
+      config.forwardAction,
+      config.showPlayButton || false
+    );
+
+    // Some steps have a special background class (e.g. beach background on the final step)
+    let screenClass = '';
+    if (config.screenClass) {
+      screenClass = ` ${config.screenClass}`;
+    }
+
+    // Put it all together and render to the page
+    const html = `
+      <div class="game-screen${screenClass}">
+        ${bannerHTML}
+        <div class="intro-screen-wrapper" style="position: relative; z-index: 1000;">
+          <div class="ruairidh-intro-screen">
+            ${speechHTML}
+            ${navHTML}
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.gameContainer.innerHTML = html;
+  }
+
+  // Called when player clicks "Air adhart" (forward) during the layout tutorial
+  advanceLayoutTutorialStep() {
+    // Find where we are in the tutorial steps
+    const stepKeys = Object.keys(LAYOUT_TUTORIAL_STEPS);
+    let currentIndex = -1;
+    for (let i = 0; i < stepKeys.length; i++) {
+      const key = stepKeys[i];
+      if (LAYOUT_TUTORIAL_STEPS[key].step === this.layoutTutorialStep) {
+        currentIndex = i;
+        break;
+      }
+    }
+
+    // If we're not at the last step, go to the next one
+    if (currentIndex < stepKeys.length - 1) {
+      this.renderLayoutTutorialStep(currentIndex + 1);
     }
   }
 
-  // Show the help modal - doesn't pause the game, just overlays it
-  // (matching the public version which works correctly)
-  open() {
-    this.createModal();
-    this.isOpen = true;
-    document.body.style.overflow = 'hidden';  // stop background from scrolling
-  }
+  // Called when player clicks the sound button
+  toggleSound() {
+    const nowEnabled = this.audio.toggle(); // flips audio on/off and returns new state
 
-  // Hide the modal
-  close() {
-    // Set isOpen to false immediately to prevent double-close issues
-    this.isOpen = false;
-    document.body.style.overflow = '';  // restore scrolling immediately
-
-    if (this.modalElement) {
-      const modalToRemove = this.modalElement;  // capture reference to avoid race condition
-
-      // Remove event listeners to prevent any lingering handlers
-      modalToRemove.removeEventListener('keydown', this._boundKeydownHandler);
-      modalToRemove.removeEventListener('click', this._boundClickHandler);
-
-      modalToRemove.classList.remove('active');
-
-      // Clear pointer events immediately to ensure clicks go through to game board
-      modalToRemove.style.pointerEvents = 'none';
-
-      setTimeout(() => {
-        // Only remove this specific modal, not a newly created one
-        if (modalToRemove && modalToRemove.parentNode) {
-          modalToRemove.remove();
-        }
-        // Only clear the reference if it's still the same modal
-        if (this.modalElement === modalToRemove) {
-          this.modalElement = null;
-        }
-      }, 300);  // matches CSS transition duration
+    // Firebase Data Logging: Track sound toggles
+    if (this.dataLogger) {
+      this.dataLogger.logSoundToggle(nowEnabled);
     }
 
-    // Ensure focus returns to the game by blurring any focused element in the modal
-    if (document.activeElement && document.activeElement.closest('.help-modal')) {
-      document.activeElement.blur();
+    const muteOverlay = document.getElementById('sound-mute-overlay');
+
+    // Show or hide the red X over the speaker icon
+    if (muteOverlay) {
+      if (nowEnabled) {
+        muteOverlay.style.display = 'none';
+      } else {
+        muteOverlay.style.display = 'block'; // shows the muted indicator
+      }
+    }
+
+    if (nowEnabled) {
+      this.audio.startForState(this.currentState); // restart music for current screen
     }
   }
 
-  // Builds the modal DOM element and adds it to the page
-  createModal() {
-    const existing = document.getElementById('smart-help-modal');
-    if (existing) existing.remove();
+  // When the player clicks the "?" next to one of the seleted idiomatic Gaelic phrases, this shows a popup
+  // explaining what the phrase means (with Ruairidh the seal)
+  showPhraseExplanation(phraseId) {
+    // The phrases used in the game and their explanations
+    const phrases = {
+      cairn: {
+        phrase: "Nithear càirn mòr bho chlachan bheaga", // "Big cairns are made from small stones"
+        explanation: "Tha an abairt seo a' ciallachadh gun urrainn dhut rudeigin mòr a choileanadh le bhith a' cur ris, beag air bheag. Tha na ceumannan beaga cudromach!"
+      },
+      earrach: {
+        phrase: "San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar", // "In Spring, when the sheep is thin, the shellfish is fat"
+        explanation: "Tha an abairt seo a' ciallachadh gur e àm math a th' anns an Earrach dhuinn. Aig toiseach na bliadhna, tha na caoraich caol, ach tha na maoraich, 's e sin na giomaich is na crùbagan, gu math reamhar. Tha a mhuir agus an tìr a' toirt biadh dhuinn fad na bliadhna, fiùs ma tha rudeigin eile lag no gann!"
+      }
+    };
 
+    const data = phrases[phraseId];
+    if (!data) return; // just in case an invalid phraseId is passed
+
+    // Create the  popup box
     const modal = document.createElement('div');
-    modal.id = 'smart-help-modal';
-    modal.className = 'help-modal';
-    modal.innerHTML = this.generateModalHTML();
-    document.body.appendChild(modal);
+    modal.className = 'phrase-modal active';
+    modal.id = 'phrase-modal';
+    modal.innerHTML = `
+      <div class="phrase-modal-content">
+        <h3 class="phrase-modal-title">"${data.phrase}"</h3>
+        <div class="phrase-modal-seal">
+          <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh" />
+        </div>
+        <div class="phrase-modal-explanation">
+          <p>${data.explanation}</p>
+        </div>
+        <button class="arrow-btn" onclick="gameController.closePhraseExplanation()">Dùin</button>
+      </div>
+    `;
+    document.body.appendChild(modal); // add it to the page
+  }
 
-    this.modalElement = modal;
-    this.attachEventListeners();
+  closePhraseExplanation() {
+    const modal = document.getElementById('phrase-modal');
+    if (modal) {
+      modal.remove(); // takes it off the page
+    }
+  }
 
-    // The active class has opacity:1 in CSS, so adding it triggers a fadein.
-    // But if I add it immediately after appending to DOM, the browser skips
-    // the transition. requestAnimationFrame delays it by one frame so it works
-    requestAnimationFrame(() => {
-      modal.classList.add('active');
+  // Pauses or resumes Game 1 - stops the timer and freezes the lobster
+  togglePause() {
+    this.gamePaused = !this.gamePaused;
+    const button = document.getElementById('pause-button');
+    const modal = document.getElementById('pause-modal');
+
+    if (this.gamePaused) {
+      if (this.gameTimer) clearInterval(this.gameTimer); // stop the countdown
+      if (this.game1Board) this.game1Board.isAnimating = true; // freeze the lobster
+      if (button) button.innerHTML = SVG_ICONS.play;
+      if (modal) modal.classList.add('active');
+      this.audio.pauseGameSounds(this.currentState);
+    } else {
+      if (this.game1Board) {
+        this.game1Board.isAnimating = false; // unfreeze the lobster
+      }
+
+      // Restart the countdown timer
+      if (this.gameTimer) clearInterval(this.gameTimer);
+      this.gameTimer = setInterval(() => {
+        this.timeRemaining--;
+        this.updateGame1TimerDisplay();
+        if (this.timeRemaining <= 0) {
+          clearInterval(this.gameTimer);
+          setTimeout(() => this.setGameFlowState('GAME2_READY'), GAME_SETTINGS.TIMING.stateTransitionDelay);
+        }
+      }, 1000);
+
+      if (button) button.innerHTML = SVG_ICONS.pause;
+      if (modal) modal.classList.remove('active');
+      this.audio.resumeForState(this.currentState);
+    }
+  }
+
+  // Pauses or resumes Game 3 - same idea as togglePause but for the fish sorting game
+  // (I kept these separate because Game 1 has the timer logic and Game 3 doesn't)
+  toggleGame3Pause() {
+    if (!this.game3Board) return;
+    this.game3Board.isPaused = !this.game3Board.isPaused;
+    const button = document.getElementById('pause-button');
+    const modal = document.getElementById('pause-modal');
+
+    if (this.game3Board.isPaused) {
+      if (button) button.innerHTML = SVG_ICONS.play;
+      if (modal) modal.classList.add('active');
+      this.audio.pauseGameSounds(this.currentState);
+    } else {
+      if (button) button.innerHTML = SVG_ICONS.pause;
+      if (modal) modal.classList.remove('active');
+      this.audio.resumeGameSounds(this.currentState);
+    }
+  }
+
+  // ============================================================================
+  //
+  //                           MAIN STATE MACHINE
+  //
+  //   This is the heart of the app. It controls which screen is showing and when
+  //   Every screen transition goes through this function
+  //
+  //   As i stated in the begining, the game flow goes like this:
+  //
+  //   LOGIN → RUAIRIDH_INTRO → PREGAME_TUTORIAL
+  //         → GAME1_TUTORIAL → GAME1
+  //         → GAME2_READY → GAME2_TUTORIAL → GAME2
+  //         → GAME3_READY → GAME3_TUTORIAL → GAME3 → RESULTS
+  //
+  // ============================================================================
+  setGameFlowState(newState) {
+    const oldState = this.currentState;
+    this.currentState = newState;
+
+    // Firebase Data Logging: Track state transitions and game starts
+    if (this.dataLogger) {
+      this.dataLogger.logStateTransition(oldState, newState);
+
+      // Log game starts
+      if (newState === 'GAME1') this.dataLogger.logGameStart(1);
+      if (newState === 'GAME2') this.dataLogger.logGameStart(2);
+      if (newState === 'GAME3') this.dataLogger.logGameStart(3);
+    }
+
+    // Clear what was on screen before
+    this.gameContainer.innerHTML = '';
+
+    // ===== AUDIO MANAGEMENT =====
+    // Each state has different audio requirements
+    // First anbd foremost kill everything that's currently playing:
+    this.audio.stopAll();
+
+    // Then start the appropriate tracks for this new state
+    if (newState === 'GAME1_TUTORIAL') {
+      // Tutorial has quieter music + ocean ambience
+      this.audio.startGame1Tutorial();
+      this.audio.startAmbience();
+    } else if (newState === 'GAME1') {
+      // Ambiance for game 1 only here
+      this.audio.startGame1();
+      this.audio.startAmbience();
+    } else if (newState === 'GAME2') {
+      // Matching game music
+      this.audio.startGame2();
+    } else if (newState === 'GAME3') {
+      // Fishing game music
+      this.audio.startGame3();
+    } else if (['RUAIRIDH_INTRO', 'PREGAME_TUTORIAL', 'GAME2_READY', 'GAME2_TUTORIAL', 'GAME3_READY', 'GAME3_TUTORIAL', 'RESULTS'].includes(newState)) {
+      // Menu and tutorial screens use generic background music
+      this.audio.startBackground();
+    }
+    // LOGIN screen stays silent (no music)
+
+    switch (newState) {
+      case 'LOGIN':
+        this.renderLoginScreen();
+        break;
+      case 'RUAIRIDH_INTRO':
+        this.renderIntroduction_RuairidhIntro();
+        break;
+      case 'PREGAME_TUTORIAL':
+        this.renderLayoutTutorialStep(0);
+        break;
+      case 'GAME1_TUTORIAL':
+        this.renderGame1TutorialFlow();
+        break;
+      case 'GAME1':
+        this.renderGame1_Main();
+        break;
+      case 'GAME2_READY':
+        this.renderInterval_TransitionToGame2();
+        break;
+      case 'GAME2_TUTORIAL':
+        this.renderGame2TutorialScreen();
+        break;
+      case 'GAME2':
+        this.renderGame2_Main();
+        break;
+      case 'GAME3_READY':
+        this.renderInterval_TransitionToGame3();
+        break;
+      case 'GAME3_TUTORIAL':
+        this.renderGame3_Tutorial();
+        break;
+      case 'GAME3':
+        this.renderGame3_Main();
+        break;
+      case 'RESULTS':
+        this.renderResultsScreen();
+        break;
+    }
+
+    // Update sound button icon to match current sound state
+    this.updateSoundButtonIcon();
+  }
+
+  updateSoundButtonIcon() {
+    const muteOverlay = document.getElementById('sound-mute-overlay');
+    if (muteOverlay) {
+      muteOverlay.style.display = this.audio.isEnabled() ? 'none' : 'block';
+    }
+  }
+
+  // Sets up a smaller version of the Game 1 board for the tutorial screens
+  initGame1TutorialBoard(options = {}) {
+    let withRocks = false;
+    if (options.withRocks) {
+      withRocks = true;
+    }
+
+    // Create a new board with smaller dimensions for the tutorial
+    this.game1TutorialBoard = new Game1Board(5, this);
+    this.game1TutorialBoard.isAnimating = true; // starts frozen so player can read instructions
+    this.game1TutorialBoard.gridWidth = GAME_SETTINGS.GRID.tutorialWidth;
+    this.game1TutorialBoard.gridHeight = GAME_SETTINGS.GRID.tutorialHeight;
+    this.game1TutorialBoard.boardSquares.clear();
+    this.game1TutorialBoard.initialiseBoard();
+    this.game1TutorialBoard.spawnLobster();
+
+    // Some tutorial steps show rocks, others don't
+    if (withRocks) {
+      const lobsterX = this.game1TutorialBoard.lobster.position.x;
+      const lobsterY = this.game1TutorialBoard.lobster.position.y;
+      const lobsterKey = lobsterX + ',' + lobsterY;
+
+      // Add each rock position, but skip if the lobster is there
+      // This was a bug fix where a stone would sometimes spawn on top of the lobster during the tutorial,
+      //  which was confusing for users given the fact taht isay the lobser can't jump over rocks
+      for (let i = 0; i < TUTORIAL_ROCK_POSITIONS.length; i++) {
+        const pos = TUTORIAL_ROCK_POSITIONS[i];
+        if (pos !== lobsterKey) {
+          this.game1TutorialBoard.blockedSet.add(pos);
+        }
+      }
+    } else {
+      this.game1TutorialBoard.blockedSet.clear();
+    }
+
+    return this.game1TutorialBoard;
+  }
+
+  // ----------------------------------------------------------
+  // 1 - LOGIN (player enters their participant code before starting)
+  // ----------------------------------------------------------
+  renderLoginScreen() {
+    const html = `
+      <div class="login-wrapper">
+        <h1 class="game-main-title">Geamaichean Gàidhlig</h1>
+        <div class="login-screen">
+          <h2>Fàilte!</h2>
+          <div class="form-group">
+            <label for="participant-code">Còd an cluicheadar:</label>
+            <input type="text" id="participant-code" placeholder="Cuir a-steach do chòd an seo" autocomplete="off" />
+          </div>
+          <button class="play-button" onclick="gameController.handleLoginSubmit()">Tòisich</button>
+        </div>
+      </div>
+    `;
+    this.gameContainer.innerHTML = html;
+
+    // Allow Enter key to submit // When being tested by teacher afetr iteration 1 and she
+    // tried pressing enter and it didnt work, decided to implement this
+    const input = document.getElementById('participant-code');
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          this.handleLoginSubmit();
+        }
+      });
+    }
+  }
+
+  // Handles participant/teacher code login with Firebase authentication
+  async handleLoginSubmit() {
+    const input = document.getElementById('participant-code');
+    if (!input) return;
+
+    const code = input.value.trim().toUpperCase();
+
+    if (!code) {
+      alert('Feuch gun cuir thu a-steach an còd ceart agad!');
+      return;
+    }
+
+    try {
+      // Disable input while processing
+      input.disabled = true;
+      input.placeholder = 'A\' dèanamh dearbhaidh...'; // Authenticating...
+
+      // Call Cloud Function to validate code and get auth token
+      const validateFunc = firebase.functions().httpsCallable('validateAndAuthenticate');
+      const result = await validateFunc({ code });
+
+      // Sign in with custom token
+      await firebase.auth().signInWithCustomToken(result.data.token);
+
+      // Route based on type
+      if (result.data.type === 'teacher') {
+        // Redirect to teacher dashboard
+        window.location.href = '/dashboard.html';
+        return;
+      }
+
+      // Participant flow - initialize data logger and continue to game
+      this.participantCode = code;
+      this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
+
+      // Initialize Firebase data logger
+      this.dataLogger = new window.DataLogger(code);
+      await this.dataLogger.initSession();
+      await this.dataLogger.logEvent('login', { participantCode: code });
+
+      // Continue to game intro
+      this.setGameFlowState('RUAIRIDH_INTRO');
+
+    } catch (error) {
+      console.error('Login error:', error);
+
+      // Re-enable input
+      input.disabled = false;
+      input.placeholder = 'Cuir a-steach an còd agad';
+
+      // Show user-friendly error message
+      if (error.code === 'functions/not-found') {
+        alert('Còd mì-dhligheach. Feuch gun cuir thu a-steach an còd ceart.');
+      } else if (error.code === 'functions/permission-denied') {
+        alert('Tha an còd seo air a dhì-ghnìomhachadh.');
+      } else {
+        alert('Mearachd: Chan urrainn dhuinn ceangal ris an t-seirbheis. Feuch a-rithist.');
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // 2 - INTRODUCTION (Ruairidh the seal introduces himself)
+  // ----------------------------------------------------------
+  renderIntroduction_RuairidhIntro() {
+    const html = `
+      <div class="ruairidh-intro-screen">
+        <div class="ruairidh-container">
+          <div class="seal-icon-wrapper">
+            <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+          </div>
+          <div class="speech-bubble">
+            <p>Halo! Is mise Ruairidh an Ròn, 's tha mi an seo airson do chuideachadh leis a' gheama seo.</p>
+          </div>
+        </div>
+        <div class="arrow-buttons centred">
+          <button class="arrow-btn" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">Air adhart →</button>
+        </div>
+      </div>
+    `;
+    this.gameContainer.innerHTML = html;
+  }
+
+  // ----------------------------------------------------------
+  // 3 - GAME 1 TUTORIAL (Ruairidh explains how to catch lobsters)
+  //
+  // This is split into multiple steps so the player isn't overwhelmed:
+  //   Step 1  - Welcome to the beach + Gaelic phrase
+  //   Step 1b - Shows the lobster moving around
+  //   Step 2  - Explains the board and sand tiles
+  //   Step 3  - Explains rocks and how to trap lobsters
+  //   Step 4  - Final tips, then "Play" button
+  // ----------------------------------------------------------
+
+  renderGame1TutorialFlow() {
+    this.game1TutorialStep = 0;
+    this.renderGame1Tutorial_Step1();
+  }
+
+  // When moving from Step 1b to Step 2, we need to stop the lobster animation first -
+  // this bug actually stopped the gameboard from apeparing in the next step because the lobster animation hadn't finsiehd
+// hence the need for this cleanup fucntion
+  cleanupAndNavigateToStep2() {
+    if (this.game1TutorialBoard) {
+      this.game1TutorialBoard.stopTutorialAnimation();
+    }
+    this.game1TutorialStep = 1;
+    this.renderGame1Tutorial_Step2();
+  }
+
+  // Step 1: Welcome message with a Gaelic phrase about springtime
+  renderGame1Tutorial_Step1() {
+    this.game1TutorialStep = 0;
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const html = `
+      <div class="game1-screen game1-tutorial-step1">
+        ${banner}
+        <div class="intro-screen-wrapper">
+          <div class="ruairidh-intro-screen">
+            ${this.buildSpeechBubbleHTML('Fàilte dhan tràigh, a charaid!<br><br>Bidh iad ag ràdh…<span class="phrase-underline">San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar.</span> <button class="phrase-help-btn" onclick="gameController.showPhraseExplanation(\'earrach\')">?</button>')}
+            <div class="arrow-buttons">
+              <button class="arrow-btn" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">← Air ais</button>
+              <button class="arrow-btn" onclick="gameController.renderGame1Tutorial_Step1b();">Air adhart →</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    this.gameContainer.innerHTML = html;
+  }
+
+  // Step 1b: Shows the lobster moving around - just on the sand
+  renderGame1Tutorial_Step1b() {
+    this.game1TutorialStep = 0;
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const html = `
+      <div class="game1-screen game1-tutorial-step1">
+        ${banner}
+        <div class="game1-tutorial-content-wrapper">
+          <div class="game1-tutorial-text-section">
+            <div class="ruairidh-intro-screen game1-tutorial-box">
+              ${this.buildSpeechBubbleHTML("'S fìor thoil leam giomaich, ach tha iad cho duilich an glacadh!<br><br>Le sin, tha mi ag iarraidh do chuideachadh.", 150)}
+              <div class="arrow-buttons">
+                <button class="arrow-btn" onclick="gameController.renderGame1Tutorial_Step1();">← Air ais</button>
+                <button class="arrow-btn" onclick="gameController.cleanupAndNavigateToStep2();">Air adhart →</button>
+              </div>
+            </div>
+          </div>
+          <div class="game1-tutorial-board-section">
+            <div id="game1-board-tutorial"></div>
+          </div>
+        </div>
+      </div>`;
+    this.gameContainer.innerHTML = html;
+
+    // Set up the demo board and start the lobster moving slowly
+    this.initGame1TutorialBoard();
+    this.game1TutorialBoard.renderTutorialOnlyLobster('game1-board-tutorial');
+    this.game1TutorialBoard.startSlowLobsterAnimation(1000); // moves every 1 second
+  }
+
+  // Step 2: Explains what the board looks like (lobster + sand tiles)
+  renderGame1Tutorial_Step2() {
+    this.game1TutorialStep = 1;
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const html = `
+      <div class="game1-screen game1-tutorial-step2">
+        ${banner}
+        <div class="game1-tutorial-content-wrapper game1-tutorial-step2">
+          <div class="game1-tutorial-text-section">
+            <div class="ruairidh-intro-screen game1-tutorial-box">
+              ${this.buildSpeechBubbleHTML("Ri mo thaobh chì thu giomach agus blocaichean gainmhich bhuidhe. Seo far a bheil sinn a' dol a dh' fheuchainn giomaich a ghlacadh!", 150)}
+              <div class="arrow-buttons">
+                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 0; gameController.renderGame1Tutorial_Step1();">← Air ais</button>
+                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">Air adhart →</button>
+              </div>
+            </div>
+          </div>
+          <div class="game1-tutorial-board-section-right">
+            <div id="game1-board-tutorial"></div>
+          </div>
+        </div>
+      </div>`;
+    this.gameContainer.innerHTML = html;
+
+    this.initGame1TutorialBoard();
+    this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
+  }
+
+  // Step 3: Explains how placing rocks traps lobsters
+  renderGame1Tutorial_Step3() {
+    this.game1TutorialStep = 2;
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const html = `
+      <div class="game1-screen game1-tutorial-step3">
+        ${banner}
+        <div class="game1-tutorial-content-wrapper game1-tutorial-step3">
+          <div class="game1-tutorial-text-section">
+            <div class="ruairidh-intro-screen game1-tutorial-box">
+              ${this.buildSpeechBubbleHTML("Nuair a bhrùthas tu air an gainmheach bhuidhe, 's urrainn dhut clach a chur sìos. Chan urrainn do na giomaich a' dhol thairis air na clachan!<br><br>Airson a h-uile giomach a gheibh thu, thèid clach a chur air an càirn agad.", 150)}
+              <div class="arrow-buttons">
+                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 1; gameController.renderGame1Tutorial_Step2();">← Air ais</button>
+                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 3; gameController.renderGame1Tutorial_Step4();">Air adhart →</button>
+              </div>
+            </div>
+          </div>
+          <div class="game1-tutorial-board-section-right">
+            <div id="game1-board-tutorial"></div>
+          </div>
+        </div>
+      </div>`;
+    this.gameContainer.innerHTML = html;
+
+    this.initGame1TutorialBoard({ withRocks: true }); // show rocks on this step
+    this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
+  }
+
+  // Step 4: Final tips and the "Play" button to start the actual game
+  renderGame1Tutorial_Step4() {
+    this.game1TutorialStep = 3;
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const html = `
+      <div class="game1-screen game1-tutorial-step4">
+        ${banner}
+        <div class="game1-tutorial-content-wrapper game1-tutorial-step4">
+          <div class="game1-tutorial-text-section">
+            <div class="ruairidh-intro-screen game1-tutorial-box">
+              ${this.buildSpeechBubbleHTML("Cuimhnich, tha na giomaich ann an Leòdhas gu math seòlta!<br><br>Chan eil ach ceithir mionaidean againn! Steall ort!", 150)} // "Remember, the lobsters in Lewis are very clever! We only have 4 minutes! Get cracking!"
+              <div class="arrow-buttons">
+                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">← Air ais</button>
+                <button class="play-green-btn" onclick="gameController.setGameFlowState('GAME1');">Cluich an Geama</button>
+              </div>
+            </div>
+          </div>
+          <div class="game1-tutorial-board-section-right">
+            <div id="game1-board-tutorial"></div>
+          </div>
+        </div>
+      </div>`;
+    this.gameContainer.innerHTML = html;
+
+    this.initGame1TutorialBoard({ withRocks: true });
+    this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
+  }
+
+
+
+
+  // ----------------------------------------------------------
+  // 4 - GAME 1 - GLAC AN GIOMACH (the actual lobster catching game)
+  // ----------------------------------------------------------
+  renderGame1_Main() {
+    const banner = this.buildBannerHTML({
+      showTitle: true, title: 'Glac an Giomach',
+      showTimer: true, timerDisplay: '4:00',
+      pauseDisabled: false, pauseHandler: 'gameController.togglePause()',
+      helpDisabled: false, cairnId: 'cairn-points'
+    });
+
+    const html = `
+      <div class="game1-screen">
+        ${banner}
+        <div class="game1-board" id="game1-board"></div>
+        <div class="game1-footer">
+          <div id="round-status"></div>
+          <button class="nav-btn" onclick="gameController.resetGame1Round()">Tòisich a-rithist</button>
+          <button class="nav-btn dev-skip-btn" onclick="gameController.setGameFlowState('GAME2_READY')" style="background: #ff6b6b; margin-left: 10px;">DEV: Skip to Game 2 →</button>
+        </div>
+      </div>
+      <div class="pause-modal" id="pause-modal">
+        <div class="pause-modal-content">
+          <h2>Geama air stad</h2>
+          <button class="pause-resume-btn" onclick="gameController.togglePause()">Tòisich</button>
+        </div>
+      </div>`;
+
+    this.gameContainer.innerHTML = html;
+
+    // Create the game board and start the 4-minute countdown
+    this.game1Board = new Game1Board(5, this);
+    this.game1Board.render();
+    this.updatePointsDisplayOnly();
+    this.startGame1Timer();
+  }
+
+
+  // ===== GAME 1 TIMER SYSTEM =====
+  // Starts a 4-minute countdown timer for the cairn building game
+  // Originally was 5 minutes but that felt too long, so we reduced it
+  // Timer shows warnings at 60s, 30s, and 10s to create urgency
+  startGame1Timer() {
+    this.timeRemaining = GAME_SETTINGS.TIMING.game1Duration;  // 4 minutes (240 seconds)
+    this.updateGame1TimerDisplay();
+
+    // Analytics call
+    // This would mark the player as having started a game,
+    // useful for knowing if they're a returning player
+    // if (this.helpSystem) {
+    //   this.helpSystem.markAsPlayed();
+    // }
+
+    // Clear any existing timer first (safety check)
+    if (this.gameTimer) clearInterval(this.gameTimer);
+
+    // Start the countdown - ticks every second
+    this.gameTimer = setInterval(() => {
+      this.timeRemaining--;
+      this.updateGame1TimerDisplay();  // Update the visual display
+
+      // Check if time's up
+      if (this.timeRemaining <= 0) {
+        clearInterval(this.gameTimer);  // Stop the timer
+        // Brief pause before transitioning to next screen
+        setTimeout(() => {
+          this.setGameFlowState('GAME2_READY');
+        }, 500);
+      }
+    }, 1000);  // Run every 1000ms (1 second)
+  }
+
+  // Updates the timer display and adds visual warnings when time is running out
+  // Colour-coded warnings help players manage their time effectivly
+  updateGame1TimerDisplay() {
+    const display = document.getElementById('timer-display');
+    if (display) {
+      // Format as MM:SS (e.g., "4:00")
+      const minutes = Math.floor(this.timeRemaining / 60);
+      const seconds = this.timeRemaining % 60;
+      display.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+      // Clear any old warning styles before we check again
+      display.classList.remove('warning-yellow', 'warning-orange', 'warning-red', 'warning');
+
+      // Traffic light system for time warnings:
+      // - Yellow: under 1 minute left
+      // - Orange: under 30 second
+      // - Red: final 10 seconds, like a panic mode
+      if (this.timeRemaining <= 10) {
+        display.classList.add('warning-red');  //
+      } else if (this.timeRemaining <= 30) {
+        display.classList.add('warning-orange');
+      } else if (this.timeRemaining <= 60) {
+        display.classList.add('warning-yellow');
+      }
+      // if more than 60 seconds left, no warning class needed
+    }
+  }
+
+  // Opens the smart help system for Game 1
+  toggleInGameHelpModal() {
+    if (!this.helpSystem) {
+      this.helpSystem = new SmartHelpSystem(this);
+    }
+
+    // Firebase Data Logging: Track help requests
+    if (this.dataLogger && this.helpSystem.modal && !this.helpSystem.modal.classList.contains('visible')) {
+      // Only log when opening (not closing) the help modal
+      this.dataLogger.logHelpRequest(this.currentState, 0); // Could track time in game if needed
+    }
+
+    this.helpSystem.toggle();
+  }
+
+  // Resets Game 1 board if player wants to start fresh
+  resetGame1Round() {
+    if (this.game1Board) {
+      this.game1Board.reset();
+      this.game1Board.render();
+    }
+  }
+
+  // ----------------------------------------------------------
+  // 5 - INTERVAL 1 (transition between games)
+  // ----------------------------------------------------------
+  // This is a quick breather screen between Game 1 and Game 2.
+  // Ruairidh thanks the player for helping catch lobsters and
+  // asks if they're ready for the next challenge. Gives the suers
+  // a moment to relax before jumping into the memory game.
+  renderInterval_TransitionToGame2() {
+    const html = `
+      <div class="game2-ready-screen">
+        <div class="intro-screen-wrapper">
+          <div class="ruairidh-intro-screen">
+            <div class="ruairidh-container">
+              <div class="seal-icon-wrapper">
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+              </div>
+              <div class="speech-bubble">
+                <!-- "Thank you for helping me! Are you ready for the next game?" -->
+                <p>Tapadh leibh airson mo chuideachadh! A bheil sibh deiseil airson an ath gheama?</p>
+              </div>
+            </div>
+            <div class="arrow-buttons centred">
+              <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">Air adhart →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    this.gameContainer.innerHTML = html;
+  }
+
+  // ----------------------------------------------------------
+  // 6 - GAME 2 TUTORIAL
+  // ----------------------------------------------------------
+  // Game 2 is "Cho Coltach ris an Dà Sgadan" which translates to
+  // "As alike as two herrings", the  Scottish Gaelic saying
+  // similar to "like two peas in a pod". Chosen as the name for a memory matching game
+  //
+  // The tutorial has 2 steps:
+  //   Step 1: Ruairidh explains the basic concept
+  //   Step 2: Shows example cards with Harris Tweed patterns
+
+  // STEP 1: Introduction to the matching game concept
+  renderGame2TutorialScreen() {
+    this.game2TutorialStep = 0;
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan' });
+
+    // Ruairidh says: "In this game, you need to help me make pairs  of things we can find on the beach or at sea."
+    const html = `
+      <div class="game2-tutorial-screen">
+        ${banner}
+        <div class="intro-screen-wrapper">
+          <div class="ruairidh-intro-screen">
+            ${this.buildSpeechBubbleHTML("Anns an geama seo, feumaidh tu mo chuideachadh paidhrichean a dhèanamh de rudan as urrainn dhuinn a' lorg air an tràigh neo aig muir.")}
+            <div class="arrow-buttons">
+              <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_READY')">← Air ais</button>
+              <button class="arrow-btn" onclick="gameController.renderGame2TutorialScreen_Step2()">Air adhart →</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    this.gameContainer.innerHTML = html;
+  }
+
+  // STEP 2: Show example cards so players know what to expect TBD - Put in some actual examples of the cards instead of just placeholders
+  renderGame2TutorialScreen_Step2() {
+    this.game2TutorialStep = 1;
+
+    // Pick random tweed patterns to display as examples - TBD  -noticed performance issue with diffrent tweed types, perhaos revert to just one
+    // These are the card backs asnd Harris Tweed is iconic to the Outer Hebrides
+    const availableTweeds = [2, 5, 6];
+    const tweed1 = availableTweeds[Math.floor(Math.random() * availableTweeds.length)];
+    const tweed2 = availableTweeds[Math.floor(Math.random() * availableTweeds.length)];
+
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan' });
+
+    // Ruairidh says: "There will be pieces of Harris Tweed on the table
+    // beside me. Press them to see what's behind them and you need to
+    // make pairs from them."
+    const html = `
+      <div class="game2-tutorial-screen">
+        ${banner}
+        <div class="game2-tutorial-content-wrapper">
+          <div class="game2-tutorial-text-section">
+            <div class="ruairidh-intro-screen" style="max-width: 600px;">
+              ${this.buildSpeechBubbleHTML("Bidh pìosan clò Hearaich air a' bhòrd ri mo thaobh. Brùth orra gus faicinn dè a tha air an cùlaibh agus feumaidh sibh paidhrichean a dhèanamh asta.", 120)}
+              <div class="arrow-buttons">
+                <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">← Air ais</button>
+                <button class="play-green-btn" onclick="gameController.setGameFlowState('GAME2')">Air adhart</button>
+              </div>
+            </div>
+          </div>
+          <div class="game2-tutorial-cards-section">
+            <div class="tutorial-card-grid">
+              <div class="tutorial-card"><div class="tutorial-card-inner"><div class="tutorial-card-face"><img src="./svgs/game-2/tweeds/tweed-${tweed1}.svg" alt="Card back" /></div></div></div>
+              <div class="tutorial-card"><div class="tutorial-card-inner"><div class="tutorial-card-face"><img src="./svgs/game-2/tweeds/tweed-${tweed2}.svg" alt="Card back" /></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    this.gameContainer.innerHTML = html;
+  }
+
+  // ----------------------------------------------------------
+  // 7 - GAME 2 - CARD MATCHING GAME
+  // ----------------------------------------------------------
+  // The main memory matching game screen. Players will lcikc to flip cards to
+  // find matching pairs. This is a classic memory game but with a Hebridean
+  // theme. I have chosen not ot hve a time presure as it could negatively impact the
+  // memory element for some users, making it feel stressful rather than fun.
+  renderGame2_Main() {
+    // Note: pause button is disabled because there's no timer in this game
+    const html = `
+      <div class="game2-screen">
+        <div class="ruairidh-banner">
+          <div class="ruairidh-banner-left">
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
+            <button class="ruairidh-help-button" onclick="gameController.toggleGame2HelpModal()">?</button>
+          </div>
+          <div class="banner-title-container">
+            <h1 class="game1-title-fun">Cho Coltrach ris an Dà Sgadan</h1>
+          </div>
+          <div class="ruairidh-banner-right">
+            <div class="points-box">
+              <img src="./svgs/all-games/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-points" />
+              <div class="ruairidh-banner-text">PUINGEAN:</div>
+              <span id="points-counter">${this.totalPoints}</span>
+            </div>
+          </div>
+        </div>
+        <div class="game2-content-wrapper">
+          <div class="game2-board" id="game2-board"></div>
+          <div class="game2-footer" style="text-align: center; margin-top: 10px;">
+            <button class="nav-btn dev-skip-btn" onclick="gameController.setGameFlowState('GAME3_READY')" style="background: #ff6b6b;">DEV: Skip to Game 3 →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help modal with step-by-step instructions in Gaelic -->
+      <!-- "Ciamar a chluicheas tu?" = "How do you play?" -->
+      <div class="help-modal" id="game2-help-modal">
+        <div class="help-modal-content simple-help">
+          <button class="modal-close" onclick="gameController.toggleGame2HelpModal()">✕</button>
+
+          <h2 class="simple-help-title">Ciamar a chluicheas tu?</h2>
+
+          <div class="simple-help-body">
+            <div class="help-tip">
+              <span class="help-tip-number">1</span>
+              <div class="help-tip-content">
+                <!-- "Goal: Find all matching pairs of cards" -->
+                <strong>Amas:</strong> <p>Lorg gach paidhir chairtean a tha co-ionann.</p>
+              </div>
+            </div>
+
+            <div class="help-tip">
+              <span class="help-tip-number">2</span>
+              <div class="help-tip-content">
+                <!-- "How to do it: Press a card to flip it" -->
+                <strong>Mar a nì thu e:</strong> <p>Brùth air cairt gus a thionndaidh.</p>
+              </div>
+            </div>
+
+            <div class="help-tip">
+              <span class="help-tip-number">3</span>
+              <div class="help-tip-content">
+                <!-- "Flip two cards at the same time" -->
+                <p>Tionndaidh dà chairt aig an aon àm.</p>
+              </div>
+            </div>
+
+            <div class="help-tip">
+              <span class="help-tip-number">4</span>
+              <div class="help-tip-content">
+                <!-- "If they match, you get a point!" -->
+                <p>Ma tha iad co-ionann, gheibh thu puing!</p>
+              </div>
+            </div>
+
+            <div class="help-tip">
+              <span class="help-tip-number">5</span>
+              <div class="help-tip-content">
+                <!-- "If they're different, they flip back over" -->
+                <p>Ma tha iad diofraichte, tionndaidhidh iad air ais.</p>
+              </div>
+            </div>
+
+            <div class="help-tip">
+              <span class="help-tip-number">6</span>
+              <div class="help-tip-content">
+                <!-- "If you find all pairs, you've won the game!" -->
+                <p>Ma lorgas tu gach paidhir, tha thu air a' gheama a bhuannachadh!</p>
+              </div>
+            </div>
+          </div>
+
+          <button class="arrow-btn" onclick="gameController.toggleGame2HelpModal()">Dùin</button>
+        </div>
+      </div>
+    `;
+    this.gameContainer.innerHTML = html;
+
+    // Create the card game board &  render it
+    this.game2Board = new CardMatchingGame(this);
+    this.game2Board.render();
+  }
+
+  // Opens/closes the help box for Game 2
+  // Also pauses/resumes the game so players can read without pressure
+  toggleGame2HelpModal() {
+    const modal = document.getElementById('game2-help-modal');
+    if (modal) {
+      const isOpening = !modal.classList.contains('active');
+      modal.classList.toggle('active');
+
+      if (isOpening) {
+        // TBD - Remove this because no timer on game 2?
+        // Freeze the game while reading help - i had this in here from when it was timed
+        if (this.game2Board) {
+          this.game2Board.isPaused = true;
+        }
+        this.audio.pauseGameSounds(this.currentState);
+      } else {
+
+        if (this.game2Board) {
+          this.game2Board.isPaused = false;
+        }
+        this.audio.resumeGameSounds(this.currentState);
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // POINTS & SCORING SYSTEM
+  // ----------------------------------------------------------
+  // These functions handle the scoring across all games.
+  // The cairn (stone pile) is used as the visual points counter,
+  // and stones fly to it when players earn points.
+
+  // Just updates the points number on screen - no common animation as:
+  // game 1 - merges from centre of board
+  // game 2 - comes from midle of card macth
+  // game 3, decided it was overstimulating to keep having stones animated along with moving fish
+  updatePointsDisplayOnly() {
+    const counter = document.getElementById('points-counter');
+    if (counter) {
+      counter.textContent = `${this.totalPoints}`;
+    }
+  }
+
+  // -------------------------------------------------------
+  // STONE ANIMATION -  visual reward for scoring
+  // -------------------------------------------------------
+  // When a player earns a point, a stone flies from wherever they
+  // scored (like a caught lobster or matched card) up to the cairn
+  // in the banner. The cairn pulses and the counter bumps up.
+  // This gives a satisfying visual feedback
+
+  animateStoneToCairn(startX, startY, onComplete) {
+    // Saved a stone image element to animate
+    const stone = document.createElement('img');
+    stone.src = './svgs/all-games/stone.svg';
+    stone.classList.add('stone-fly');
+
+    // Position it at the starting point (where the point was earned)
+    stone.style.position = 'fixed';
+    stone.style.width = '50px';
+    stone.style.height = '50px';
+    stone.style.left = `${startX}px`;
+    stone.style.top = `${startY}px`;
+    stone.style.zIndex = '9999';  // Make sure it's on top of everything
+    stone.style.pointerEvents = 'none';  // Don't block clicks
+    document.body.appendChild(stone);
+
+    // Find the cairn icon to fly towards
+    const cairn = document.getElementById('cairn-points');
+    if (!cairn) {
+      // Fallback if cairn not found - just add the point without animation (when resized window had this issue)
+      stone.remove();
+      this.addPointToCairn();
+      if (onComplete) onComplete();
+      return;
+    }
+
+    // Calculate how far the stone needs to travel
+    const cairnRect = cairn.getBoundingClientRect();
+    stone.style.setProperty('--fly-x', `${cairnRect.left - startX}px`);
+    stone.style.setProperty('--fly-y', `${cairnRect.top - startY}px`);
+    stone.classList.add('stone-fly-animate');  // CSS animation takes over
+
+    // When the flying animation finishes:
+    stone.addEventListener('animationend', () => {
+      stone.remove();  // Clean up the flying stone
+
+      // Make the cairn pulse to show it "received" the stone
+      cairn.classList.add('pulsing');
+      setTimeout(() => cairn.classList.remove('pulsing'), GAME_SETTINGS.TIMING.cairnPulsingDuration);
+
+      this.addPointToCairn();  //  add the point to the total and update the display
+
+      // Make the counter do a little bounce
+      const counter = document.getElementById('points-counter');
+      if (counter) {
+        counter.classList.add('points-reward');
+        setTimeout(() => counter.classList.remove('points-reward'), GAME_SETTINGS.TIMING.rewardAnimationDuration);
+      }
+
+      if (onComplete) onComplete();  // Let caller know we're done
     });
   }
 
-  // Returns the HTML for Game 1's help module
-  // "Ciamar a chluicheas tu?" = "How do you play?"
-  // The tips explain in Gaelic how to trap the lobster
-  generateModalHTML() {
-    return `
-      <div class="help-modal-content simple-help">
-        <button class="modal-close" onclick="gameController.helpSystem.close()">✕</button>
+  // This increments the score and plays the sound
+  addPointToCairn() {
+    this.totalPoints++;
+    this.updatePointsDisplayOnly();
+    this.audio.playPointSound();  // Gives user feedback that theyve recieced thhat point
 
-        <h2 class="simple-help-title">Ciamar a chluicheas tu?</h2>
+    // Firebase Data Logging: Track points increment (batched every 10 seconds)
+    if (this.dataLogger) {
+      this.dataLogger.logPointsIncrement(1);
+    }
+  }
 
-        <div class="simple-help-body">
-          <div class="help-tip">
-            <span class="help-tip-number">1</span>
-            <div class="help-tip-content">
-              <strong>Coimhead!</strong> <p>Faic dè an oir den bhòrd as fhaisge air a' ghiomach - sin far a bheil e airson dol!</p>
+  // ----------------------------------------------------------
+  // 8 - INTERVAL 2 (transition to Game 3)
+  // ----------------------------------------------------------
+  // Another breather/transiion screen, this time between Game 2 and Game 3.
+  // Ruairidh introduces the final game: "Cho luath ris a' bhradan"
+  // which means "As fast as the salmon" - a fishing game where
+  // players need quick reflexes to catch the right fish
+
+  renderInterval_TransitionToGame3() {
+    this.game3TutorialStep = 0;  // Reset tutorial step counter
+
+    // Note: pause and help buttons are disabled on this screen
+    // since it's just an intro, not actual gameplay
+    const html = `
+      <div class="game3-ready-screen">
+        <div class="ruairidh-banner">
+          <div class="ruairidh-banner-left">
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
+            <button class="ruairidh-help-button" disabled>?</button>
+          </div>
+          <div class="banner-title-container">
+            <!-- "As fast as the salmon" -->
+            <div class="game3-title">Cho luath ris a' bhradan</div>
+          </div>
+          <div class="ruairidh-banner-right">
+            <div class="points-box">
+              <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
+              <div class="ruairidh-banner-text">PUINGEAN:</div>
+              <span id="points-counter">${this.totalPoints}</span>
             </div>
           </div>
-
-          <div class="help-tip">
-            <span class="help-tip-number">2</span>
-            <div class="help-tip-content">
-              <strong>Tog balla!</strong> <p>Cuir clachan sìos fada air falbh bhon ghiomach. Na tèid ro fhaisg aig an toiseach!</p>
+        </div>
+        <div class="intro-screen-wrapper">
+          <div class="ruairidh-intro-screen">
+            <div class="ruairidh-container">
+              <div class="seal-icon-wrapper">
+                <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
+              </div>
+              <div class="speech-bubble">
+                <!-- "The next game is: 'As fast as the salmon!' Come and I'll tell you more!" -->
+                <p>'S e an ath gheama: <strong>"Cho luath ris a' bhradan!"</strong> Trobhad gus an innis mi barrachd dhuibh!</p>
+              </div>
+            </div>
+            <div class="arrow-buttons centred">
+              <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME3_TUTORIAL')">Air adhart →</button>
             </div>
           </div>
+        </div>
+      </div>
+    `;
+    this.gameContainer.innerHTML = html;
+  }
 
-          <div class="help-tip">
-            <span class="help-tip-number">3</span>
-            <div class="help-tip-content">
-              <strong>Dùin na beàrnan!</strong> <p>Teichidh a' ghiomach tron toll as lugha - cum ort gus nach bi beàrn sam bith!</p>
-            </div>
+  // ----------------------------------------------------------
+  // 8b - GAME 3 TUTORIAL (multi-step instructions)
+  // ----------------------------------------------------------
+  // This tutorial teaches players how the fishing game works.
+  // Again, It's split into 3 steps so we don't overwhelm users with info:
+  //   Step 0: Shows where Ruairidh appears and that he'll show the target fish (already getting them used to loooking up)
+  //   Step 1: Explains that catching the right fish earns points
+  //   Step 2: Bonus tip - you can also collect rubbish for extra points (adding that extra ethical dimension about keeping the beaches clean)
+  renderGame3_Tutorial() {
+    const isLastStep = this.game3TutorialStep >= 2;
+
+    // Each step has:
+    // - bubbleContent: what appears in Ruairidh's speech bubble (particular fish image)
+    // - the arrow pointing upat the bubble to draw attention (only on step 0 to show where to look)
+    // - message i.e the instruction text explaining this step
+    const tutorialSteps = [
+      // STEP 0: "Look here! I'll be up here at the top. I'll show you what fish I want!"
+      {
+        bubbleContent: `<img src="./svgs/game-3/game-3-fish/sgadan-L.svg" alt="Sgadan" class="target-fish-image" />`,
+        pointer: `↑ Coimhead an seo! ↑`,  // "Look here!"
+        message: `Bidh mise an seo aig a' mhulach. Seallaidh mi dhuibh dè an t-iasg a tha mi ag iarraidh!`
+      },
+      // STEP 1: "If you catch the right fish that I want, you'll get points!"
+      {
+        bubbleContent: `<img src="./svgs/game-3/game-3-fish/sgadan-L.svg" alt="Sgadan" class="target-fish-image" />`,
+        pointer: null,
+        message: `Ma gheibh sibh an t-iasg cheart a tha mise ag iarraidh, gheibh sibh puingean!`
+      },
+      // STEP 2: "Keep an eye out for rubbish! If you tap on rubbish you'll get points too!"
+      // This adds an environmental awareness element to the game
+      {
+        bubbleContent: `<img src="./svgs/game-3/game-3-garbage/plastic-bottle-1.svg" alt="Sgudal" class="target-fish-image" />`,
+        pointer: null,
+        message: `Cùm do shùil a-mach airson sgudal! Ma bhrùthas tu air sgudal gheibh sibh puingean cuideachd!`
+      }
+    ];
+
+    const step = tutorialSteps[this.game3TutorialStep];
+
+    const html = `
+      <div class="game3-screen game3-tutorial-preview">
+        <div class="ruairidh-banner">
+          <div class="ruairidh-banner-left">
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
+            <button class="ruairidh-help-button" disabled>?</button>
           </div>
-
-          <div class="help-tip">
-            <span class="help-tip-number">4</span>
-            <div class="help-tip-content">
-              <strong>Glac e!</strong> <p>Nuair nach urrainn dha na h-oirean a ruighinn, tha thu ga ghlacadh!</p>
+          <div class="banner-title-container">
+            <div class="game3-title">Cho luath ris a' bhradan</div>
+          </div>
+          <div class="ruairidh-banner-right">
+            <div class="points-box">
+              <img src="./svgs/all-games/cairn.svg" alt="Cairn" class="cairn-icon" />
+              <div class="ruairidh-banner-text">PUINGEAN:</div>
+              <span id="points-counter">${this.totalPoints}</span>
             </div>
           </div>
         </div>
 
-        <button class="arrow-btn" onclick="gameController.helpSystem.close()">Dùin</button>
+        <!-- On step 0, Ruairidh's section gets a highlight glow to draw the usrs eye in -->
+        <div class="game3-ruairidh-section${this.game3TutorialStep === 0 ? ' tutorial-highlight' : ''}">
+          <div class="ruairidh-container">
+            <div class="seal-icon-wrapper">
+              <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh" class="seal-icon" />
+            </div>
+            <div class="speech-bubble">
+              ${step.bubbleContent}
+            </div>
+          </div>
+          ${step.pointer ? `<div class="tutorial-pointer">${step.pointer}</div>` : ''}
+        </div>
+
+        <div class="game3-tutorial-explanation">
+          <div class="tutorial-message-box">
+            <p>${step.message}</p>
+            <div class="arrow-buttons">
+              <button class="arrow-btn" onclick="gameController.game3TutorialBack()">← Air ais</button>
+              ${isLastStep
+                ? `<button class="play-green-btn" onclick="gameController.setGameFlowState('GAME3')">Cluich an Geama</button>`  // "Play the Game"
+                : `<button class="arrow-btn" onclick="gameController.game3TutorialNext()">Air adhart →</button>`
+              }
+            </div>
+          </div>
+        </div>
       </div>
     `;
+    this.gameContainer.innerHTML = html;
   }
 
-  // Keyboard and mouse shortcuts to close the modal
-  attachEventListeners() {
-    if (!this.modalElement) return;
-
-    // Store bound handlers so they can be removed later
-    this._boundKeydownHandler = (e) => {
-      if (e.key === 'Escape') this.close();
-    };
-    this._boundClickHandler = (e) => {
-      if (e.target === this.modalElement) this.close();
-    };
-
-    // Press Escape to close - Extra feature added when teacher tried to press escape from the pop up
-    this.modalElement.addEventListener('keydown', this._boundKeydownHandler);
-
-    // Click the dark background area to close - Extra feature added on top pf the above
-    this.modalElement.addEventListener('click', this._boundClickHandler);
+  // Go back a step, or exit to the intro if already at step 0
+  game3TutorialBack() {
+    if (this.game3TutorialStep > 0) {
+      this.game3TutorialStep--;
+      this.renderGame3_Tutorial();
+    } else {
+      this.setGameFlowState('GAME3_READY');
+    }
   }
 
-  // ---------------------------------------------------------------
-  // ANALYTICS (stub functions - full implementation not finished)
-  // ---------------------------------------------------------------
-  // These functions are called by the game code but the full analytics
-  // feature wasn't completed. Keeping as empty stubs to prevent errors.
-
-  recordLobsterCaught() {
-    // Stub - would track caught lobsters for personalised help tips
+  // Move to the next tutorial step
+  game3TutorialNext() {
+    this.game3TutorialStep++;
+    this.renderGame3_Tutorial();
   }
 
-  recordLobsterEscaped() {
-    // Stub - would track escaped lobsters for personalised help tips
+  // ----------------------------------------------------------
+  // 9 - GAME 3 MAIN (Cho luath ris a' bhradan)
+  // ----------------------------------------------------------
+  // The fishing game, where players tap fish swimming across the screen
+  // to catch what Ruairidh asks for and it has a 3-minute timer.
+
+
+  renderGame3_Main() {
+    const html = `
+      <div class="game3-screen">
+        <div class="ruairidh-banner">
+          <div class="ruairidh-banner-left">
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-pause-button" id="pause-button" onclick="gameController.toggleGame3Pause()">${SVG_ICONS.pause}</button>
+            <button class="ruairidh-help-button" onclick="gameController.toggleGame3HelpModal()">?</button>
+          </div>
+          <div class="banner-title-container">
+            <div class="game3-title">Cho luath ris a' bhradan</div>
+          </div>
+          <div class="ruairidh-banner-right">
+            <div class="timer-box">
+              <img src="./svgs/all-games/clock.svg" alt="Uaireadair" class="timer-icon" />
+              <div class="timer-text">ÙINE:</div>
+              <span id="timer-display" class="timer-display">3:00</span>
+            </div>
+            <div class="points-box">
+              <img src="./svgs/all-games/cairn.svg" alt="Càrn" class="cairn-icon" id="cairn-points" />
+              <div class="ruairidh-banner-text">PUINGEAN:</div>
+              <span id="points-counter">${this.totalPoints}</span>
+            </div>
+          </div>
+        </div>
+        <div class="game3-ruairidh-section">
+          <div class="ruairidh-container">
+            <div class="seal-icon-wrapper">
+              <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh" class="seal-icon" />
+            </div>
+            <div class="speech-bubble">
+              <!-- This is where Ruairidh shows what fish he wants -->
+              <div id="target-fish-display" class="target-fish-display"></div>
+            </div>
+          </div>
+        </div>
+        <!-- The Game3FishingGame class renders the swimming fish here -->
+        <div class="game3-canvas-container" id="game3-canvas"></div>
+        <div class="game3-footer" style="text-align: center; margin-top: 10px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 100;">
+          <button class="nav-btn dev-skip-btn" onclick="gameController.skipToResults()" style="background: #ff6b6b;">DEV: Skip to Results →</button>
+        </div>
+      </div>
+
+      <!-- Pause modal: "Game paused" / "Start" -->
+      <div class="pause-modal" id="pause-modal">
+        <div class="pause-modal-content">
+          <h2>Geama air stad</h2>
+          <button class="pause-resume-btn" onclick="gameController.toggleGame3Pause()">Tòisich</button>
+        </div>
+      </div>
+
+      <!-- Help modal: "How do you play?" -->
+      <div class="help-modal" id="game3-help-modal">
+        <div class="help-modal-content simple-help">
+          <button class="modal-close" onclick="gameController.toggleGame3HelpModal()">✕</button>
+
+          <h2 class="simple-help-title">Ciamar a chluicheas tu?</h2>
+
+          <div class="simple-help-body">
+            <!-- 1: "Look at Ruairidh the Seal: Look at the fish picture Ruairidh shows you" -->
+            <div class="help-tip">
+              <span class="help-tip-number">1</span>
+              <div class="help-tip-content">
+                <strong>Coimhead air Ruairidh an Ròn:</strong> <p>Coimhead air an dealbh èisg a sheallas Ruairidh dhut.</p>
+              </div>
+            </div>
+
+            <!-- 2: "Find the right fish: Tap on the fish in the sea that matches what Ruairidh wants" -->
+            <div class="help-tip">
+              <span class="help-tip-number">2</span>
+              <div class="help-tip-content">
+                <strong>Lorg an t-iasg ceart:</strong> <p>Brùth air an t-iasg anns a' mhuir a tha co-ionann ris an fhear a tha Ruairidh ag iarraidh.</p>
+              </div>
+            </div>
+
+            <!-- 3: "If you get the right fish, you get points!" -->
+            <div class="help-tip">
+              <span class="help-tip-number">3</span>
+              <div class="help-tip-content">
+                <p>Ma tha an t-iasg ceart, gheibh thu puingean!</p>
+              </div>
+            </div>
+
+            <!-- 4: "If you get the wrong fish, you lose points" -->
+            <div class="help-tip">
+              <span class="help-tip-number">4</span>
+              <div class="help-tip-content">
+                <p>Ma tha an t-iasg ceàrr, caillidh sibh puingean.</p>
+              </div>
+            </div>
+
+            <!-- 5: "You can also pick up rubbish (plastic, bottles) for extra points" -->
+            <div class="help-tip">
+              <span class="help-tip-number">5</span>
+              <div class="help-tip-content">
+                <p>Faodaidh tu sgudal a thogail cuideachd (stuthan plastaig, botail) airson barrachd phuingean.</p>
+              </div>
+            </div>
+
+            <!-- 6: "The fish Ruairidh wants changes all the time, so keep your eye on Ruairidh!" -->
+            <div class="help-tip">
+              <span class="help-tip-number">6</span>
+              <div class="help-tip-content">
+                <p>Tha an t-iasg a tha Ruairidh ag iarraidh ag atharrachadh fad na h-ùine, mar sin cùm sùil air Ruairidh!</p>
+              </div>
+            </div>
+          </div>
+
+          <button class="arrow-btn" onclick="gameController.toggleGame3HelpModal()">Dùin</button>
+        </div>
+      </div>
+    `;
+    this.gameContainer.innerHTML = html;
+
+    // Create and start the fishing game
+    this.game3Board = new Game3FishingGame(this);
+    this.game3Board.init();
+  }
+
+  // Opens/closes the help module for Game 3
+  // Pauses the fishing game while reading so fish don't swim away.
+  toggleGame3HelpModal() {
+    const modal = document.getElementById('game3-help-modal');
+    if (modal) {
+      const isOpening = !modal.classList.contains('active');
+      modal.classList.toggle('active');
+
+      if (isOpening) {
+        // Freeze the game while reading help module
+        if (this.game3Board) {
+          this.game3Board.isPaused = true;
+        }
+        this.audio.pauseGameSounds(this.currentState);
+      } else {
+        // Back to gamepaly
+        if (this.game3Board) {
+          this.game3Board.isPaused = false;
+        }
+        this.audio.resumeGameSounds(this.currentState);
+      }
+    }
+  }
+
+  skipToResults() {
+    // Dev function to skip to results
+    if (this.gameTimer) {
+      clearInterval(this.gameTimer);
+    }
+    this.setGameFlowState('RESULTS');
+  }
+
+  // ----------------------------------------------------------
+  // Final results screen after all games
+  // ----------------------------------------------------------
+  async renderResultsScreen() {
+    if (this.gameTimer) clearInterval(this.gameTimer);
+
+    // Firebase Data Logging: Finalize session with complete data
+    if (this.dataLogger) {
+      await this.dataLogger.finalizeSession({
+        totalPoints: this.totalPoints,
+        completedGames: ['game1', 'game2', 'game3'],
+        game1Score: this.game1Board ? this.game1Board.points : 0,
+        game2Score: this.game2Board ? this.game2Board.points : 0,
+        game3Score: this.game3Board ? this.game3Board.points : 0
+      });
+    }
+
+    const html = `
+      <div class="login-screen">
+        <h1>Deiseil!</h1>
+        <p>Cluicheadair: ${this.participantCode}</p>
+        <div class="game-complete-emoji">🦞</div>
+        <p class="game-complete-score">Puingean: ${this.totalPoints} Giomaich</p>
+        <p class="game-complete-message">Ceud taing airson an geama seo a' chluich, tha na puingean agad air a' shàbhaladh.</p>
+        <button class="play-button" onclick="location.reload()">Cluich a-rithist!</button>
+      </div>
+    `;
+    this.gameContainer.innerHTML = html;
   }
 }
 
