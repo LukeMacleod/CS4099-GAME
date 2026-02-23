@@ -42,115 +42,8 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Active participants -->
-          <tr class="participant-row active">
-            <td><span class="participant-code">P-01</span></td>
-            <td>
-              <span class="activity">Geama 1</span>
-              <span class="activity-status status-playing">A' cluich</span>
-            </td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 25%;"></div>
-              </div>
-            </td>
-            <td><span class="game-points">12</span></td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="points">12</span></td>
-          </tr>
-
-          <tr class="participant-row active">
-            <td><span class="participant-code">P-03</span></td>
-            <td>
-              <span class="activity">Geama 2</span>
-              <span class="activity-status status-paused">Stad</span>
-            </td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 60%;"></div>
-              </div>
-            </td>
-            <td><span class="game-points">18</span></td>
-            <td><span class="game-points">27</span></td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="points">45</span></td>
-          </tr>
-
-          <tr class="participant-row active">
-            <td><span class="participant-code">P-05</span></td>
-            <td>
-              <span class="activity">Geama 3</span>
-              <span class="activity-status status-help">Cuideachadh</span>
-            </td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 88%;"></div>
-              </div>
-            </td>
-            <td><span class="game-points">22</span></td>
-            <td><span class="game-points">31</span></td>
-            <td><span class="game-points">25</span></td>
-            <td><span class="points">78</span></td>
-          </tr>
-
-          <!-- Completed participants -->
-          <tr class="participant-row completed">
-            <td><span class="participant-code">P-02</span></td>
-            <td><span class="activity completed-text">Crìochnaichte</span></td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill complete" style="width: 100%;"></div>
-              </div>
-            </td>
-            <td><span class="game-points">28</span></td>
-            <td><span class="game-points">35</span></td>
-            <td><span class="game-points">29</span></td>
-            <td><span class="points">92</span></td>
-          </tr>
-
-          <tr class="participant-row completed">
-            <td><span class="participant-code">P-04</span></td>
-            <td><span class="activity completed-text">Crìochnaichte</span></td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill complete" style="width: 100%;"></div>
-              </div>
-            </td>
-            <td><span class="game-points">19</span></td>
-            <td><span class="game-points">24</span></td>
-            <td><span class="game-points">24</span></td>
-            <td><span class="points">67</span></td>
-          </tr>
-
-          <!-- Not started -->
-          <tr class="participant-row">
-            <td><span class="participant-code">P-06</span></td>
-            <td><span class="activity inactive">Gun tòiseachadh</span></td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 0%;"></div>
-              </div>
-            </td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="points">—</span></td>
-          </tr>
-
-          <tr class="participant-row">
-            <td><span class="participant-code">P-07</span></td>
-            <td><span class="activity inactive">Gun tòiseachadh</span></td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 0%;"></div>
-              </div>
-            </td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="game-points inactive-points">—</span></td>
-            <td><span class="points">—</span></td>
-          </tr>
+          <!-- Rows populated dynamically by dashboard-simple.js -->
+          <!-- No participants yet - start playing with a P-code to see data here! -->
         </tbody>
       </table>
     </div>
@@ -164,21 +57,10 @@
           Seanfhacail
           <button class="help-icon-btn" title="Idiomatic phrases students asked about" onclick="openModal('seanfhacail-modal')">?</button>
         </h3>
-        <div class="help-list">
-          <div class="help-item">
-            <span class="help-code">P-01</span>
-            <span class="help-detail">"San Earrach..."</span>
-          </div>
-          <div class="help-item">
-            <span class="help-code">P-03</span>
-            <span class="help-detail">"Càirn mòr..."</span>
-          </div>
-          <div class="help-item">
-            <span class="help-code">P-05</span>
-            <span class="help-detail">"San Earrach..."</span>
-          </div>
+        <div class="help-list" style="display: none;">
+          <!-- Populated dynamically by dashboard-simple.js -->
         </div>
-        <div class="empty-help" style="display: none;">
+        <div class="empty-help">
           <p>Chan eil duine air cuideachadh iarraidh</p>
         </div>
       </div>
@@ -189,30 +71,10 @@
           Cuideachadh
           <button class="help-icon-btn" title="Students who requested gameplay help" onclick="openModal('cuideachadh-modal')">?</button>
         </h3>
-        <div class="help-list">
-          <div class="help-item">
-            <span class="help-code">P-01</span>
-            <div class="help-games">
-              <span class="game-badge g1">G1</span>
-              <span class="game-badge g2">G2</span>
-            </div>
-          </div>
-          <div class="help-item">
-            <span class="help-code">P-02</span>
-            <div class="help-games">
-              <span class="game-badge g1">G1</span>
-            </div>
-          </div>
-          <div class="help-item">
-            <span class="help-code">P-04</span>
-            <div class="help-games">
-              <span class="game-badge g1">G1</span>
-              <span class="game-badge g2">G2</span>
-              <span class="game-badge g3">G3</span>
-            </div>
-          </div>
+        <div class="help-list" style="display: none;">
+          <!-- Populated dynamically by dashboard-simple.js -->
         </div>
-        <div class="empty-help" style="display: none;">
+        <div class="empty-help">
           <p>Chan eil duine air cuideachadh iarraidh</p>
         </div>
       </div>
