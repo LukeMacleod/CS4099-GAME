@@ -14,7 +14,7 @@
       <h1 class="dashboard-title">Dashboard an Tidsear</h1>
       <div class="header-actions">
         <button class="header-btn" id="clear-data-btn" style="background: #ff6b6b; border-color: #ff6b6b;">
-          🗑️ Clear Data
+          Clear Data
         </button>
         <button class="header-btn logout-btn" id="logout-btn">
           Clàraich a-mach
@@ -123,10 +123,9 @@
             batch.delete(doc.ref);
           });
           await batch.commit();
-          console.log(`🗑️  Manually deleted ${snapshot.docs.length} participant records`);
         } catch (error) {
-          console.error('❌ Error deleting:', error);
-          alert('Error deleting data!');
+          console.error('Error deleting:', error);
+          alert('Error deleting data');
         }
       }
     });

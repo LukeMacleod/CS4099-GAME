@@ -32,22 +32,15 @@ class DataLogger {
 
   // Initialize - create/update participant document
   async init() {
-    console.log('🔵 Initializing DataLogger for:', this.code);
-    console.log('🔵 Firebase DB available:', !!this.db);
-    console.log('🔵 Initial state:', this.state);
-
     try {
       await this.docRef.set(this.state, { merge: true });
-      console.log('✅ Initial data written to Firestore for:', this.code);
     } catch (error) {
-      console.error('❌ Failed to write initial data:', error);
+      console.error('Failed to write initial data:', error);
       throw error;
     }
 
     // Start auto-sync every 10 seconds
     this.syncInterval = setInterval(() => this.sync(), 10000);
-
-    console.log('✅ DataLogger initialized:', this.code);
   }
 
   // Update current game (game1, game2, game3, intro, completed)
@@ -103,20 +96,13 @@ class DataLogger {
 
   // Sync current state to Firestore
   async sync() {
-    console.log('📡 Syncing state for:', this.code, this.state);
     try {
-      const dataToWrite = {
+      await this.docRef.set({
         ...this.state,
         lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      console.log('📤 Writing to Firestore:', dataToWrite);
-
-      await this.docRef.set(dataToWrite, { merge: true });
-
-      console.log('✅ Sync successful for:', this.code);
+      }, { merge: true });
     } catch (error) {
-      console.error('❌ Sync error for', this.code, ':', error);
-      console.error('Error details:', error.code, error.message);
+      console.error('Sync error:', error);
     }
   }
 
@@ -126,13 +112,10 @@ class DataLogger {
     this.state.currentStatus = 'completed';
     this.state.progress = 100;
     await this.sync();
-    
-    // Stop auto-sync
+
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
     }
-    
-    console.log('✅ Session completed:', this.code);
   }
 }
 

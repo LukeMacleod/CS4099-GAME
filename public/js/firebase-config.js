@@ -29,21 +29,10 @@ const auth = firebase.auth();
 const functions = firebase.functions();
 
 // Enable Firestore offline persistence
-// This allows the app to work even when network is temporarily unavailable
-// Writes are queued and synced when connection is restored
 db.enablePersistence({ synchronizeTabs: true })
-  .then(() => {
-    console.log('✅ Firestore offline persistence enabled');
-  })
   .catch((err) => {
-    if (err.code === 'failed-precondition') {
-      // Multiple tabs open - persistence only works in one tab at a time
-      console.warn('⚠️  Offline persistence failed: Multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-      // Browser doesn't support persistence (e.g., older browsers)
-      console.warn('⚠️  Offline persistence not available in this browser');
-    } else {
-      console.error('❌ Offline persistence error:', err);
+    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+      console.error('Offline persistence error:', err);
     }
   });
 

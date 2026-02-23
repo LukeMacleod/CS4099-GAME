@@ -9,39 +9,25 @@ let participantsListener = null;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🔵 Dashboard initializing...');
   const db = window.firebaseDb;
 
-  console.log('🔵 Firebase DB available:', !!db);
-
   if (!db) {
-    console.error('❌ Firebase not initialized!');
+    console.error('Firebase not initialized');
     return;
   }
-
-  console.log('🔵 Setting up Firestore listener on /participants');
 
   // Listen to all participants in real-time
   participantsListener = db.collection('participants')
     .onSnapshot((snapshot) => {
-      console.log('📥 Snapshot received! Docs:', snapshot.docs.length);
-      snapshot.docs.forEach(doc => {
-        console.log('  - Document:', doc.id, doc.data());
-      });
       updateDashboard(snapshot.docs);
     }, (error) => {
-      console.error('❌ Listener error:', error);
-      console.error('Error details:', error.code, error.message);
+      console.error('Listener error:', error);
     });
-
-  console.log('✅ Dashboard listening for updates...');
 
   // Auto-delete all participant records every 1 minute
   setInterval(() => {
     deleteAllParticipants();
-  }, 60000); // 60000ms = 1 minute
-
-  console.log('🗑️  Auto-delete enabled: clearing data every 1 minute');
+  }, 60000);
 });
 
 // Update the dashboard UI with participant data
@@ -65,8 +51,6 @@ function updateDashboard(docs) {
   
   // Update help panels
   updateHelpPanels(participants);
-  
-  console.log(`📊 Updated ${participants.length} participants`);
 }
 
 // Create a table row for a participant
@@ -200,22 +184,16 @@ async function deleteAllParticipants() {
   try {
     const snapshot = await db.collection('participants').get();
 
-    if (snapshot.empty) {
-      console.log('🗑️  No participants to delete');
-      return;
-    }
+    if (snapshot.empty) return;
 
-    // Delete all documents
     const batch = db.batch();
     snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
 
     await batch.commit();
-    console.log(`🗑️  Deleted ${snapshot.docs.length} participant records`);
-
   } catch (error) {
-    console.error('❌ Error deleting participants:', error);
+    console.error('Error deleting participants:', error);
   }
 }
 
