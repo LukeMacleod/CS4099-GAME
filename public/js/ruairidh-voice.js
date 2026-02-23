@@ -70,12 +70,87 @@ class RuairidhVoice {
       this.handleAudioEnd();
     });
 
+    this.currentAudio.volume = 1.0; // Ensure volume is set
+
     this.currentAudio.play().then(() => {
       console.log(`Successfully started playing: ${dialogKey}`);
     }).catch(err => {
       console.error(`Failed to play audio ${dialogKey}:`, err);
-      this.handleAudioEnd();
+
+      // If autoplay is blocked, show a prompt to enable audio
+      if (err.name === 'NotAllowedError') {
+        console.warn('Browser blocked autoplay. User interaction required.');
+        this.showAudioPrompt(dialogKey);
+      } else {
+        // For other errors, just enable the button
+        this.handleAudioEnd();
+      }
     });
+  }
+
+  /**
+   * Show prompt when browser blocks autoplay
+   */
+  showAudioPrompt(dialogKey) {
+    const promptDiv = document.createElement('div');
+    promptDiv.id = 'audio-prompt-overlay';
+    promptDiv.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      cursor: pointer;
+    `;
+
+    promptDiv.innerHTML = `
+      <div style="
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 500px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      ">
+        <h2 style="margin: 0 0 20px 0; color: #2c3e50;">🔊 Èist ri Ruairidh</h2>
+        <p style="margin: 0 0 30px 0; font-size: 18px; color: #555;">
+          Briog an seo airson fuaim Ruairidh a chluinntinn!<br>
+          <span style="font-size: 14px; color: #888;">Click here to hear Ruairidh's voice!</span>
+        </p>
+        <button style="
+          background: #4CAF50;
+          color: white;
+          border: none;
+          padding: 15px 40px;
+          font-size: 18px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: bold;
+        ">
+          Cluich Fuaim / Play Audio
+        </button>
+      </div>
+    `;
+
+    promptDiv.onclick = () => {
+      if (this.currentAudio) {
+        this.currentAudio.play().then(() => {
+          console.log('Audio started after user interaction');
+          document.body.removeChild(promptDiv);
+        }).catch(err => {
+          console.error('Still failed to play:', err);
+          document.body.removeChild(promptDiv);
+          this.handleAudioEnd();
+        });
+      }
+    };
+
+    document.body.appendChild(promptDiv);
   }
 
   /**
@@ -86,6 +161,12 @@ class RuairidhVoice {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       this.currentAudio = null;
+    }
+
+    // Remove any audio prompt overlay
+    const prompt = document.getElementById('audio-prompt-overlay');
+    if (prompt) {
+      document.body.removeChild(prompt);
     }
   }
 
