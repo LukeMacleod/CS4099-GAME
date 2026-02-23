@@ -9,19 +9,29 @@ let participantsListener = null;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('🔵 Dashboard initializing...');
   const db = window.firebaseDb;
+
+  console.log('🔵 Firebase DB available:', !!db);
 
   if (!db) {
     console.error('❌ Firebase not initialized!');
     return;
   }
 
+  console.log('🔵 Setting up Firestore listener on /participants');
+
   // Listen to all participants in real-time
   participantsListener = db.collection('participants')
     .onSnapshot((snapshot) => {
+      console.log('📥 Snapshot received! Docs:', snapshot.docs.length);
+      snapshot.docs.forEach(doc => {
+        console.log('  - Document:', doc.id, doc.data());
+      });
       updateDashboard(snapshot.docs);
     }, (error) => {
       console.error('❌ Listener error:', error);
+      console.error('Error details:', error.code, error.message);
     });
 
   console.log('✅ Dashboard listening for updates...');

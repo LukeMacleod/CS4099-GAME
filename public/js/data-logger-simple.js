@@ -32,11 +32,21 @@ class DataLogger {
 
   // Initialize - create/update participant document
   async init() {
-    await this.docRef.set(this.state, { merge: true });
-    
+    console.log('🔵 Initializing DataLogger for:', this.code);
+    console.log('🔵 Firebase DB available:', !!this.db);
+    console.log('🔵 Initial state:', this.state);
+
+    try {
+      await this.docRef.set(this.state, { merge: true });
+      console.log('✅ Initial data written to Firestore for:', this.code);
+    } catch (error) {
+      console.error('❌ Failed to write initial data:', error);
+      throw error;
+    }
+
     // Start auto-sync every 10 seconds
     this.syncInterval = setInterval(() => this.sync(), 10000);
-    
+
     console.log('✅ DataLogger initialized:', this.code);
   }
 
@@ -93,15 +103,20 @@ class DataLogger {
 
   // Sync current state to Firestore
   async sync() {
+    console.log('📡 Syncing state for:', this.code, this.state);
     try {
-      await this.docRef.set({
+      const dataToWrite = {
         ...this.state,
         lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-      
-      console.log('📡 Synced:', this.code);
+      };
+      console.log('📤 Writing to Firestore:', dataToWrite);
+
+      await this.docRef.set(dataToWrite, { merge: true });
+
+      console.log('✅ Sync successful for:', this.code);
     } catch (error) {
-      console.error('❌ Sync error:', error);
+      console.error('❌ Sync error for', this.code, ':', error);
+      console.error('Error details:', error.code, error.message);
     }
   }
 
