@@ -3952,20 +3952,33 @@ class GameFlowController {
           </div>
         </div>
         <div class="arrow-buttons centred">
-          <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">Air adhart →</button>
+          <button id="start-audio-btn" class="play-green-btn" onclick="gameController.startRuairidhIntroAudio()" style="font-size: 20px; padding: 15px 40px;">
+            🔊 Cluich Fuaim / Play Audio
+          </button>
+          <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed; display: none;" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">Air adhart →</button>
         </div>
       </div>
     `;
     this.gameContainer.innerHTML = html;
+  }
 
-    // Play Ruairidh's voice and enable button when complete
+  startRuairidhIntroAudio() {
+    const startBtn = document.getElementById('start-audio-btn');
+    const forwardBtn = document.getElementById('forward-btn');
+
+    if (startBtn) startBtn.style.display = 'none';
+    if (forwardBtn) {
+      forwardBtn.style.display = 'inline-block';
+      forwardBtn.disabled = true;
+      forwardBtn.style.opacity = '0.5';
+    }
+
     this.ruairidhVoice.play('RUAIRIDH_INTRO', () => {
-      const btn = document.getElementById('forward-btn');
-      if (btn) {
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.style.cursor = 'pointer';
-        btn.style.backgroundColor = '#4CAF50';
+      if (forwardBtn) {
+        forwardBtn.disabled = false;
+        forwardBtn.style.opacity = '1';
+        forwardBtn.style.cursor = 'pointer';
+        forwardBtn.style.backgroundColor = '#4CAF50';
       }
     });
   }
