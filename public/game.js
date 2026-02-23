@@ -3888,53 +3888,34 @@ class GameFlowController {
       return;
     }
 
-    try {
-      // Disable input while processing
-      input.disabled = true;
-      input.placeholder = 'A\' dèanamh dearbhaidh...'; // Authenticating...
+    // Simple client-side validation
+    const participantPattern = /^P-([0-9]|[1-4][0-9]|50)$/;  // P-0 to P-50
+    const teacherPattern = /^T-(0[1-9]|10)$/;  // T-01 to T-10
 
-      // Call Cloud Function to validate code and get auth token
-      const validateFunc = firebase.functions().httpsCallable('validateAndAuthenticate');
-      const result = await validateFunc({ code });
+    const isParticipant = participantPattern.test(code);
+    const isTeacher = teacherPattern.test(code);
 
-      // Sign in with custom token
-      await firebase.auth().signInWithCustomToken(result.data.token);
-
-      // Route based on type
-      if (result.data.type === 'teacher') {
-        // Redirect to teacher dashboard
-        window.location.href = '/dashboard.html';
-        return;
-      }
-
-      // Participant flow - initialize data logger and continue to game
-      this.participantCode = code;
-      this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
-
-      // Initialize Firebase data logger
-      this.dataLogger = new window.DataLogger(code);
-      await this.dataLogger.initSession();
-      await this.dataLogger.logEvent('login', { participantCode: code });
-
-      // Continue to game intro
-      this.setGameFlowState('RUAIRIDH_INTRO');
-
-    } catch (error) {
-      console.error('Login error:', error);
-
-      // Re-enable input
-      input.disabled = false;
-      input.placeholder = 'Cuir a-steach an còd agad';
-
-      // Show user-friendly error message
-      if (error.code === 'functions/not-found') {
-        alert('Còd mì-dhligheach. Feuch gun cuir thu a-steach an còd ceart.');
-      } else if (error.code === 'functions/permission-denied') {
-        alert('Tha an còd seo air a dhì-ghnìomhachadh.');
-      } else {
-        alert('Mearachd: Chan urrainn dhuinn ceangal ris an t-seirbheis. Feuch a-rithist.');
-      }
+    if (!isParticipant && !isTeacher) {
+      alert('Còd mì-dhligheach!\n\nFeumaidh an còd a bhith san fhoirm:\nP-0 gu P-50 (com-pàirtichean)\nno T-01 gu T-10 (tidsearan)');
+      return;
     }
+
+    // Teacher codes go to dashboard
+    if (isTeacher) {
+      window.location.href = '/dashboard.html';
+      return;
+    }
+
+    // Participant flow
+    this.participantCode = code;
+    this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
+
+    // Initialize Firebase data logger
+    this.dataLogger = new window.DataLogger(code);
+    await this.dataLogger.init();
+
+    // Continue to game intro
+    this.setGameFlowState('RUAIRIDH_INTRO');
   }
 
   // ----------------------------------------------------------
