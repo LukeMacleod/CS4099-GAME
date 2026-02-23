@@ -28,6 +28,7 @@ class DataLogger {
     
     // Auto-sync every 10 seconds
     this.syncInterval = null;
+    this.syncTimeout = null;
   }
 
   // Initialize - create/update participant document
@@ -43,18 +44,24 @@ class DataLogger {
     this.syncInterval = setInterval(() => this.sync(), 10000);
   }
 
+  // Debounced sync - prevents hitting 1 write/second limit
+  debouncedSync() {
+    clearTimeout(this.syncTimeout);
+    this.syncTimeout = setTimeout(() => this.sync(), 500);
+  }
+
   // Update current game (game1, game2, game3, intro, completed)
   updateGame(game) {
     this.state.currentGame = game;
     this.state.lastUpdate = new Date();
-    this.sync(); // Immediate sync for game changes
+    this.debouncedSync();
   }
 
   // Update status (playing, paused, help, idle, tutorial)
   updateStatus(status) {
     this.state.currentStatus = status;
     this.state.lastUpdate = new Date();
-    this.sync(); // Immediate sync for status changes
+    this.debouncedSync();
   }
 
   // Add points to total and current game
@@ -66,14 +73,13 @@ class DataLogger {
     if (this.state.currentGame === 'game3') this.state.game3Points += points;
 
     this.state.lastUpdate = new Date();
-    // Points sync on 10-second interval (too many to sync immediately)
   }
 
   // Update progress percentage (0-100)
   updateProgress(percent) {
     this.state.progress = Math.min(100, Math.max(0, percent));
     this.state.lastUpdate = new Date();
-    this.sync(); // Immediate sync for progress changes
+    this.debouncedSync();
   }
 
   // Log help request for Seanfhacail panel

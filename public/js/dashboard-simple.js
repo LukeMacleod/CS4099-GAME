@@ -6,6 +6,7 @@
  */
 
 let participantsListener = null;
+let updateTimeout = null;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,7 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Listen to all participants in real-time
   participantsListener = db.collection('participants')
     .onSnapshot((snapshot) => {
-      updateDashboard(snapshot.docs);
+      // Debounce updates to prevent UI lag with many concurrent participants
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(() => {
+        updateDashboard(snapshot.docs);
+      }, 300);
     }, (error) => {
       console.error('Listener error:', error);
     });
