@@ -10,12 +10,12 @@ let participantsListener = null;
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
   const db = window.firebaseDb;
-  
+
   if (!db) {
     console.error('❌ Firebase not initialized!');
     return;
   }
-  
+
   // Listen to all participants in real-time
   participantsListener = db.collection('participants')
     .onSnapshot((snapshot) => {
@@ -23,8 +23,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }, (error) => {
       console.error('❌ Listener error:', error);
     });
-  
+
   console.log('✅ Dashboard listening for updates...');
+
+  // Auto-delete all participant records every 1 minute
+  setInterval(() => {
+    deleteAllParticipants();
+  }, 60000); // 60000ms = 1 minute
+
+  console.log('🗑️  Auto-delete enabled: clearing data every 1 minute');
 });
 
 // Update the dashboard UI with participant data
@@ -173,6 +180,32 @@ function updateHelpPanels(participants) {
   } else {
     cuideachadhList.style.display = 'none';
     cuideachadhEmpty.style.display = 'block';
+  }
+}
+
+// Delete all participant records from Firestore
+async function deleteAllParticipants() {
+  const db = window.firebaseDb;
+
+  try {
+    const snapshot = await db.collection('participants').get();
+
+    if (snapshot.empty) {
+      console.log('🗑️  No participants to delete');
+      return;
+    }
+
+    // Delete all documents
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    console.log(`🗑️  Deleted ${snapshot.docs.length} participant records`);
+
+  } catch (error) {
+    console.error('❌ Error deleting participants:', error);
   }
 }
 

@@ -13,6 +13,9 @@
     <div class="header-content">
       <h1 class="dashboard-title">Dashboard an Tidsear</h1>
       <div class="header-actions">
+        <button class="header-btn" id="clear-data-btn" style="background: #ff6b6b; border-color: #ff6b6b;">
+          🗑️ Clear Data
+        </button>
         <button class="header-btn logout-btn" id="logout-btn">
           Clàraich a-mach
         </button>
@@ -245,6 +248,25 @@
   <script src="js/dashboard-simple.js"></script>
 
   <script>
+    // Clear data button functionality
+    document.getElementById('clear-data-btn')?.addEventListener('click', async () => {
+      if (confirm('Clear all participant data? This cannot be undone.')) {
+        const db = window.firebaseDb;
+        try {
+          const snapshot = await db.collection('participants').get();
+          const batch = db.batch();
+          snapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+          await batch.commit();
+          console.log(`🗑️  Manually deleted ${snapshot.docs.length} participant records`);
+        } catch (error) {
+          console.error('❌ Error deleting:', error);
+          alert('Error deleting data!');
+        }
+      }
+    });
+
     // Logout button functionality
     document.getElementById('logout-btn')?.addEventListener('click', () => {
       window.location.href = '/index.html';
