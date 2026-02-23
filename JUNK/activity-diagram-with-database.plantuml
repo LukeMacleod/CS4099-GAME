@@ -1,0 +1,81 @@
+@startuml Gaelic_Games_With_Database
+
+title Gaelic Games Application - Activity Diagram with Data Flow
+
+' Styling
+skinparam ActivityBackgroundColor LightYellow
+skinparam ActivityBorderColor Black
+skinparam ActivityDiamondBackgroundColor LightBlue
+skinparam DatabaseBackgroundColor Wheat
+skinparam DatabaseBorderColor Black
+
+|#lightblue|Participant|
+start
+
+:Login;
+
+if (Code Type?) then (Teacher)
+
+  |#lightgreen|Teacher|
+
+  :Teacher Dashboard;
+
+  note right
+    • View live sessions
+    • Export CSV/JSON
+  end note
+
+  stop
+
+else (Participant)
+
+  |#lightblue|Participant|
+
+  :Welcome;
+
+  :Pre-Games Tutorial;
+
+  :Game 1 Tutorial;
+
+  :Game 1 {≤4 min};
+
+  :Interval 1;
+
+  :Game 2 Tutorial;
+
+  :Game 2;
+
+  :Interval 2;
+
+  :Game 3 Tutorial;
+
+  :Game 3 {≤3 min};
+
+  :Results;
+
+  stop
+
+endif
+
+|#lightyellow|System|
+
+' Database as floating component
+partition "**Data Storage**" {
+  (**Database**)
+  database Database
+  note right of Database
+    **Firestore**
+    • Session data
+    • Event logs
+    • Scores
+  end note
+}
+
+' Data flow annotations
+note bottom
+  **Data Flow:**
+  1. Games log data → Database
+  2. Database provides data → Teacher Dashboard
+end note
+
+@enduml

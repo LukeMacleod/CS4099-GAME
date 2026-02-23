@@ -1,0 +1,118 @@
+═══════════════════════════════════════════════════════════════
+SIMPLIFIED UML ACTIVITY DIAGRAM - FINAL VERSION
+Valid UML | Clean | Not Too Restrictive
+═══════════════════════════════════════════════════════════════
+
+                        ●  (Initial node)
+                        ↓
+                   ┌─────────┐
+                   │  Login  │
+                   └────┬────┘
+                        ↓
+                   ┌────◇────┐  (Decision node)
+                   │         │
+               ╱───┴─────────┴───╲
+          [Teacher]          [Participant]
+              ↓                   ↓
+      ┌───────────────┐      ┌──────────┐
+      │   Dashboard   │      │ Welcome  │
+      └───────┬───────┘      └────┬─────┘
+              ↓                   ↓
+             ◉              ┌────────────────┐
+      (Activity final)      │ Pre-Games      │
+                            │ Tutorial       │
+                            └───────┬────────┘
+                                    ↓
+                            ┌───────────────┐
+                            │ Game 1        │
+                            │ Tutorial      │
+                            └───────┬───────┘
+                                    ↓
+                            ┌───────────────┐
+                            │ Game 1        │ {duration ≤ 4 min}
+                            │ (Lobster)     │━━━━━┐
+                            └───────┬───────┘     │
+                                    ↓             │ Logs data
+                            ┌───────────────┐     │
+                            │  Interval 1   │     │
+                            └───────┬───────┘     │
+                                    ↓             │
+                            ┌───────────────┐     │
+                            │ Game 2        │     │
+                            │ Tutorial      │     │
+                            └───────┬───────┘     │
+                                    ↓             │
+                            ┌───────────────┐     │
+                            │ Game 2        │━━━━━┤
+                            │ (Memory)      │     │
+                            └───────┬───────┘     │
+                                    ↓             │
+                            ┌───────────────┐     │
+                            │  Interval 2   │     │
+                            └───────┬───────┘     │
+                                    ↓             │
+                            ┌───────────────┐     │
+                            │ Game 3        │     │
+                            │ Tutorial      │     │
+                            └───────┬───────┘     │
+                                    ↓             │
+                            ┌───────────────┐     │
+                            │ Game 3        │ {duration ≤ 3 min}
+                            │ (Fishing)     │━━━━━┤
+                            └───────┬───────┘     │
+                                    ↓             │
+                            ┌───────────────┐     │
+                            │    Results    │     │
+                            └───────┬───────┘     │
+                                    ↓             │
+                                   ◉              ↓
+                            (Activity final)  ┌─────────┐
+                                              │Database │
+                                              │(Firestore)
+                                              └────┬────┘
+                                                   │ Provides data
+                                                   ↓
+                                            (to Dashboard)
+
+═══════════════════════════════════════════════════════════════
+
+KEY IMPROVEMENTS:
+
+✅ Decision node after Login (Teacher vs Participant)
+✅ Teacher Dashboard → simple activity + endpoint
+✅ Database shown as object node (not full swimlane)
+✅ Data flow: Games ━━━> Database ━━━> Dashboard
+✅ Removed complex Firebase swimlane
+✅ Time constraints shown: {duration ≤ N min}
+✅ Clean, readable, academically valid
+
+═══════════════════════════════════════════════════════════════
+
+LEGEND:
+
+●  = Initial node (start)
+◉  = Activity final node (end of all paths)
+◇  = Decision node (branching)
+┌──┐ = Activity
+{...} = Constraint (time limit)
+━━━> = Data flow
+└──┘ = Object node (database)
+
+═══════════════════════════════════════════════════════════════
+
+FIGURE CAPTION:
+
+**Figure X: UML Activity Diagram for Gaelic Games Application**
+
+This activity diagram models the user interaction flow of the Gaelic
+Games educational application. Upon login, a decision node routes users
+based on access code type: teacher codes (T-XX) direct to a monitoring
+dashboard, while participant codes (P-XX) proceed through a sequence of
+three games with intervening tutorials and intervals. Games 1 and 3
+enforce time constraints ({duration ≤ 4 min} and {duration ≤ 3 min}
+respectively). Game activities log session data to a Firestore database
+(shown via data flow connections), which provides aggregated statistics
+to the teacher dashboard. This diagram follows UML 2.5 notation while
+abstracting implementation details for clarity.
+
+═══════════════════════════════════════════════════════════════

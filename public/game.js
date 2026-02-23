@@ -3584,6 +3584,11 @@ class GameFlowController {
   // When the player clicks the "?" next to one of the seleted idiomatic Gaelic phrases, this shows a popup
   // explaining what the phrase means (with Ruairidh the seal)
   showPhraseExplanation(phraseId) {
+    // SIMPLE Firebase: Log Seanfhacail help request
+    if (this.dataLogger) {
+      this.dataLogger.logHelpSeanfhacail(phraseId);
+    }
+
     // The phrases used in the game and their explanations
     const phrases = {
       cairn: {
@@ -3697,14 +3702,27 @@ class GameFlowController {
     const oldState = this.currentState;
     this.currentState = newState;
 
-    // Firebase Data Logging: Track state transitions and game starts
+    // SIMPLE Firebase Data Logging
     if (this.dataLogger) {
-      this.dataLogger.logStateTransition(oldState, newState);
-
-      // Log game starts
-      if (newState === 'GAME1') this.dataLogger.logGameStart(1);
-      if (newState === 'GAME2') this.dataLogger.logGameStart(2);
-      if (newState === 'GAME3') this.dataLogger.logGameStart(3);
+      // Update game state and progress
+      if (newState === 'GAME1') {
+        this.dataLogger.updateGame('game1');
+        this.dataLogger.updateStatus('playing');
+        this.dataLogger.updateProgress(33);
+      } else if (newState === 'GAME2') {
+        this.dataLogger.updateGame('game2');
+        this.dataLogger.updateStatus('playing');
+        this.dataLogger.updateProgress(66);
+      } else if (newState === 'GAME3') {
+        this.dataLogger.updateGame('game3');
+        this.dataLogger.updateStatus('playing');
+        this.dataLogger.updateProgress(90);
+      } else if (newState === 'RESULTS') {
+        this.dataLogger.updateGame('completed');
+        this.dataLogger.updateProgress(100);
+      } else if (newState.includes('TUTORIAL')) {
+        this.dataLogger.updateStatus('tutorial');
+      }
     }
 
     // Clear what was on screen before
@@ -3855,7 +3873,7 @@ class GameFlowController {
     }
   }
 
-  // Handles participant/teacher code login with Firebase authentication
+  // Handles participant/teacher code login - SIMPLIFIED
   async handleLoginSubmit() {
     const input = document.getElementById('participant-code');
     if (!input) return;
@@ -3867,64 +3885,56 @@ class GameFlowController {
       return;
     }
 
+    // Validate code format: P-XX (P-0 to P-50) or T-XX (T-01 to T-10)
+    const participantPattern = /^P-([0-9]|[1-4][0-9]|50)$/;  // P-0 to P-50
+    const teacherPattern = /^T-(0[1-9]|10)$/;  // T-01 to T-10
+
+    const isParticipant = participantPattern.test(code);
+    const isTeacher = teacherPattern.test(code);
+
+    if (!isParticipant && !isTeacher) {
+      alert('Còd mì-dhligheach!\n\nFeumaidh an còd a bhith san fhoirm:\nP-0 gu P-50 (com-pàirtichean)\nno T-01 gu T-10 (tidsearan)');
+      return;
+    }
+
     try {
       // Disable input while processing
       input.disabled = true;
-      input.placeholder = 'A\' dèanamh dearbhaidh...'; // Authenticating...
+      input.placeholder = 'A\' dèanamh dearbhaidh...';
 
-      console.log('🔑 Calling Cloud Function with code:', code);
+      console.log('🔑 Code validated:', code, isTeacher ? '(TEACHER)' : '(PARTICIPANT)');
 
-      // Call Cloud Function to validate code and get auth token
-      const validateFunc = firebase.functions().httpsCallable('validateAndAuthenticate');
-      const result = await validateFunc({ code });
-
-      console.log('✅ Cloud Function result:', result.data);
-
-      // Sign in with custom token
-      await firebase.auth().signInWithCustomToken(result.data.token);
-
-      console.log('🔐 Signed in successfully. Type:', result.data.type);
-
-      // Route based on type
-      if (result.data.type === 'teacher') {
+      // TEACHER: Redirect to dashboard
+      if (isTeacher) {
         console.log('👨‍🏫 TEACHER detected - redirecting to dashboard');
-        // Redirect to teacher dashboard
         window.location.href = '/dashboard.html';
         return;
       }
 
+      // PARTICIPANT: Initialize game
       console.log('👤 PARTICIPANT detected - starting game');
 
-      // Participant flow - initialize data logger and continue to game
       this.participantCode = code;
       this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
 
-      // Initialize Firebase data logger
+      // Initialize SIMPLE Firebase data logger
       this.dataLogger = new window.DataLogger(code);
-      await this.dataLogger.initSession();
-      await this.dataLogger.logEvent('login', { participantCode: code });
+      await this.dataLogger.init();
+      this.dataLogger.updateGame('intro');
+      this.dataLogger.updateStatus('playing');
 
       // Continue to game intro
       this.setGameFlowState('RUAIRIDH_INTRO');
 
     } catch (error) {
       console.error('❌ LOGIN ERROR:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      console.error('Full error:', JSON.stringify(error, null, 2));
 
       // Re-enable input
       input.disabled = false;
       input.placeholder = 'Cuir a-steach an còd agad';
 
       // Show user-friendly error message
-      if (error.code === 'functions/not-found') {
-        alert('Còd mì-dhligheach. Feuch gun cuir thu a-steach an còd ceart.');
-      } else if (error.code === 'functions/permission-denied') {
-        alert('Tha an còd seo air a dhì-ghnìomhachadh.');
-      } else {
-        alert('Mearachd: Chan urrainn dhuinn ceangal ris an t-seirbheis. Feuch a-rithist.');
-      }
+      alert('Mearachd: Chan urrainn dhuinn ceangal ris an t-seirbheis. Feuch a-rithist.');
     }
   }
 
@@ -4220,10 +4230,20 @@ class GameFlowController {
       this.helpSystem = new SmartHelpSystem(this);
     }
 
-    // Firebase Data Logging: Track help requests
-    if (this.dataLogger && this.helpSystem.modal && !this.helpSystem.modal.classList.contains('visible')) {
-      // Only log when opening (not closing) the help modal
-      this.dataLogger.logHelpRequest(this.currentState, 0); // Could track time in game if needed
+    // SIMPLE Firebase: Track help requests
+    const isOpening = this.helpSystem.modal && !this.helpSystem.modal.classList.contains('visible');
+
+    if (this.dataLogger) {
+      if (isOpening) {
+        // Opening help modal
+        const currentGame = this.currentState.includes('GAME1') ? 'game1' :
+                           this.currentState.includes('GAME2') ? 'game2' : 'game3';
+        this.dataLogger.logHelpCuideachadh(currentGame);
+        this.dataLogger.updateStatus('help');
+      } else {
+        // Closing help modal - back to playing
+        this.dataLogger.updateStatus('playing');
+      }
     }
 
     this.helpSystem.toggle();
@@ -4555,9 +4575,9 @@ class GameFlowController {
     this.updatePointsDisplayOnly();
     this.audio.playPointSound();  // Gives user feedback that theyve recieced thhat point
 
-    // Firebase Data Logging: Track points increment (batched every 10 seconds)
+    // SIMPLE Firebase: Track points (syncs every 10 seconds automatically)
     if (this.dataLogger) {
-      this.dataLogger.logPointsIncrement(1);
+      this.dataLogger.addPoints(1);
     }
   }
 
@@ -4884,15 +4904,9 @@ class GameFlowController {
   async renderResultsScreen() {
     if (this.gameTimer) clearInterval(this.gameTimer);
 
-    // Firebase Data Logging: Finalize session with complete data
+    // SIMPLE Firebase: Mark session as complete
     if (this.dataLogger) {
-      await this.dataLogger.finalizeSession({
-        totalPoints: this.totalPoints,
-        completedGames: ['game1', 'game2', 'game3'],
-        game1Score: this.game1Board ? this.game1Board.points : 0,
-        game2Score: this.game2Board ? this.game2Board.points : 0,
-        game3Score: this.game3Board ? this.game3Board.points : 0
-      });
+      await this.dataLogger.complete();
     }
 
     const html = `

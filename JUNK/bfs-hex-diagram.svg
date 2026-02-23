@@ -1,0 +1,226 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Title -->
+  <text x="400" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle">
+    Figure: Breadth-First Search on Hexagonal Grid (Game 1)
+  </text>
+
+  <!-- Subtitle -->
+  <text x="400" y="50" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#666">
+    Lobster pathfinding: BFS explores in layers of increasing distance to find shortest escape route
+  </text>
+
+  <!-- Legend -->
+  <g transform="translate(20, 80)">
+    <text font-family="Arial, sans-serif" font-size="14" font-weight="bold">Legend:</text>
+
+    <!-- Lobster (start) -->
+    <circle cx="10" cy="25" r="8" fill="#FF6B35" stroke="#000" stroke-width="2"/>
+    <text x="25" y="30" font-family="Arial, sans-serif" font-size="12">Lobster (start node s)</text>
+
+    <!-- Distance 1 -->
+    <circle cx="10" cy="50" r="8" fill="#FFD93D" stroke="#000" stroke-width="1.5"/>
+    <text x="25" y="55" font-family="Arial, sans-serif" font-size="12">Distance 1 (dist = 1)</text>
+
+    <!-- Distance 2 -->
+    <circle cx="10" cy="75" r="8" fill="#6BCF7F" stroke="#000" stroke-width="1.5"/>
+    <text x="25" y="80" font-family="Arial, sans-serif" font-size="12">Distance 2 (dist = 2)</text>
+
+    <!-- Distance 3 -->
+    <circle cx="10" cy="100" r="8" fill="#4ECDC4" stroke="#000" stroke-width="1.5"/>
+    <text x="25" y="105" font-family="Arial, sans-serif" font-size="12">Distance 3 (dist = 3)</text>
+
+    <!-- Boundary -->
+    <rect x="5" y="120" width="10" height="10" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="25" y="128" font-family="Arial, sans-serif" font-size="12">Boundary tile (escape)</text>
+
+    <!-- Blocked -->
+    <polygon points="10,145 17,152 10,159 3,152" fill="#888" stroke="#000" stroke-width="2"/>
+    <text x="25" y="153" font-family="Arial, sans-serif" font-size="12">Blocked (rock placed by player)</text>
+
+    <!-- Unvisited -->
+    <circle cx="10" cy="175" r="8" fill="#FFF" stroke="#AAA" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="25" y="180" font-family="Arial, sans-serif" font-size="12">Unvisited (dist = ∞)</text>
+  </g>
+
+  <!-- Main hexagonal grid diagram -->
+  <g transform="translate(320, 150)">
+    <!-- Define hexagon points (flat-top orientation) -->
+    <defs>
+      <polygon id="hex" points="0,-20 17.32,-10 17.32,10 0,20 -17.32,10 -17.32,-10"/>
+    </defs>
+
+    <!-- Boundary tiles (edges) - Top row -->
+    <use href="#hex" x="0" y="0" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="0" y="5" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="40" y="0" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="40" y="5" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="80" y="0" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="80" y="5" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="120" y="0" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="120" y="5" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <!-- Row 2 -->
+    <use href="#hex" x="-20" y="30" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="-20" y="35" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="20" y="30" fill="#4ECDC4" stroke="#000" stroke-width="1.5"/>
+    <text x="20" y="35" font-size="10" text-anchor="middle">3</text>
+
+    <use href="#hex" x="60" y="30" fill="#6BCF7F" stroke="#000" stroke-width="1.5"/>
+    <text x="60" y="35" font-size="10" text-anchor="middle">2</text>
+
+    <use href="#hex" x="100" y="30" fill="#4ECDC4" stroke="#000" stroke-width="1.5"/>
+    <text x="100" y="35" font-size="10" text-anchor="middle">3</text>
+
+    <use href="#hex" x="140" y="30" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="140" y="35" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <!-- Row 3 -->
+    <use href="#hex" x="0" y="60" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="0" y="65" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="40" y="60" fill="#6BCF7F" stroke="#000" stroke-width="1.5"/>
+    <text x="40" y="65" font-size="10" text-anchor="middle">2</text>
+
+    <use href="#hex" x="80" y="60" fill="#FFD93D" stroke="#000" stroke-width="1.5"/>
+    <text x="80" y="65" font-size="10" text-anchor="middle">1</text>
+
+    <use href="#hex" x="120" y="60" fill="#888" stroke="#000" stroke-width="2"/>
+    <text x="120" y="65" font-size="10" text-anchor="middle" fill="#FFF">🪨</text>
+
+    <use href="#hex" x="160" y="60" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="160" y="65" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <!-- Row 4 (center - with lobster) -->
+    <use href="#hex" x="-20" y="90" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="-20" y="95" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="20" y="90" fill="#4ECDC4" stroke="#000" stroke-width="1.5"/>
+    <text x="20" y="95" font-size="10" text-anchor="middle">3</text>
+
+    <use href="#hex" x="60" y="90" fill="#FFD93D" stroke="#000" stroke-width="1.5"/>
+    <text x="60" y="95" font-size="10" text-anchor="middle">1</text>
+
+    <!-- Lobster start -->
+    <use href="#hex" x="100" y="90" fill="#FF6B35" stroke="#000" stroke-width="3"/>
+    <text x="100" y="90" font-size="16" text-anchor="middle">🦞</text>
+    <text x="100" y="103" font-size="9" text-anchor="middle" font-weight="bold">s</text>
+
+    <use href="#hex" x="140" y="90" fill="#FFF" stroke="#AAA" stroke-width="1" stroke-dasharray="2,2"/>
+    <text x="140" y="95" font-size="10" text-anchor="middle" fill="#AAA">∞</text>
+
+    <use href="#hex" x="180" y="90" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="180" y="95" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <!-- Row 5 -->
+    <use href="#hex" x="0" y="120" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="0" y="125" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="40" y="120" fill="#6BCF7F" stroke="#000" stroke-width="1.5"/>
+    <text x="40" y="125" font-size="10" text-anchor="middle">2</text>
+
+    <use href="#hex" x="80" y="120" fill="#FFD93D" stroke="#000" stroke-width="1.5"/>
+    <text x="80" y="125" font-size="10" text-anchor="middle">1</text>
+
+    <use href="#hex" x="120" y="120" fill="#888" stroke="#000" stroke-width="2"/>
+    <text x="120" y="125" font-size="10" text-anchor="middle" fill="#FFF">🪨</text>
+
+    <use href="#hex" x="160" y="120" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="160" y="125" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <!-- Row 6 -->
+    <use href="#hex" x="-20" y="150" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="-20" y="155" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="20" y="150" fill="#4ECDC4" stroke="#000" stroke-width="1.5"/>
+    <text x="20" y="155" font-size="10" text-anchor="middle">3</text>
+
+    <use href="#hex" x="60" y="150" fill="#6BCF7F" stroke="#000" stroke-width="1.5"/>
+    <text x="60" y="155" font-size="10" text-anchor="middle">2</text>
+
+    <use href="#hex" x="100" y="150" fill="#4ECDC4" stroke="#000" stroke-width="1.5"/>
+    <text x="100" y="155" font-size="10" text-anchor="middle">3</text>
+
+    <use href="#hex" x="140" y="150" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="140" y="155" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <!-- Bottom boundary -->
+    <use href="#hex" x="0" y="180" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="0" y="185" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="40" y="180" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="40" y="185" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="80" y="180" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="80" y="185" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <use href="#hex" x="120" y="180" fill="#95E1D3" stroke="#000" stroke-width="2"/>
+    <text x="120" y="185" font-size="10" text-anchor="middle" font-weight="bold">E</text>
+
+    <!-- Shortest path arrows (using parent pointers) -->
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 10 3, 0 6" fill="#E63946" />
+      </marker>
+    </defs>
+
+    <!-- Path: s -> (80,60) -> (60,30) -> boundary -->
+    <line x1="95" y1="85" x2="85" y2="65" stroke="#E63946" stroke-width="3" marker-end="url(#arrowhead)"/>
+    <line x1="75" y1="60" x2="62" y2="38" stroke="#E63946" stroke-width="3" marker-end="url(#arrowhead)"/>
+    <line x1="58" y1="28" x2="48" y2="8" stroke="#E63946" stroke-width="3" marker-end="url(#arrowhead)"/>
+  </g>
+
+  <!-- BFS Queue visualization -->
+  <g transform="translate(50, 420)">
+    <text font-family="Arial, sans-serif" font-size="14" font-weight="bold">BFS Queue Progression (FIFO):</text>
+
+    <!-- Step 0 -->
+    <text x="0" y="30" font-family="monospace" font-size="11">d=0: Q = [s]</text>
+    <text x="180" y="30" font-family="Arial, sans-serif" font-size="10" fill="#666">← Initialize: lobster position</text>
+
+    <!-- Step 1 -->
+    <text x="0" y="50" font-family="monospace" font-size="11">d=1: Q = [n₁, n₂, n₃, n₄, n₅, n₆]</text>
+    <text x="180" y="50" font-family="Arial, sans-serif" font-size="10" fill="#666">← Explore 6 hex neighbours</text>
+
+    <!-- Step 2 -->
+    <text x="0" y="70" font-family="monospace" font-size="11">d=2: Q = [n₇, n₈, n₉, ...]</text>
+    <text x="180" y="70" font-family="Arial, sans-serif" font-size="10" fill="#666">← Expand layer-by-layer</text>
+
+    <!-- Step 3 -->
+    <text x="0" y="90" font-family="monospace" font-size="11">d=3: Found boundary → STOP</text>
+    <text x="180" y="90" font-family="Arial, sans-serif" font-size="10" fill="#666">← Reconstruct path via parent map</text>
+  </g>
+
+  <!-- Algorithm complexity -->
+  <g transform="translate(400, 420)">
+    <text font-family="Arial, sans-serif" font-size="14" font-weight="bold">Algorithm Analysis:</text>
+
+    <text x="0" y="30" font-family="Arial, sans-serif" font-size="11">
+      <tspan font-weight="bold">Time Complexity:</tspan> O(|V| + |E|)
+    </text>
+
+    <text x="0" y="50" font-family="Arial, sans-serif" font-size="11">
+      • |V| ≤ 61 tiles (hexagonal grid)
+    </text>
+
+    <text x="0" y="65" font-family="Arial, sans-serif" font-size="11">
+      • |E| ≤ 6|V| (max 6 neighbours/hex)
+    </text>
+
+    <text x="0" y="80" font-family="Arial, sans-serif" font-size="11">
+      • Each tile visited at most once
+    </text>
+
+    <text x="0" y="100" font-family="Arial, sans-serif" font-size="11" font-style="italic">
+      → Effectively O(1) on fixed 61-tile board
+    </text>
+  </g>
+
+  <!-- Reference -->
+  <text x="400" y="570" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#999">
+    Based on Dasgupta, Papadimitriou &amp; Vazirani, "Algorithms" (Chapter 4: Breadth-First Search)
+  </text>
+</svg>

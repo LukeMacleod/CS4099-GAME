@@ -1,0 +1,87 @@
+@startuml Gaelic_Games_Activity_Diagram
+
+title Gaelic Games Application - UML Activity Diagram
+
+' Styling
+skinparam ActivityBackgroundColor LightYellow
+skinparam ActivityBorderColor Black
+skinparam ActivityDiamondBackgroundColor LightBlue
+
+start
+
+:Login;
+
+' Decision: Teacher or Participant
+if (Code Type?) then (Teacher)
+
+  :Teacher Dashboard;
+
+  stop
+
+else (Participant)
+
+  :Welcome;
+
+  :Pre-Games Tutorial;
+
+  repeat
+    :Tutorial Steps (1-5);
+  repeat while (Repeat?) is (yes)
+  ->no;
+
+  :Game 1 Tutorial;
+
+  repeat
+    :Tutorial Steps;
+  repeat while (Repeat?) is (yes)
+  ->no;
+
+  :Game 1
+  (Lobster Pathfinding)
+  {duration ≤ 4 min};
+
+  :Interval 1;
+
+  :Game 2 Tutorial;
+
+  repeat
+    :Tutorial Steps;
+  repeat while (Repeat?) is (yes)
+  ->no;
+
+  :Game 2
+  (Memory Matching);
+
+  :Interval 2;
+
+  :Game 3 Tutorial;
+
+  repeat
+    :Tutorial Steps;
+  repeat while (Repeat?) is (yes)
+  ->no;
+
+  :Game 3
+  (Fishing Collection)
+  {duration ≤ 3 min};
+
+  :Finish Display
+  (Results);
+
+  stop
+
+endif
+
+' Database connection note
+note left
+  **Data Storage:**
+
+  Participant Games
+        ↓
+    Database
+    (Firestore)
+        ↓
+  Teacher Dashboard
+end note
+
+@enduml

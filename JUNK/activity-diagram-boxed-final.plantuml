@@ -1,0 +1,132 @@
+@startuml Gaelic_Games_Activity_Diagram_Final
+
+title Gaelic Games Application - UML Activity Diagram
+
+skinparam ActivityBackgroundColor LightYellow
+skinparam ActivityBorderColor Black
+skinparam ActivityDiamondBackgroundColor LightBlue
+skinparam PartitionBackgroundColor WhiteSmoke
+skinparam PartitionBorderColor Gray
+
+start
+
+:Login;
+
+' Decision node for Teacher vs Participant routing
+if (Code Type?) then (Teacher)
+
+  :Teacher Dashboard;
+
+  note right
+    • View live sessions
+    • Export data
+  end note
+
+  stop
+
+else (Participant)
+
+  :Welcome;
+
+  :Pre-Games Tutorial;
+
+  ' Pre-Games Tutorial Steps (boxed)
+  partition "Tutorial Steps" {
+    :Step 1;
+    :Step 2;
+    :Step 3;
+    :Step 4;
+    :Step 5;
+  }
+
+  :Game 1 Tutorial;
+
+  ' Game 1 Tutorial Steps (boxed)
+  partition "Tutorial Steps" {
+    :Step 1;
+    :Step 2;
+    :Step 3;
+  }
+
+  :Game 1
+  (Lobster Pathfinding)
+  {duration ≤ 4 min};
+
+  ' In-game support
+  partition "Game 1 Support" {
+    :In-Game Help
+    Buttons;
+    note right
+      ? Button
+      !! Button
+    end note
+  }
+
+  :Interval 1;
+
+  :Game 2 Tutorial;
+
+  ' Game 2 Tutorial Steps (boxed)
+  partition "Tutorial Steps" {
+    :Step 1;
+    :Step 2;
+    :Step 3;
+  }
+
+  :Game 2
+  (Memory Matching);
+
+  ' In-game support
+  partition "Game 2 Support" {
+    :In-Game Help
+    Buttons;
+    note right
+      ? Button
+    end note
+  }
+
+  :Interval 2;
+
+  :Game 3 Tutorial;
+
+  ' Game 3 Tutorial Steps (boxed)
+  partition "Tutorial Steps" {
+    :Step 1;
+    :Step 2;
+    :Step 3;
+  }
+
+  :Game 3
+  (Fishing Collection)
+  {duration ≤ 3 min};
+
+  ' In-game support
+  partition "Game 3 Support" {
+    :In-Game Help
+    Buttons;
+    note right
+      ? Button
+      !! Button
+    end note
+  }
+
+  :Finish Display
+  (Results);
+
+  stop
+
+endif
+
+' Database connection note
+floating note left
+  **Data Flow:**
+
+  Participant Games
+       ↓
+   Database
+   (Firestore)
+       ↓
+  Teacher Dashboard
+end note
+
+@enduml

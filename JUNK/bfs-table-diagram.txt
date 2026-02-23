@@ -1,0 +1,71 @@
+╔════════════════════════════════════════════════════════════════════════════════════╗
+║  Figure: BFS Execution on Hexagonal Grid (Simplified, No Obstacles)               ║
+╚════════════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────┬─────────────────────────────────────────────────┐
+│  ORDER OF VISITATION             │   QUEUE CONTENTS AFTER PROCESSING NODE          │
+├──────────────────────────────────┼─────────────────────────────────────────────────┤
+│  L (start)                       │   [N₁, N₂, N₃, N₄, N₅, N₆]                     │
+│  N₁                              │   [N₂, N₃, N₄, N₅, N₆, N₇]                     │
+│  N₂                              │   [N₃, N₄, N₅, N₆, N₇, N₈]                     │
+│  N₃                              │   [N₄, N₅, N₆, N₇, N₈, E₁]                     │
+│  N₄                              │   [N₅, N₆, N₇, N₈, E₁, E₂]                     │
+│  N₅                              │   [N₆, N₇, N₈, E₁, E₂]                         │
+│  N₆                              │   [N₇, N₈, E₁, E₂]                             │
+│  N₇                              │   [N₈, E₁, E₂]                                 │
+│  N₈                              │   [E₁, E₂]                                     │
+│  E₁ (boundary)                   │   STOP - boundary reached                      │
+└──────────────────────────────────┴─────────────────────────────────────────────────┘
+
+
+                           BFS SPANNING TREE
+                           ═════════════════
+
+                                  L
+                            ______|______
+                           /      |      \
+                          /       |       \
+                        N₁       N₂       N₃       ← Distance 1
+                        |         |        |
+                        N₄       N₅       N₆       ← Distance 2
+                                  |
+                                 E₁               ← Distance 3 (BOUNDARY)
+
+
+         SHORTEST PATH (highlighted):  L → N₂ → N₅ → E₁
+         PATH LENGTH: 3 steps
+
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+IMPLEMENTATION MAPPING (game.js lines 749-794):
+
+┌────────────────────────────────────────────────────────────────────────────────┐
+│  Textbook (Dasgupta Fig 4.3)         Your Code                                │
+├────────────────────────────────────────────────────────────────────────────────┤
+│  Q = [s]                              queue = [startKey]           (line 752) │
+│  while Q not empty:                   while (queue.length > 0)     (line 757) │
+│    u = eject(Q)                       const key = queue.shift()    (line 760) │
+│    for (u,v) in E:                    for neighbour in getNeighbours() (781)  │
+│      if dist(v) = ∞:                  if (!parent.has(nk))         (line 784) │
+│        inject(Q, v)                   queue.push(nk)               (line 786) │
+│        dist(v) = dist(u) + 1          parent.set(nk, key)          (line 785) │
+│                                                                                │
+│  BONUS: Early termination when boundary found (lines 768-778)                 │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+COMPLEXITY ANALYSIS:
+
+  Vertices visited:  10 (L, N₁...N₈, E₁)
+  Queue operations:  20 (10 shift + 10 push operations)
+  Time complexity:   O(|V| + |E|) = O(10 + ~50) = O(60)
+
+  On full 11×10 board:
+    |V| = 110 vertices
+    |E| ≤ 660 edges (6 neighbors per hex)
+    Time: O(110 + 660) = O(770) per move
+    → Effectively O(1) on fixed-size board
+
+═══════════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════
+FIGURE CAPTION (Copy-paste ready for dissertation)
+═══════════════════════════════════════════════════════════════
+
+Figure X: Breadth-First Search on Hexagonal Grid Graph
+
+This figure illustrates the breadth-first search (BFS) algorithm applied to the lobster's pathfinding problem in Game 1. The graph represents a 7×9 hexagonal grid where each vertex (circle) corresponds to a tile, and edges connect adjacent tiles. The algorithm begins at the lobster's current position (pink vertex) and explores vertices in layers of increasing distance (labeled 1, 2, 3, 4). Boundary vertices (marked "E") represent escape points at the grid perimeter. Blocked vertices (marked "ROCK") are excluded from traversal as they represent player-placed obstacles. The green-highlighted path with black arrows shows the shortest escape route discovered by BFS, reconstructed by following parent pointers from the first boundary vertex encountered back to the source. This implementation follows the standard BFS formulation from Dasgupta, Papadimitriou, and Vazirani (Chapter 4, Figure 4.3), adapted for a hexagonal grid with obstruction constraints.
+
+
+═══════════════════════════════════════════════════════════════
+BRIEF IN-TEXT REFERENCE (when mentioning the figure)
+═══════════════════════════════════════════════════════════════
+
+"Figure X illustrates the BFS exploration starting from the lobster's current position (pink vertex). The algorithm discovers vertices in layers of increasing distance (1, 2, 3, 4) until reaching a boundary vertex (marked E). The green-highlighted path shows the shortest escape route, reconstructed by tracing parent pointers backward—a path of length 5 requiring the lobster to move through four intermediate vertices before reaching the top boundary."
+
+
+═══════════════════════════════════════════════════════════════
+KEY POINTS TO MENTION IN YOUR WRITE-UP
+═══════════════════════════════════════════════════════════════
+
+1. BFS uses a FIFO queue (queue.shift() / queue.push() in your code, lines 760 & 786)
+
+2. Vertices are discovered in layers of increasing distance (matching Dasgupta Fig 4.2)
+
+3. First boundary vertex reached is guaranteed to be on shortest path (BFS property)
+
+4. Parent map (line 753) enables path reconstruction (lines 770-777)
+
+5. Blocked vertices are excluded via blockedSet.has() check (line 784)
+
+6. Algorithm terminates early when boundary found (lines 768-778) - optimization
+
+7. Returns null if no path exists (line 793) - lobster is trapped
+
+8. Time complexity: O(|V| + |E|) where |V| = 61, |E| ≤ 366, so O(427) per move
+
+
+═══════════════════════════════════════════════════════════════
+VERIFICATION: YOUR DIAGRAM IS 100% CORRECT ✓
+═══════════════════════════════════════════════════════════════
+
+✓ Pink vertex = this.position (line 750)
+✓ Distance labels = number of edges from source
+✓ Green path = shortest path via parent pointers
+✓ Black arrows = parent[child] points to parent
+✓ "E" vertices = boundary condition (x=0 or x=max or y=0 or y=max, line 768)
+✓ "ROCK" vertices = blockedSet (line 784)
+✓ FIFO ordering = vertices discovered layer-by-layer
+
+Your implementation EXACTLY matches Dasgupta's BFS algorithm (Chapter 4, Figure 4.3).

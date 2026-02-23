@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for authentication checks
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isParticipant() {
+      return isAuthenticated() &&
+             request.auth.token.type == "participant";
+    }
+
+    function isTeacher() {
+      return isAuthenticated() &&
+             request.auth.token.type == "teacher";
+    }
+
+    function isOwnSession() {
+      return resource.data.participantCode == request.auth.token.code;
+    }
+
+    function isCreatingOwnSession() {
+      return request.resource.data.participantCode == request.auth.token.code;
+    }
+
+    // Codes collection - read-only for validation
+    // Pre-populated by admin, no client writes allowed
+    match /codes/{codeId} {
+      allow read: if true; // Anyone can check if code exists for validation
+      allow write: if false; // Pre-populated by admin only
+    }
+
+    // Sessions collection
+    match /sessions/{sessionId} {
+      // Participants can create sessions with their own participant code
+      allow create: if isParticipant() && isCreatingOwnSession();
+
+      // Participants can update only their own sessions
+      // Teachers can read but not update (read-only access for dashboard)
+      allow update: if isParticipant() && isOwnSession();
+
+      // Participants can read only their own sessions
+      // Teachers can read all sessions
+      allow read: if (isParticipant() && isOwnSession()) || isTeacher();
+
+      // List sessions (for dashboard queries)
+      // Teachers can list all sessions
+      // Participants can list only their own
+      allow list: if isTeacher() ||
+                     (isParticipant() && resource.data.participantCode == request.auth.token.code);
+
+      // Events subcollection within each session
+      match /events/{eventId} {
+        // Participants can create events in their own sessions only
+        allow create: if isParticipant() &&
+                        get(/databases/$(database)/documents/sessions/$(sessionId)).data.participantCode == request.auth.token.code;
+
+        // Read events: participants can read their own, teachers can read all
+        allow read: if (isParticipant() &&
+                       get(/databases/$(database)/documents/sessions/$(sessionId)).data.participantCode == request.auth.token.code) ||
+                       isTeacher();
+
+        // List events: same as read
+        allow list: if (isParticipant() &&
+                       get(/databases/$(database)/documents/sessions/$(sessionId)).data.participantCode == request.auth.token.code) ||
+                       isTeacher();
+      }
+    }
+
+    // Analytics collection - teachers only (read-only)
+    // Updated via Cloud Functions or Cloud Scheduler
+    match /analytics/{doc=**} {
+      allow read: if isTeacher();
+      allow write: if false; // Only Cloud Functions can write
+    }
+  }
+}

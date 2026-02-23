@@ -1,0 +1,138 @@
+@startuml Gaelic_Games_Complete
+
+title Gaelic Games Application - UML Activity Diagram
+
+skinparam ActivityBackgroundColor LightYellow
+skinparam ActivityBorderColor Black
+skinparam ActivityDiamondBackgroundColor LightBlue
+skinparam PartitionBackgroundColor WhiteSmoke
+skinparam PartitionBorderColor Gray
+
+start
+
+:Login;
+
+if (Code Type?) then (Teacher)
+
+  :Teacher Dashboard;
+  note right
+    • Live session stats
+    • Export CSV/JSON
+  end note
+  stop
+
+else (Participant)
+
+  :Welcome;
+
+  :Pre-Games Tutorial;
+
+  ' Pre-Games Tutorial with loop
+  partition "Pre-Games Tutorial Steps" {
+    repeat
+      :Step 1;
+      :Step 2;
+      :Step 3;
+      :Step 4;
+      :Step 5;
+    repeat while (In-text\n? Button) is (Repeat)
+    ->Continue;
+  }
+
+  :Game 1 Tutorial;
+
+  ' Game 1 Tutorial with loop
+  partition "Game 1 Tutorial Steps" {
+    repeat
+      :Step 1;
+      :Step 2;
+      :Step 3;
+    repeat while (In-text\n? Button) is (Repeat)
+    ->Continue;
+  }
+
+  :Game 1
+  (Lobster Pathfinding)
+  {duration ≤ 4 min};
+
+  ' Game 1 Support box
+  partition "Game 1 Support" {
+    note
+      In-Game Buttons:
+      • ? Button (Help)
+      • !! Button (Alert)
+    end note
+  }
+
+  :Interval 1;
+
+  :Game 2 Tutorial;
+
+  ' Game 2 Tutorial with loop
+  partition "Game 2 Tutorial Steps" {
+    repeat
+      :Step 1;
+      :Step 2;
+      :Step 3;
+    repeat while (In-text\n? Button) is (Repeat)
+    ->Continue;
+  }
+
+  :Game 2
+  (Memory Matching);
+
+  ' Game 2 Support box
+  partition "Game 2 Support" {
+    note
+      In-Game Buttons:
+      • ? Button (Help)
+    end note
+  }
+
+  :Interval 2;
+
+  :Game 3 Tutorial;
+
+  ' Game 3 Tutorial with loop
+  partition "Game 3 Tutorial Steps" {
+    repeat
+      :Step 1;
+      :Step 2;
+      :Step 3;
+    repeat while (In-text\n? Button) is (Repeat)
+    ->Continue;
+  }
+
+  :Game 3
+  (Fishing Collection)
+  {duration ≤ 3 min};
+
+  ' Game 3 Support box
+  partition "Game 3 Support" {
+    note
+      In-Game Buttons:
+      • ? Button (Help)
+      • !! Button (Alert)
+    end note
+  }
+
+  :Finish Display
+  (Results Screen);
+
+  stop
+
+endif
+
+' Database data flow
+note left of "Game 1"
+  **Data Logging:**
+  All games log to
+  Firestore Database
+end note
+
+note right of "Teacher Dashboard"
+  **Reads from:**
+  Firestore Database
+end note
+
+@enduml

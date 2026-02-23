@@ -1,0 +1,9 @@
+ONE-PARAGRAPH ACADEMIC SUMMARY FOR YOUR WRITE-UP:
+=======================================================
+
+The lobster's movement is modelled as a shortest-path problem on a finite hexagonal grid graph, where each tile corresponds to a vertex and edges connect adjacent, non-blocked tiles (excluding positions obstructed by player-placed rocks). To determine whether the lobster can still escape and to generate a plausible "cunning" move toward the boundary, I apply breadth-first search (BFS) from the lobster's current position to any edge tile. This follows the standard BFS formulation described by Dasgupta, Papadimitriou, and Vazirani (Chapter 4), which explores the graph in layers of increasing distance from the source vertex and computes shortest paths in O(|V| + |E|) time for unit-weight edges. In my implementation (findShortestEscapePath method, lines 749–794 of game.js), BFS maintains a FIFO queue initialized with the lobster's position and a parent map to reconstruct the path upon reaching the boundary. The algorithm terminates when the first boundary tile is dequeued—guaranteeing a shortest path by BFS's layer-by-layer expansion—or returns null if the queue is exhausted, signalling that the lobster is fully trapped. Each BFS execution visits at most the 61 tiles of the hexagonal board and examines up to six adjacency relations per tile, yielding a worst-case time complexity of O(61 + 6×61) = O(427) per move, which is effectively constant on the target hardware and ensures real-time responsiveness during gameplay.
+
+=======================================================
+
+REFERENCE CITATION (use this format):
+Dasgupta, S., Papadimitriou, C. H., & Vazirani, U. V. (2008). Algorithms. McGraw-Hill. Chapter 4: Paths in Graphs, pp. 109-111.

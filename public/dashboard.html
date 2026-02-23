@@ -1,160 +1,278 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="gd">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Dashboard - Geamaichean Gàidhlig</title>
-  <link rel="stylesheet" href="css/dashboard.css">
+  <title>Dashboard an Tidsear | Teacher Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-  <div class="dashboard-container">
-    <!-- Header -->
-    <header class="dashboard-header">
-      <h1>📊 Geamaichean Gàidhlig - Clàr-deasachaidh an Luchd-teagaisg</h1>
+
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">Dashboard an Tidsear</h1>
       <div class="header-actions">
-        <span id="teacher-code" class="teacher-code"></span>
-        <button id="logout-button" class="logout-button">Clàraich a-mach</button>
+        <button class="header-btn logout-btn" id="logout-btn">
+          Clàraich a-mach
+        </button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- Main Content -->
-    <main class="dashboard-main">
+  <div class="dashboard-container">
 
-      <!-- Live Sessions Section -->
-      <section class="dashboard-section">
-        <div class="section-header">
-          <h2>🟢 Seiseanan Beò (Live Sessions)</h2>
-          <span id="live-count" class="badge">0 active</span>
-        </div>
-        <div id="live-sessions" class="live-sessions-grid">
-          <p class="empty-state">Chan eil cluicheadairean beò an-dràsta / No active players</p>
-        </div>
-      </section>
+    <!-- Left Column: Participants List -->
+    <div class="main-panel">
+      <h2 class="panel-title">Liosta Com-pàirtichean</h2>
 
-      <!-- Filters Section -->
-      <section class="dashboard-section">
-        <div class="section-header">
-          <h2>📈 Eachdraidh Seiseanan (Session History)</h2>
-          <div class="filters">
-            <select id="participant-filter" class="filter-select">
-              <option value="all">Uile Chom-pàirtichean (All Participants)</option>
-            </select>
-            <select id="date-filter" class="filter-select">
-              <option value="today">An-diugh (Today)</option>
-              <option value="week">An t-seachdain seo chaidh (Last 7 days)</option>
-              <option value="month">Am mìos seo chaidh (Last 30 days)</option>
-              <option value="all">Uile (All time)</option>
-            </select>
-            <button id="refresh-button" class="action-button">🔄 Ath-nuadhaich</button>
+      <table class="participants-table">
+        <thead>
+          <tr>
+            <th>Còd</th>
+            <th>Ag obair air:</th>
+            <th>Adhartas</th>
+            <th>G1</th>
+            <th>G2</th>
+            <th>G3</th>
+            <th>Puingean</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Active participants -->
+          <tr class="participant-row active">
+            <td><span class="participant-code">P-01</span></td>
+            <td>
+              <span class="activity">Geama 1</span>
+              <span class="activity-status status-playing">A' cluich</span>
+            </td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 25%;"></div>
+              </div>
+            </td>
+            <td><span class="game-points">12</span></td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="points">12</span></td>
+          </tr>
+
+          <tr class="participant-row active">
+            <td><span class="participant-code">P-03</span></td>
+            <td>
+              <span class="activity">Geama 2</span>
+              <span class="activity-status status-paused">Stad</span>
+            </td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 60%;"></div>
+              </div>
+            </td>
+            <td><span class="game-points">18</span></td>
+            <td><span class="game-points">27</span></td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="points">45</span></td>
+          </tr>
+
+          <tr class="participant-row active">
+            <td><span class="participant-code">P-05</span></td>
+            <td>
+              <span class="activity">Geama 3</span>
+              <span class="activity-status status-help">Cuideachadh</span>
+            </td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 88%;"></div>
+              </div>
+            </td>
+            <td><span class="game-points">22</span></td>
+            <td><span class="game-points">31</span></td>
+            <td><span class="game-points">25</span></td>
+            <td><span class="points">78</span></td>
+          </tr>
+
+          <!-- Completed participants -->
+          <tr class="participant-row completed">
+            <td><span class="participant-code">P-02</span></td>
+            <td><span class="activity completed-text">Crìochnaichte</span></td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill complete" style="width: 100%;"></div>
+              </div>
+            </td>
+            <td><span class="game-points">28</span></td>
+            <td><span class="game-points">35</span></td>
+            <td><span class="game-points">29</span></td>
+            <td><span class="points">92</span></td>
+          </tr>
+
+          <tr class="participant-row completed">
+            <td><span class="participant-code">P-04</span></td>
+            <td><span class="activity completed-text">Crìochnaichte</span></td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill complete" style="width: 100%;"></div>
+              </div>
+            </td>
+            <td><span class="game-points">19</span></td>
+            <td><span class="game-points">24</span></td>
+            <td><span class="game-points">24</span></td>
+            <td><span class="points">67</span></td>
+          </tr>
+
+          <!-- Not started -->
+          <tr class="participant-row">
+            <td><span class="participant-code">P-06</span></td>
+            <td><span class="activity inactive">Gun tòiseachadh</span></td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%;"></div>
+              </div>
+            </td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="points">—</span></td>
+          </tr>
+
+          <tr class="participant-row">
+            <td><span class="participant-code">P-07</span></td>
+            <td><span class="activity inactive">Gun tòiseachadh</span></td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%;"></div>
+              </div>
+            </td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="game-points inactive-points">—</span></td>
+            <td><span class="points">—</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Right Column: Help Tracking -->
+    <div class="side-panel">
+
+      <!-- Seanfhacail Help -->
+      <div class="help-panel">
+        <h3 class="help-panel-title">
+          Seanfhacail
+          <button class="help-icon-btn" title="Idiomatic phrases students asked about" onclick="openModal('seanfhacail-modal')">?</button>
+        </h3>
+        <div class="help-list">
+          <div class="help-item">
+            <span class="help-code">P-01</span>
+            <span class="help-detail">"San Earrach..."</span>
+          </div>
+          <div class="help-item">
+            <span class="help-code">P-03</span>
+            <span class="help-detail">"Càirn mòr..."</span>
+          </div>
+          <div class="help-item">
+            <span class="help-code">P-05</span>
+            <span class="help-detail">"San Earrach..."</span>
           </div>
         </div>
+        <div class="empty-help" style="display: none;">
+          <p>Chan eil duine air cuideachadh iarraidh</p>
+        </div>
+      </div>
 
-        <!-- Session Table -->
-        <div class="table-container">
-          <table id="sessions-table" class="sessions-table">
-            <thead>
-              <tr>
-                <th>Ceann-latha (Date)</th>
-                <th>Còd (Code)</th>
-                <th>Puingean (Score)</th>
-                <th>Geamaichean (Games)</th>
-                <th>Ùine (Duration)</th>
-                <th>Inbhe (Status)</th>
-                <th>Gnìomhan (Actions)</th>
-              </tr>
-            </thead>
-            <tbody id="sessions-tbody">
-              <tr class="empty-state-row">
-                <td colspan="7">A' luchdachadh... / Loading...</td>
-              </tr>
-            </tbody>
-          </table>
+      <!-- Gameplay Help -->
+      <div class="help-panel">
+        <h3 class="help-panel-title">
+          Cuideachadh
+          <button class="help-icon-btn" title="Students who requested gameplay help" onclick="openModal('cuideachadh-modal')">?</button>
+        </h3>
+        <div class="help-list">
+          <div class="help-item">
+            <span class="help-code">P-01</span>
+            <div class="help-games">
+              <span class="game-badge g1">G1</span>
+              <span class="game-badge g2">G2</span>
+            </div>
+          </div>
+          <div class="help-item">
+            <span class="help-code">P-02</span>
+            <div class="help-games">
+              <span class="game-badge g1">G1</span>
+            </div>
+          </div>
+          <div class="help-item">
+            <span class="help-code">P-04</span>
+            <div class="help-games">
+              <span class="game-badge g1">G1</span>
+              <span class="game-badge g2">G2</span>
+              <span class="game-badge g3">G3</span>
+            </div>
+          </div>
         </div>
+        <div class="empty-help" style="display: none;">
+          <p>Chan eil duine air cuideachadh iarraidh</p>
+        </div>
+      </div>
 
-        <!-- Pagination -->
-        <div class="pagination">
-          <button id="prev-page" class="page-button" disabled>← Roimhe</button>
-          <span id="page-info">Duilleag 1</span>
-          <button id="next-page" class="page-button" disabled>Air adhart →</button>
-        </div>
-      </section>
+    </div>
 
-      <!-- Statistics Section -->
-      <section class="dashboard-section stats-grid">
-        <div class="stat-card">
-          <h3>Iomlan Chom-pàirtichean</h3>
-          <p class="stat-number" id="total-participants">-</p>
-          <p class="stat-label">Total Participants</p>
-        </div>
-        <div class="stat-card">
-          <h3>Iomlan Sheiseanan</h3>
-          <p class="stat-number" id="total-sessions">-</p>
-          <p class="stat-label">Total Sessions</p>
-        </div>
-        <div class="stat-card">
-          <h3>Ìre Crìochnachaidh</h3>
-          <p class="stat-number" id="completion-rate">-</p>
-          <p class="stat-label">Completion Rate</p>
-        </div>
-        <div class="stat-card">
-          <h3>Cuibheasach Puingean</h3>
-          <p class="stat-number" id="avg-score">-</p>
-          <p class="stat-label">Average Score</p>
-        </div>
-        <div class="stat-card">
-          <h3>Cuibheasach Ùine</h3>
-          <p class="stat-number" id="avg-duration">-</p>
-          <p class="stat-label">Average Duration</p>
-        </div>
-        <div class="stat-card">
-          <h3>Cleachdadh Cuideachadh</h3>
-          <p class="stat-number" id="help-usage">-</p>
-          <p class="stat-label">Help Clicks/Session</p>
-        </div>
-      </section>
-
-      <!-- Export Section -->
-      <section class="dashboard-section">
-        <div class="section-header">
-          <h2>📥 Às-phortaich Dàta (Export Data)</h2>
-        </div>
-        <div class="export-options">
-          <button id="export-csv" class="export-button">
-            📄 Às-phortaich CSV (Export CSV)
-          </button>
-          <button id="export-json" class="export-button">
-            📋 Às-phortaich JSON le Tachartasan (Export JSON with Events)
-          </button>
-          <p class="export-hint">
-            Includes all filtered sessions based on current selection
-          </p>
-        </div>
-      </section>
-
-    </main>
   </div>
 
-  <!-- Session Detail Modal -->
-  <div id="session-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Mion-fhiosrachadh Seisean (Session Details)</h2>
-        <button id="close-modal" class="close-button">✕</button>
-      </div>
-      <div id="session-detail" class="modal-body">
-        <!-- Populated dynamically by JavaScript -->
-      </div>
+  <!-- Seanfhacail Help Modal -->
+  <div class="help-modal" id="seanfhacail-modal">
+    <div class="help-modal-content simple-help">
+      <button class="modal-close" onclick="closeModal('seanfhacail-modal')">×</button>
+      <p class="simple-help-text">Tha am putan seo a' ciallachadh gun do bhrùth sgoilear air am putan <span class="help-icon-btn" style="pointer-events: none;">?</span> ri taobh abairt gus barrachd fhaighinn a-mach mu a dheidhinn.</p>
+    </div>
+  </div>
+
+  <!-- Cuideachadh Help Modal -->
+  <div class="help-modal" id="cuideachadh-modal">
+    <div class="help-modal-content simple-help">
+      <button class="modal-close" onclick="closeModal('cuideachadh-modal')">×</button>
+      <p class="simple-help-text">Tha seo a' ciallachadh gun do bhrùth sgoilear am putan <span class="help-icon-btn" style="pointer-events: none;">?</span> tro gheama airson barrachd fios fhaighinn mun gheama fhad's a bha iad a' cluich.</p>
     </div>
   </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-functions-compat.js"></script>
 
-  <!-- Firebase Configuration & Dashboard Logic -->
+  <!-- Firebase Config -->
   <script src="js/firebase-config.js"></script>
-  <script src="js/dashboard.js"></script>
+
+  <!-- Dashboard Logic -->
+  <script src="js/dashboard-simple.js"></script>
+
+  <script>
+    // Logout button functionality
+    document.getElementById('logout-btn')?.addEventListener('click', () => {
+      window.location.href = '/index.html';
+    });
+
+    // Modal functions
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add('active');
+      }
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    }
+
+    // Close modal when clicking outside
+    document.querySelectorAll('.help-modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>

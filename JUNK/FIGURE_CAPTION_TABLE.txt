@@ -1,0 +1,91 @@
+═══════════════════════════════════════════════════════════════════════════════════
+DISSERTATION FIGURE - COPY-PASTE READY
+═══════════════════════════════════════════════════════════════════════════════════
+
+Figure X: The result of breadth-first search on a hexagonal grid (unobstructed case)
+
+┌──────────────────────┬────────────────────────────────┐
+│  Order of            │  Queue contents                │              L
+│  visitation          │  after processing node         │          ____|____
+├──────────────────────┼────────────────────────────────┤         /    |    \
+│  L                   │  [N₁ N₂ N₃ N₄ N₅ N₆]          │       N₁    N₂    N₃
+│  N₁                  │  [N₂ N₃ N₄ N₅ N₆ N₇]          │        |     |     |
+│  N₂                  │  [N₃ N₄ N₅ N₆ N₇ N₈]          │       N₄    N₅    N₆
+│  N₃                  │  [N₄ N₅ N₆ N₇ N₈ E₁]          │             |
+│  N₄                  │  [N₅ N₆ N₇ N₈ E₁]             │            E₁
+│  N₅                  │  [N₆ N₇ N₈ E₁]                │        (boundary)
+│  N₆                  │  [N₇ N₈ E₁]                   │
+│  N₇                  │  [N₈ E₁]                      │
+│  N₈                  │  [E₁]                         │
+│  E₁                  │  []                           │
+└──────────────────────┴────────────────────────────────┘
+
+This figure shows BFS execution starting from the lobster's position (L) on a
+hexagonal grid. The left table traces the algorithm's progress, showing the order
+in which vertices are dequeued and the queue state after processing each vertex.
+The right diagram shows the resulting BFS spanning tree, where each edge represents
+the parent-child relationship discovered during traversal. When boundary vertex E₁
+is reached, the algorithm terminates, having found the shortest path L→N₂→N₅→E₁
+with length 3. This follows Dasgupta et al. (Chapter 4, Figure 4.4), adapted for
+hexagonal adjacency.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+ALTERNATIVE: Simplified 3-step path (even cleaner!)
+
+┌──────────────────────┬────────────────────────────────┐
+│  Order of            │  Queue contents                │              L
+│  visitation          │  after processing node         │        ______|______
+├──────────────────────┼────────────────────────────────┤       /      |      \
+│  L (start)           │  [N₁ N₂ N₃ N₄ N₅ N₆]          │     N₁      N₂      N₃
+│  N₁                  │  [N₂ N₃ N₄ N₅ N₆ N₇ N₈]       │      |       |       |
+│  N₂                  │  [N₃ N₄ N₅ N₆ N₇ N₈ N₉]       │     N₇      N₈      N₉
+│  N₃                  │  [N₄ N₅ N₆ N₇ N₈ N₉ N₁₀ E₁]   │                     |
+│  N₄                  │  [N₅ N₆ N₇ N₈ N₉ N₁₀ E₁]      │                    E₁
+│  N₅                  │  [N₆ N₇ N₈ N₉ N₁₀ E₁]         │              (boundary)
+│  N₆                  │  [N₇ N₈ N₉ N₁₀ E₁]            │
+│  N₇                  │  [N₈ N₉ N₁₀ E₁]               │  Shortest path:
+│  N₈                  │  [N₉ N₁₀ E₁]                  │  L → N₃ → N₉ → E₁
+│  N₉                  │  [N₁₀ E₁]                     │  Length: 3
+│  N₁₀                 │  [E₁]                         │
+│  E₁ (boundary)       │  STOP                         │
+└──────────────────────┴────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+CAPTION TEMPLATE:
+
+Figure X: The result of breadth-first search on a hexagonal grid (simplified example)
+
+The left table shows the order in which vertices are visited during BFS execution,
+along with the queue state after processing each vertex. Starting from the lobster's
+position (L), the algorithm explores vertices in layers of increasing distance using
+FIFO queue ordering (shift() removes from front, push() adds to back). The right
+diagram displays the resulting BFS spanning tree, showing parent-child relationships.
+When the first boundary vertex (E₁) is dequeued at distance 3, the algorithm terminates
+and reconstructs the shortest path via parent pointers: L→N₃→N₉→E₁. This implementation
+follows the standard BFS formulation described by Dasgupta, Papadimitriou, and Vazirani
+(Chapter 4, Figure 4.4), adapted for hexagonal adjacency with early termination upon
+reaching the goal.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+IN-TEXT REFERENCE:
+
+"Figure X illustrates the BFS algorithm's layer-by-layer exploration pattern. The
+queue contents column demonstrates the FIFO ordering guarantee: vertices at distance
+d are fully processed before any vertex at distance d+1 is dequeued. This ensures
+that when boundary vertex E₁ is first encountered, the path L→N₃→N₉→E₁ is guaranteed
+to be minimal."
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+KEY TEACHING POINTS:
+
+1. Queue grows and shrinks as vertices are discovered and processed
+2. All vertices at distance d are dequeued before any at distance d+1
+3. When E₁ is reached, all shorter paths have been explored
+4. The tree shows exactly which edges are in the BFS spanning tree
+5. Path reconstruction follows parent pointers from E₁ back to L
+
+═══════════════════════════════════════════════════════════════════════════════════

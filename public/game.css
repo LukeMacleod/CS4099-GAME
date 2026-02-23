@@ -833,12 +833,12 @@ TBD NEEEDS TO BE COMBINED WITH OTHER POPUPS  */
 
 .modal-close:hover {
   background: rgba(255, 255, 255, 0.35);
-  transform: rotate(90deg) scale(1.1);
+  transform: scale(1.08);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .modal-close:active {
-  transform: rotate(90deg) scale(0.95);
+  transform: scale(0.95);
 }
 
 /* Simpler version for quick help popups */
