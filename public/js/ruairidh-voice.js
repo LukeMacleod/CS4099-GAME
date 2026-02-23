@@ -42,8 +42,9 @@ class RuairidhVoice {
 
     this.onAudioComplete = onComplete;
 
-    // Check if audio is muted via AudioManager
-    if (!this.audioManager || this.audioManager.isMuted) {
+    // Check if audio is disabled via AudioManager
+    if (!this.audioManager || !this.audioManager.enabled) {
+      console.log('Audio disabled, skipping narration');
       if (onComplete) onComplete();
       return;
     }
@@ -56,19 +57,23 @@ class RuairidhVoice {
     }
 
     const audioPath = this.basePath + filename;
+    console.log(`Playing Ruairidh voice: ${dialogKey} -> ${audioPath}`);
     this.currentAudio = new Audio(audioPath);
 
     this.currentAudio.addEventListener('ended', () => {
+      console.log(`Ruairidh voice completed: ${dialogKey}`);
       this.handleAudioEnd();
     });
 
     this.currentAudio.addEventListener('error', (e) => {
-      console.error('Audio playback error:', e);
+      console.error(`Audio playback error for ${dialogKey}:`, e);
       this.handleAudioEnd();
     });
 
-    this.currentAudio.play().catch(err => {
-      console.error('Failed to play audio:', err);
+    this.currentAudio.play().then(() => {
+      console.log(`Successfully started playing: ${dialogKey}`);
+    }).catch(err => {
+      console.error(`Failed to play audio ${dialogKey}:`, err);
       this.handleAudioEnd();
     });
   }
