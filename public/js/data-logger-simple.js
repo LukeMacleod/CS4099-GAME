@@ -44,29 +44,33 @@ class DataLogger {
   updateGame(game) {
     this.state.currentGame = game;
     this.state.lastUpdate = new Date();
+    this.sync(); // Immediate sync for game changes
   }
 
   // Update status (playing, paused, help, idle, tutorial)
   updateStatus(status) {
     this.state.currentStatus = status;
     this.state.lastUpdate = new Date();
+    this.sync(); // Immediate sync for status changes
   }
 
   // Add points to total and current game
   addPoints(points) {
     this.state.totalPoints += points;
-    
+
     if (this.state.currentGame === 'game1') this.state.game1Points += points;
     if (this.state.currentGame === 'game2') this.state.game2Points += points;
     if (this.state.currentGame === 'game3') this.state.game3Points += points;
-    
+
     this.state.lastUpdate = new Date();
+    // Points sync on 10-second interval (too many to sync immediately)
   }
 
   // Update progress percentage (0-100)
   updateProgress(percent) {
     this.state.progress = Math.min(100, Math.max(0, percent));
     this.state.lastUpdate = new Date();
+    this.sync(); // Immediate sync for progress changes
   }
 
   // Log help request for Seanfhacail panel
