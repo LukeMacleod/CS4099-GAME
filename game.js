@@ -3291,7 +3291,9 @@ class GameFlowController {
 
     // Centralised audio management
     this.audio = new AudioManager();
-    //
+
+    // Ruairidh voice narration system
+    this.ruairidhVoice = new RuairidhVoice(this.audio);
   }
 
   // Builds the top banner (buttons, timer, points) - options control what's shown
@@ -3449,7 +3451,7 @@ class GameFlowController {
   }
 
   // Builds the back/forward arrow buttons (or the green "play" button on the final tutorial step)
-  buildNavButtonsHTML(backAction, forwardAction, showPlayButton = false, playAction = null) {
+  buildNavButtonsHTML(backAction, forwardAction, showPlayButton = false, playAction = null, forwardDisabled = false) {
     let buttons = '';
 
     if (backAction) {
@@ -3461,9 +3463,11 @@ class GameFlowController {
       if (playAction) {
         action = playAction;
       }
-      buttons += `<button class="play-green-btn" onclick="${action}">Cluich an Geama</button>`;
+      const disabledAttr = forwardDisabled ? ' disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+      buttons += `<button id="forward-btn" class="play-green-btn"${disabledAttr} onclick="${action}">Cluich an Geama</button>`;
     } else if (forwardAction) {
-      buttons += `<button class="arrow-btn" onclick="${forwardAction}">Air adhart →</button>`;
+      const disabledAttr = forwardDisabled ? ' disabled style="opacity: 0.5; cursor: not-allowed;"' : '';
+      buttons += `<button id="forward-btn" class="arrow-btn"${disabledAttr} onclick="${forwardAction}">Air adhart →</button>`;
     }
 
     // Centre the buttons if there's only a play button (no back arrow)
@@ -3508,11 +3512,13 @@ class GameFlowController {
     // Build speech bubble
     const speechHTML = this.buildSpeechBubbleHTML(config.speechText);
 
-    // Build navigation buttons
+    // Build navigation buttons (start with forward button disabled)
     const navHTML = this.buildNavButtonsHTML(
       config.backAction,
       config.forwardAction,
-      config.showPlayButton || false
+      config.showPlayButton || false,
+      null,
+      true  // forwardDisabled = true initially
     );
 
     // Some steps have a special background class (e.g. beach background on the final step)
@@ -3535,6 +3541,20 @@ class GameFlowController {
     `;
 
     this.gameContainer.innerHTML = html;
+
+    // Play audio based on layout step and enable forward button when complete
+    const audioKeys = ['LAYOUT_SOUND', 'LAYOUT_PAUSE', 'LAYOUT_HELP', 'LAYOUT_CAIRN', 'LAYOUT_READY'];
+    const audioKey = audioKeys[this.layoutTutorialStep];
+
+    this.ruairidhVoice.play(audioKey, () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // Called when player clicks "Air adhart" (forward) during the layout tutorial
@@ -3714,6 +3734,7 @@ class GameFlowController {
     // Each state has different audio requirements
     // First anbd foremost kill everything that's currently playing:
     this.audio.stopAll();
+    this.ruairidhVoice.stop();
 
     // Then start the appropriate tracks for this new state
     if (newState === 'GAME1_TUTORIAL') {
@@ -3931,11 +3952,22 @@ class GameFlowController {
           </div>
         </div>
         <div class="arrow-buttons centred">
-          <button class="arrow-btn" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">Air adhart →</button>
+          <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">Air adhart →</button>
         </div>
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // Play Ruairidh's voice and enable button when complete
+    this.ruairidhVoice.play('RUAIRIDH_INTRO', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // ----------------------------------------------------------
@@ -3977,12 +4009,22 @@ class GameFlowController {
             ${this.buildSpeechBubbleHTML('Fàilte dhan tràigh, a charaid!<br><br>Bidh iad ag ràdh…<span class="phrase-underline">San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar.</span> <button class="phrase-help-btn" onclick="gameController.showPhraseExplanation(\'earrach\')">?</button>')}
             <div class="arrow-buttons">
               <button class="arrow-btn" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">← Air ais</button>
-              <button class="arrow-btn" onclick="gameController.renderGame1Tutorial_Step1b();">Air adhart →</button>
+              <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.renderGame1Tutorial_Step1b();">Air adhart →</button>
             </div>
           </div>
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    this.ruairidhVoice.play('GAME1_TUT_STEP1', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // Step 1b: Shows the lobster moving around - just on the sand
@@ -3998,7 +4040,7 @@ class GameFlowController {
               ${this.buildSpeechBubbleHTML("'S fìor thoil leam giomaich, ach tha iad cho duilich an glacadh!<br><br>Le sin, tha mi ag iarraidh do chuideachadh.", 150)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.renderGame1Tutorial_Step1();">← Air ais</button>
-                <button class="arrow-btn" onclick="gameController.cleanupAndNavigateToStep2();">Air adhart →</button>
+                <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.cleanupAndNavigateToStep2();">Air adhart →</button>
               </div>
             </div>
           </div>
@@ -4013,6 +4055,16 @@ class GameFlowController {
     this.initGame1TutorialBoard();
     this.game1TutorialBoard.renderTutorialOnlyLobster('game1-board-tutorial');
     this.game1TutorialBoard.startSlowLobsterAnimation(1000); // moves every 1 second
+
+    this.ruairidhVoice.play('GAME1_TUT_STEP1B', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // Step 2: Explains what the board looks like (lobster + sand tiles)
@@ -4028,7 +4080,7 @@ class GameFlowController {
               ${this.buildSpeechBubbleHTML("Ri mo thaobh chì thu giomach agus blocaichean gainmhich bhuidhe. Seo far a bheil sinn a' dol a dh' fheuchainn giomaich a ghlacadh!", 150)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.game1TutorialStep = 0; gameController.renderGame1Tutorial_Step1();">← Air ais</button>
-                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">Air adhart →</button>
+                <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">Air adhart →</button>
               </div>
             </div>
           </div>
@@ -4041,6 +4093,16 @@ class GameFlowController {
 
     this.initGame1TutorialBoard();
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
+
+    this.ruairidhVoice.play('GAME1_TUT_STEP2', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // Step 3: Explains how placing rocks traps lobsters
@@ -4056,7 +4118,7 @@ class GameFlowController {
               ${this.buildSpeechBubbleHTML("Nuair a bhrùthas tu air an gainmheach bhuidhe, 's urrainn dhut clach a chur sìos. Chan urrainn do na giomaich a' dhol thairis air na clachan!<br><br>Airson a h-uile giomach a gheibh thu, thèid clach a chur air an càirn agad.", 150)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.game1TutorialStep = 1; gameController.renderGame1Tutorial_Step2();">← Air ais</button>
-                <button class="arrow-btn" onclick="gameController.game1TutorialStep = 3; gameController.renderGame1Tutorial_Step4();">Air adhart →</button>
+                <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.game1TutorialStep = 3; gameController.renderGame1Tutorial_Step4();">Air adhart →</button>
               </div>
             </div>
           </div>
@@ -4069,6 +4131,16 @@ class GameFlowController {
 
     this.initGame1TutorialBoard({ withRocks: true }); // show rocks on this step
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
+
+    this.ruairidhVoice.play('GAME1_TUT_STEP3', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // Step 4: Final tips and the "Play" button to start the actual game
@@ -4081,10 +4153,10 @@ class GameFlowController {
         <div class="game1-tutorial-content-wrapper game1-tutorial-step4">
           <div class="game1-tutorial-text-section">
             <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("Cuimhnich, tha na giomaich ann an Leòdhas gu math seòlta!<br><br>Chan eil ach ceithir mionaidean againn! Steall ort!", 150)} // "Remember, the lobsters in Lewis are very clever! We only have 4 minutes! Get cracking!"
+              ${this.buildSpeechBubbleHTML("Cuimhnich, tha na giomaich ann an Leòdhas gu math seòlta!<br><br>Chan eil ach ceithir mionaidean againn! Steall ort!", 150)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">← Air ais</button>
-                <button class="play-green-btn" onclick="gameController.setGameFlowState('GAME1');">Cluich an Geama</button>
+                <button id="forward-btn" class="play-green-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('GAME1');">Cluich an Geama</button>
               </div>
             </div>
           </div>
@@ -4097,6 +4169,16 @@ class GameFlowController {
 
     this.initGame1TutorialBoard({ withRocks: true });
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
+
+    this.ruairidhVoice.play('GAME1_TUT_STEP4', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
 
@@ -4242,18 +4324,27 @@ class GameFlowController {
                 <img src="./svgs/game-1/seal-2.svg" alt="Ruairidh the Seal" class="seal-icon" />
               </div>
               <div class="speech-bubble">
-                <!-- "Thank you for helping me! Are you ready for the next game?" -->
                 <p>Tapadh leibh airson mo chuideachadh! A bheil sibh deiseil airson an ath gheama?</p>
               </div>
             </div>
             <div class="arrow-buttons centred">
-              <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">Air adhart →</button>
+              <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">Air adhart →</button>
             </div>
           </div>
         </div>
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    this.ruairidhVoice.play('GAME2_READY', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // ----------------------------------------------------------
@@ -4272,7 +4363,6 @@ class GameFlowController {
     this.game2TutorialStep = 0;
     const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan' });
 
-    // Ruairidh says: "In this game, you need to help me make pairs  of things we can find on the beach or at sea."
     const html = `
       <div class="game2-tutorial-screen">
         ${banner}
@@ -4281,29 +4371,34 @@ class GameFlowController {
             ${this.buildSpeechBubbleHTML("Anns an geama seo, feumaidh tu mo chuideachadh paidhrichean a dhèanamh de rudan as urrainn dhuinn a' lorg air an tràigh neo aig muir.")}
             <div class="arrow-buttons">
               <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_READY')">← Air ais</button>
-              <button class="arrow-btn" onclick="gameController.renderGame2TutorialScreen_Step2()">Air adhart →</button>
+              <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.renderGame2TutorialScreen_Step2()">Air adhart →</button>
             </div>
           </div>
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    this.ruairidhVoice.play('GAME2_TUT_STEP1', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
-  // STEP 2: Show example cards so players know what to expect TBD - Put in some actual examples of the cards instead of just placeholders
+  // STEP 2: Show example cards so players know what to expect
   renderGame2TutorialScreen_Step2() {
     this.game2TutorialStep = 1;
 
-    // Pick random tweed patterns to display as examples - TBD  -noticed performance issue with diffrent tweed types, perhaos revert to just one
-    // These are the card backs asnd Harris Tweed is iconic to the Outer Hebrides
     const availableTweeds = [2, 5, 6];
     const tweed1 = availableTweeds[Math.floor(Math.random() * availableTweeds.length)];
     const tweed2 = availableTweeds[Math.floor(Math.random() * availableTweeds.length)];
 
     const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan' });
 
-    // Ruairidh says: "There will be pieces of Harris Tweed on the table
-    // beside me. Press them to see what's behind them and you need to
-    // make pairs from them."
     const html = `
       <div class="game2-tutorial-screen">
         ${banner}
@@ -4313,7 +4408,7 @@ class GameFlowController {
               ${this.buildSpeechBubbleHTML("Bidh pìosan clò Hearaich air a' bhòrd ri mo thaobh. Brùth orra gus faicinn dè a tha air an cùlaibh agus feumaidh sibh paidhrichean a dhèanamh asta.", 120)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">← Air ais</button>
-                <button class="play-green-btn" onclick="gameController.setGameFlowState('GAME2')">Air adhart</button>
+                <button id="forward-btn" class="play-green-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('GAME2')">Air adhart</button>
               </div>
             </div>
           </div>
@@ -4326,6 +4421,16 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    this.ruairidhVoice.play('GAME2_TUT_STEP2', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // ----------------------------------------------------------
@@ -4594,13 +4699,23 @@ class GameFlowController {
               </div>
             </div>
             <div class="arrow-buttons centred">
-              <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME3_TUTORIAL')">Air adhart →</button>
+              <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('GAME3_TUTORIAL')">Air adhart →</button>
             </div>
           </div>
         </div>
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    this.ruairidhVoice.play('GAME3_READY', () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // ----------------------------------------------------------
@@ -4681,8 +4796,8 @@ class GameFlowController {
             <div class="arrow-buttons">
               <button class="arrow-btn" onclick="gameController.game3TutorialBack()">← Air ais</button>
               ${isLastStep
-                ? `<button class="play-green-btn" onclick="gameController.setGameFlowState('GAME3')">Cluich an Geama</button>`  // "Play the Game"
-                : `<button class="arrow-btn" onclick="gameController.game3TutorialNext()">Air adhart →</button>`
+                ? `<button id="forward-btn" class="play-green-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('GAME3')">Cluich an Geama</button>`
+                : `<button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.game3TutorialNext()">Air adhart →</button>`
               }
             </div>
           </div>
@@ -4690,6 +4805,20 @@ class GameFlowController {
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // Play audio based on game3 tutorial step
+    const audioKeys = ['GAME3_TUT_STEP0', 'GAME3_TUT_STEP1', 'GAME3_TUT_STEP2'];
+    const audioKey = audioKeys[this.game3TutorialStep];
+
+    this.ruairidhVoice.play(audioKey, () => {
+      const btn = document.getElementById('forward-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#4CAF50';
+      }
+    });
   }
 
   // Go back a step, or exit to the intro if already at step 0
