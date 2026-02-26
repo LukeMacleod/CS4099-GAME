@@ -62,7 +62,7 @@ const GAME_SETTINGS = {
     pointsAnimationDuration: 800,
     rewardAnimationDuration: 600,
     stateTransitionDelay: 500,
-    messageDisplayDuration: 1500,
+    messageDisplayDuration: 2000,  // 2 seconds for lobster voice to finish
     cairnPulsingDuration: 800,
     pointsTextDuration: 1000,
     flashRemoveDuration: 1500,
@@ -149,7 +149,7 @@ const LAYOUT_TUTORIAL_STEPS = {
     pauseButtonGlowing: true,
     helpButtonGlowing: false,
     cairnGlowing: false,
-    speechText: 'Ma tha thu ag iarraidh stad a chur air a gheama, brùth pause an seo.',
+    speechText: 'Ma tha thu ag iarraidh stad a chur air a\' gheama, brùth air "pause" an seo.',
     backAction: 'gameController.renderLayoutTutorialStep(0)',
     forwardAction: 'gameController.advanceLayoutTutorialStep()'
   },
@@ -169,7 +169,7 @@ const LAYOUT_TUTORIAL_STEPS = {
     pauseButtonGlowing: false,
     helpButtonGlowing: false,
     cairnGlowing: true,
-    speechText: 'Nise, tha mise a\' cumail sùil air na puingean. Nuair a gheibh thu puing, gheibh thu clach air an càirn agad.<br><br><span class="phrase-underline">Cuimhich, nithear càirn mòr bho chlachan bheaga.</span> <button class="phrase-help-btn" onclick="gameController.showPhraseExplanation(\'cairn\')">?</button>',
+    speechText: 'Nise, tha mise a\' cumail sùil air na puingean. Nuair a gheibh thu puing, gheibh thu clach air an càrn agad.<br><br><span class="phrase-underline">Cuimhnich, nithear càrn mòr bho clachan beaga.</span> <button class="phrase-help-btn" onclick="gameController.showPhraseExplanation(\'cairn\')">?</button>',
     backAction: 'gameController.renderLayoutTutorialStep(2)',
     forwardAction: 'gameController.advanceLayoutTutorialStep()'
   },
@@ -179,7 +179,7 @@ const LAYOUT_TUTORIAL_STEPS = {
     pauseButtonGlowing: false,
     helpButtonGlowing: false,
     cairnGlowing: false,
-    speechText: 'A chiad gheama a chluicheas sinn se Glac an Giomach. A bheil thu deiseil?',
+    speechText: 'A\' chiad gheama a chluicheas sinn \'s e Glac an Giomach. A bheil thu deiseil?',
     backAction: 'gameController.renderLayoutTutorialStep(3)',
     forwardAction: null,
     showPlayButton: true,
@@ -470,12 +470,24 @@ class SmartHelpSystem {
     }
   }
 
-  // Show the help modal - doesn't pause the game, just overlays it
-  // (matching the public version which works correctly)
+  // Show the help modal - pauses game and stops timer
   open() {
     this.createModal();
     this.isOpen = true;
     document.body.style.overflow = 'hidden';  // stop background from scrolling
+
+    // CRITICAL: Stop the countdown timer (Game 1)
+    if (this.controller.gameTimer) {
+      clearInterval(this.controller.gameTimer);
+    }
+
+    // CRITICAL: Pause game board (freeze animations)
+    if (this.controller.game1Board) {
+      this.controller.game1Board.isAnimating = true;
+    }
+
+    // CRITICAL: Pause all game audio
+    this.controller.audio.pauseGameSounds(this.controller.currentState);
   }
 
   // Hide the modal
@@ -483,6 +495,32 @@ class SmartHelpSystem {
     // Set isOpen to false immediately to prevent double-close issues
     this.isOpen = false;
     document.body.style.overflow = '';  // restore scrolling immediately
+
+    // CRITICAL: Restore status to 'playing' when closing help modal
+    if (this.controller.dataLogger) {
+      this.controller.dataLogger.updateStatus('playing');
+    }
+
+    // CRITICAL: Resume game board (resume animations)
+    if (this.controller.game1Board) {
+      this.controller.game1Board.isAnimating = false;
+    }
+
+    // CRITICAL: Restart the countdown timer (Game 1 only)
+    if (this.controller.currentState === 'GAME1' && this.controller.timeRemaining > 0) {
+      if (this.controller.gameTimer) clearInterval(this.controller.gameTimer);
+      this.controller.gameTimer = setInterval(() => {
+        this.controller.timeRemaining--;
+        this.controller.updateGame1TimerDisplay();
+        if (this.controller.timeRemaining <= 0) {
+          clearInterval(this.controller.gameTimer);
+          setTimeout(() => this.controller.setGameFlowState('GAME2_READY'), 500);
+        }
+      }, 1000);
+    }
+
+    // CRITICAL: Resume all game audio
+    this.controller.audio.resumeGameSounds(this.controller.currentState);
 
     if (this.modalElement) {
       const modalToRemove = this.modalElement;  // capture reference to avoid race condition
@@ -554,7 +592,7 @@ class SmartHelpSystem {
           <div class="help-tip">
             <span class="help-tip-number">1</span>
             <div class="help-tip-content">
-              <strong>Coimhead!</strong> <p>Faic dè an oir den bhòrd as fhaisge air a' ghiomach - sin far a bheil e airson dol!</p>
+              <strong>Coimhead!</strong> <p>Faic dè an t-oire den bhòrd as fhaisge air a' ghiomach - sin far a bheil e airson a dhol!</p>
             </div>
           </div>
 
@@ -568,14 +606,14 @@ class SmartHelpSystem {
           <div class="help-tip">
             <span class="help-tip-number">3</span>
             <div class="help-tip-content">
-              <strong>Dùin na beàrnan!</strong> <p>Teichidh a' ghiomach tron toll as lugha - cum ort gus nach bi beàrn sam bith!</p>
+              <strong>Dùin na beàrnan!</strong> <p>Teichidh a' ghiomach tron toll as lugha - cùm ort gus nach bi beàrn sam bith ann!</p>
             </div>
           </div>
 
           <div class="help-tip">
             <span class="help-tip-number">4</span>
             <div class="help-tip-content">
-              <strong>Glac e!</strong> <p>Nuair nach urrainn dha na h-oirean a ruighinn, tha thu ga ghlacadh!</p>
+              <strong>Glac e!</strong> <p>Nuair nach urrainn dha na h-oirean a ruigsinn tuilleadh, tha thu air a' ghiomach a ghlacadh - math fhèin!</p>
             </div>
           </div>
         </div>
@@ -956,6 +994,9 @@ class Game1Board {
 
     this.activeBubble = null;  // Currently showing speech bubble
 
+    // Initialize lobster voice system
+    this.giomachVoice = new GiomachVoice(this.controller.audio);
+
     // Set up the board
     this.boardSquares = new Map();  // All hexagons on the board
     this.initialiseBoard();
@@ -980,6 +1021,11 @@ class Game1Board {
       duration: duration,
       hasBeenRendered: false  // So we know if this is a fresh bubble
     };
+
+    // Play the lobster's voice for this message
+    if (this.giomachVoice) {
+      this.giomachVoice.play(message);
+    }
 
     // Auto-remove the bubble after the duration
     setTimeout(() => {
@@ -1106,7 +1152,7 @@ class Game1Board {
       // Lobster says something when caught (cycles through messages)
       const message = this.caughtMessages[this.caughtMessageIndex];
       this.caughtMessageIndex = (this.caughtMessageIndex + 1) % this.caughtMessages.length;
-      this.showSpeechBubble(message, 2000);
+      this.showSpeechBubble(message, 2500);  // 2.5 seconds to ensure voice finishes
 
       this.render();  // Show the bubble
 
@@ -1225,6 +1271,11 @@ class Game1Board {
 
     // Clear any active speech bubble
     this.activeBubble = null;
+
+    // Stop any playing lobster voice
+    if (this.giomachVoice) {
+      this.giomachVoice.stop();
+    }
 
     // Clear the "Lobster escaped!" or "Lobster caught!" message from last round
     const status = document.getElementById('round-status');
@@ -3324,9 +3375,14 @@ class GameFlowController {
     if (soundButtonGlowing) {
       soundBtnClass = 'ruairidh-sound-button glowing';
     }
+
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const soundBtn = `<button class="${soundBtnClass}" id="sound-button" onclick="gameController.toggleSound()">
       <img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" />
-      <img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" />
+      <img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" />
     </button>`;
 
     // Build pause button - this one's a bit more complex because it behaves differently
@@ -3542,6 +3598,12 @@ class GameFlowController {
 
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Play audio based on layout step and enable forward button when complete
     const audioKeys = ['LAYOUT_SOUND', 'LAYOUT_PAUSE', 'LAYOUT_HELP', 'LAYOUT_CAIRN', 'LAYOUT_READY'];
     const audioKey = audioKeys[this.layoutTutorialStep];
@@ -3585,16 +3647,20 @@ class GameFlowController {
       this.dataLogger.logSoundToggle(nowEnabled);
     }
 
-    const muteOverlay = document.getElementById('sound-mute-overlay');
-
-    // Show or hide the red X over the speaker icon
-    if (muteOverlay) {
-      if (nowEnabled) {
-        muteOverlay.style.display = 'none';
-      } else {
-        muteOverlay.style.display = 'block'; // shows the muted indicator
-      }
+    // CRITICAL: Stop Ruairidh voice narration when muting
+    if (!nowEnabled && this.ruairidhVoice) {
+      this.ruairidhVoice.stop();
     }
+
+    // Update red X overlay - find ALL instances on the page
+    const muteOverlays = document.querySelectorAll('.sound-mute-overlay, #sound-mute-overlay');
+    muteOverlays.forEach(overlay => {
+      if (nowEnabled) {
+        overlay.style.display = 'none'; // Hide red X when sound is ON
+      } else {
+        overlay.style.display = 'block'; // Show red X when sound is OFF
+      }
+    });
 
     if (nowEnabled) {
       this.audio.startForState(this.currentState); // restart music for current screen
@@ -3612,12 +3678,17 @@ class GameFlowController {
       },
       earrach: {
         phrase: "San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar", // "In Spring, when the sheep is thin, the shellfish is fat"
-        explanation: "Tha an abairt seo a' ciallachadh gur e àm math a th' anns an Earrach dhuinn. Aig toiseach na bliadhna, tha na caoraich caol, ach tha na maoraich, 's e sin na giomaich is na crùbagan, gu math reamhar. Tha a mhuir agus an tìr a' toirt biadh dhuinn fad na bliadhna, fiùs ma tha rudeigin eile lag no gann!"
+        explanation: "Tha an abairt seo a' ciallachadh gur e àm math a th' anns an earrach dhuinn. Aig toiseach na bliadhna, tha na caoraich caol, ach tha na maoraich, 's e sin na giomaich is na crùbagan, gu math reamhar. Tha a' mhuir agus an tìr a' toirt biadh dhuinn fad na bliadhna, fiù 's ma tha rudeigin eile lag no gann!"
       }
     };
 
     const data = phrases[phraseId];
     if (!data) return; // just in case an invalid phraseId is passed
+
+    // CRITICAL: Log Seanfhacail help request to Firebase
+    if (this.dataLogger) {
+      this.dataLogger.logHelpSeanfhacail(data.phrase);
+    }
 
     // Create the  popup box
     const modal = document.createElement('div');
@@ -3652,12 +3723,22 @@ class GameFlowController {
     const modal = document.getElementById('pause-modal');
 
     if (this.gamePaused) {
+      // CRITICAL: Update status to 'paused'
+      if (this.dataLogger) {
+        this.dataLogger.updateStatus('paused');
+      }
+
       if (this.gameTimer) clearInterval(this.gameTimer); // stop the countdown
       if (this.game1Board) this.game1Board.isAnimating = true; // freeze the lobster
       if (button) button.innerHTML = SVG_ICONS.play;
       if (modal) modal.classList.add('active');
       this.audio.pauseGameSounds(this.currentState);
     } else {
+      // CRITICAL: Restore status to 'playing'
+      if (this.dataLogger) {
+        this.dataLogger.updateStatus('playing');
+      }
+
       if (this.game1Board) {
         this.game1Board.isAnimating = false; // unfreeze the lobster
       }
@@ -3688,10 +3769,20 @@ class GameFlowController {
     const modal = document.getElementById('pause-modal');
 
     if (this.game3Board.isPaused) {
+      // CRITICAL: Update status to 'paused'
+      if (this.dataLogger) {
+        this.dataLogger.updateStatus('paused');
+      }
+
       if (button) button.innerHTML = SVG_ICONS.play;
       if (modal) modal.classList.add('active');
       this.audio.pauseGameSounds(this.currentState);
     } else {
+      // CRITICAL: Restore status to 'playing'
+      if (this.dataLogger) {
+        this.dataLogger.updateStatus('playing');
+      }
+
       if (button) button.innerHTML = SVG_ICONS.pause;
       if (modal) modal.classList.remove('active');
       this.audio.resumeGameSounds(this.currentState);
@@ -3715,6 +3806,14 @@ class GameFlowController {
   // ============================================================================
   setGameFlowState(newState) {
     const oldState = this.currentState;
+
+    // DEFENSIVE: Prevent invalid state transitions
+    // Don't allow going back to GAME2_READY if we're already past Game 2
+    if (newState === 'GAME2_READY' && ['GAME3', 'GAME3_READY', 'GAME3_TUTORIAL', 'RESULTS', 'COMPLETED'].includes(oldState)) {
+      console.warn(`Prevented invalid transition from ${oldState} to ${newState}`);
+      return;
+    }
+
     this.currentState = newState;
 
     // Firebase Data Logging: Track state transitions and game starts
@@ -3725,6 +3824,27 @@ class GameFlowController {
       if (newState === 'GAME1') this.dataLogger.logGameStart(1);
       if (newState === 'GAME2') this.dataLogger.logGameStart(2);
       if (newState === 'GAME3') this.dataLogger.logGameStart(3);
+
+      // Update progress bar based on game flow state (fine-grained progression)
+      const progressMap = {
+        'LOGIN': 0,
+        'RUAIRIDH_INTRO': 5,
+        'PREGAME_TUTORIAL': 10,
+        'GAME1_TUTORIAL': 15,
+        'GAME1': 35,           // +20 for playing Game 1
+        'GAME2_READY': 38,     // +3 transition
+        'GAME2_TUTORIAL': 43,  // +5 tutorial
+        'GAME2': 63,           // +20 for playing Game 2
+        'GAME3_READY': 66,     // +3 transition
+        'GAME3_TUTORIAL': 71,  // +5 tutorial
+        'GAME3': 91,           // +20 for playing Game 3
+        'RESULTS': 96,         // +5 viewing results
+        'COMPLETED': 100       // +4 complete
+      };
+
+      if (progressMap[newState] !== undefined) {
+        this.dataLogger.updateProgress(progressMap[newState]);
+      }
     }
 
     // Clear what was on screen before
@@ -3801,10 +3921,12 @@ class GameFlowController {
   }
 
   updateSoundButtonIcon() {
-    const muteOverlay = document.getElementById('sound-mute-overlay');
-    if (muteOverlay) {
-      muteOverlay.style.display = this.audio.isEnabled() ? 'none' : 'block';
-    }
+    // Update ALL sound button overlays on the page (handles multiple instances)
+    const muteOverlays = document.querySelectorAll('.sound-mute-overlay, #sound-mute-overlay');
+    const isEnabled = this.audio.isEnabled();
+    muteOverlays.forEach(overlay => {
+      overlay.style.display = isEnabled ? 'none' : 'block';
+    });
   }
 
   // Sets up a smaller version of the Game 1 board for the tutorial screens
@@ -3864,6 +3986,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Allow Enter key to submit // When being tested by teacher afetr iteration 1 and she
     // tried pressing enter and it didnt work, decided to implement this
     const input = document.getElementById('participant-code');
@@ -3910,9 +4035,16 @@ class GameFlowController {
     this.participantCode = code;
     this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
 
-    // Initialize Firebase data logger
-    this.dataLogger = new window.DataLogger(code);
-    await this.dataLogger.init();
+    // Initialize Firebase data logger (non-blocking - game continues even if logging fails)
+    try {
+      console.log('Initializing DataLogger for participant:', code);
+      this.dataLogger = new window.DataLogger(code);
+      await this.dataLogger.init();
+      console.log('DataLogger initialized successfully');
+    } catch (error) {
+      console.warn('DataLogger initialization failed (game will continue without logging):', error);
+      this.dataLogger = null;  // Disable logging but allow game to proceed
+    }
 
     // Continue to game intro
     this.setGameFlowState('RUAIRIDH_INTRO');
@@ -3934,13 +4066,16 @@ class GameFlowController {
         </div>
         <div class="arrow-buttons centred">
           <button id="start-audio-btn" class="play-green-btn" onclick="gameController.startRuairidhIntroAudio()" style="font-size: 20px; padding: 15px 40px;">
-            🔊 Cluich Fuaim / Play Audio
+            TÒISICH
           </button>
           <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed; display: none;" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">Air adhart →</button>
         </div>
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
   }
 
   startRuairidhIntroAudio() {
@@ -4010,6 +4145,9 @@ class GameFlowController {
       </div>`;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     this.ruairidhVoice.play('GAME1_TUT_STEP1', () => {
       const btn = document.getElementById('forward-btn');
       if (btn) {
@@ -4045,6 +4183,9 @@ class GameFlowController {
       </div>`;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Set up the demo board and start the lobster moving slowly
     this.initGame1TutorialBoard();
     this.game1TutorialBoard.renderTutorialOnlyLobster('game1-board-tutorial');
@@ -4071,7 +4212,7 @@ class GameFlowController {
         <div class="game1-tutorial-content-wrapper game1-tutorial-step2">
           <div class="game1-tutorial-text-section">
             <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("Ri mo thaobh chì thu giomach agus blocaichean gainmhich bhuidhe. Seo far a bheil sinn a' dol a dh' fheuchainn giomaich a ghlacadh!", 150)}
+              ${this.buildSpeechBubbleHTML("Ri mo thaobh chì thu giomach agus blocaichean gainmhich buidhe. Seo far a bheil sinn a' dol a dh' fheuchainn giomaich a ghlacadh!", 150)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.game1TutorialStep = 0; gameController.renderGame1Tutorial_Step1();">← Air ais</button>
                 <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">Air adhart →</button>
@@ -4084,6 +4225,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.initGame1TutorialBoard();
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
@@ -4109,7 +4253,7 @@ class GameFlowController {
         <div class="game1-tutorial-content-wrapper game1-tutorial-step3">
           <div class="game1-tutorial-text-section">
             <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("Nuair a bhrùthas tu air an gainmheach bhuidhe, 's urrainn dhut clach a chur sìos. Chan urrainn do na giomaich a' dhol thairis air na clachan!<br><br>Airson a h-uile giomach a gheibh thu, thèid clach a chur air an càirn agad.", 150)}
+              ${this.buildSpeechBubbleHTML("Nuair a bhrùthas tu air an gainmheach bhuidhe, 's urrainn dhut clach a chur sìos. Chan urrainn do na giomaich a dhol thairis air na clachan!<br><br>Airson a h-uile giomach a gheibh thu, thèid clach a chur air an càrn agad.", 150)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.game1TutorialStep = 1; gameController.renderGame1Tutorial_Step2();">← Air ais</button>
                 <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.game1TutorialStep = 3; gameController.renderGame1Tutorial_Step4();">Air adhart →</button>
@@ -4122,6 +4266,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.initGame1TutorialBoard({ withRocks: true }); // show rocks on this step
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
@@ -4160,6 +4307,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.initGame1TutorialBoard({ withRocks: true });
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
@@ -4207,6 +4357,9 @@ class GameFlowController {
       </div>`;
 
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     // Create the game board and start the 4-minute countdown
     this.game1Board = new Game1Board(5, this);
@@ -4284,10 +4437,15 @@ class GameFlowController {
       this.helpSystem = new SmartHelpSystem(this);
     }
 
-    // Firebase Data Logging: Track help requests
-    if (this.dataLogger && this.helpSystem.modal && !this.helpSystem.modal.classList.contains('visible')) {
-      // Only log when opening (not closing) the help modal
-      this.dataLogger.logHelpRequest(this.currentState, 0); // Could track time in game if needed
+    const isOpening = !this.helpSystem.isOpen;
+
+    // CRITICAL: Update status and log help request when OPENING
+    if (this.dataLogger && isOpening) {
+      this.dataLogger.logHelpCuideachadh('GAME1');
+      this.dataLogger.updateStatus('help');
+    } else if (this.dataLogger && !isOpening) {
+      // CRITICAL: Restore status to playing when CLOSING
+      this.dataLogger.updateStatus('playing');
     }
 
     this.helpSystem.toggle();
@@ -4330,6 +4488,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     this.ruairidhVoice.play('GAME2_READY', () => {
       const btn = document.getElementById('forward-btn');
       if (btn) {
@@ -4362,7 +4523,7 @@ class GameFlowController {
         ${banner}
         <div class="intro-screen-wrapper">
           <div class="ruairidh-intro-screen">
-            ${this.buildSpeechBubbleHTML("Anns an geama seo, feumaidh tu mo chuideachadh paidhrichean a dhèanamh de rudan as urrainn dhuinn a' lorg air an tràigh neo aig muir.")}
+            ${this.buildSpeechBubbleHTML("Anns an geama seo, feumaidh tu mo chuideachadh paidhrichean a dhèanamh de rudan as urrainn dhuinn a lorg air an tràigh no aig muir.")}
             <div class="arrow-buttons">
               <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_READY')">← Air ais</button>
               <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.renderGame2TutorialScreen_Step2()">Air adhart →</button>
@@ -4371,6 +4532,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.ruairidhVoice.play('GAME2_TUT_STEP1', () => {
       const btn = document.getElementById('forward-btn');
@@ -4399,7 +4563,7 @@ class GameFlowController {
         <div class="game2-tutorial-content-wrapper">
           <div class="game2-tutorial-text-section">
             <div class="ruairidh-intro-screen" style="max-width: 600px;">
-              ${this.buildSpeechBubbleHTML("Bidh pìosan clò Hearaich air a' bhòrd ri mo thaobh. Brùth orra gus faicinn dè a tha air an cùlaibh agus feumaidh sibh paidhrichean a dhèanamh asta.", 120)}
+              ${this.buildSpeechBubbleHTML("Bidh pìosan clò Hearaich air a' bhòrd ri mo thaobh. Brùth orra gus faicinn dè tha air an cùlaibh agus feumaidh sibh paidhrichean a dhèanamh asta.", 120)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">← Air ais</button>
                 <button id="forward-btn" class="play-green-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('GAME2')">Air adhart</button>
@@ -4415,6 +4579,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.ruairidhVoice.play('GAME2_TUT_STEP2', () => {
       const btn = document.getElementById('forward-btn');
@@ -4436,11 +4603,15 @@ class GameFlowController {
   // memory element for some users, making it feel stressful rather than fun.
   renderGame2_Main() {
     // Note: pause button is disabled because there's no timer in this game
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const html = `
       <div class="game2-screen">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" /></button>
             <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
             <button class="ruairidh-help-button" onclick="gameController.toggleGame2HelpModal()">?</button>
           </div>
@@ -4484,7 +4655,7 @@ class GameFlowController {
               <span class="help-tip-number">2</span>
               <div class="help-tip-content">
                 <!-- "How to do it: Press a card to flip it" -->
-                <strong>Mar a nì thu e:</strong> <p>Brùth air cairt gus a thionndaidh.</p>
+                <strong>Mar a nì thu e:</strong> <p>Brùth air cairt gus a tionndadh.</p>
               </div>
             </div>
 
@@ -4527,6 +4698,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Create the card game board &  render it
     this.game2Board = new CardMatchingGame(this);
     this.game2Board.render();
@@ -4541,13 +4715,22 @@ class GameFlowController {
       modal.classList.toggle('active');
 
       if (isOpening) {
-        // TBD - Remove this because no timer on game 2?
-        // Freeze the game while reading help - i had this in here from when it was timed
+        // CRITICAL: Log help request and update status to 'help'
+        if (this.dataLogger) {
+          this.dataLogger.logHelpCuideachadh('GAME2');
+          this.dataLogger.updateStatus('help');
+        }
+
+        // Freeze the game while reading help
         if (this.game2Board) {
           this.game2Board.isPaused = true;
         }
         this.audio.pauseGameSounds(this.currentState);
       } else {
+        // CRITICAL: Restore status to 'playing' when closing
+        if (this.dataLogger) {
+          this.dataLogger.updateStatus('playing');
+        }
 
         if (this.game2Board) {
           this.game2Board.isPaused = false;
@@ -4661,11 +4844,15 @@ class GameFlowController {
 
     // Note: pause and help buttons are disabled on this screen
     // since it's just an intro, not actual gameplay
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const html = `
       <div class="game3-ready-screen">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" /></button>
             <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
             <button class="ruairidh-help-button" disabled>?</button>
           </div>
@@ -4689,7 +4876,7 @@ class GameFlowController {
               </div>
               <div class="speech-bubble">
                 <!-- "The next game is: 'As fast as the salmon!' Come and I'll tell you more!" -->
-                <p>'S e an ath gheama: <strong>"Cho luath ris a' bhradan!"</strong> Trobhad gus an innis mi barrachd dhuibh!</p>
+                <p>'S e an ath gheama: "Cho luath ris a' bhradan!" Trobhad gus an innis mi barrachd dhuibh!</p>
               </div>
             </div>
             <div class="arrow-buttons centred">
@@ -4700,6 +4887,9 @@ class GameFlowController {
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.ruairidhVoice.play('GAME3_READY', () => {
       const btn = document.getElementById('forward-btn');
@@ -4732,30 +4922,34 @@ class GameFlowController {
       {
         bubbleContent: `<img src="./svgs/game-3/game-3-fish/sgadan-L.svg" alt="Sgadan" class="target-fish-image" />`,
         pointer: `↑ Coimhead an seo! ↑`,  // "Look here!"
-        message: `Bidh mise an seo aig a' mhulach. Seallaidh mi dhuibh dè an t-iasg a tha mi ag iarraidh!`
+        message: `Bidh mise an seo aig a' mhullach. Seallaidh mi dhuibh dè an t-iasg a tha mi ag iarraidh!`
       },
       // STEP 1: "If you catch the right fish that I want, you'll get points!"
       {
         bubbleContent: `<img src="./svgs/game-3/game-3-fish/sgadan-L.svg" alt="Sgadan" class="target-fish-image" />`,
         pointer: null,
-        message: `Ma gheibh sibh an t-iasg cheart a tha mise ag iarraidh, gheibh sibh puingean!`
+        message: `Ma gheibh sibh an t-iasg ceart a tha mise ag iarraidh, gheibh sibh puingean!`
       },
       // STEP 2: "Keep an eye out for rubbish! If you tap on rubbish you'll get points too!"
       // This adds an environmental awareness element to the game
       {
         bubbleContent: `<img src="./svgs/game-3/game-3-garbage/plastic-bottle-1.svg" alt="Sgudal" class="target-fish-image" />`,
         pointer: null,
-        message: `Cùm do shùil a-mach airson sgudal! Ma bhrùthas tu air sgudal gheibh sibh puingean cuideachd!`
+        message: `Cùm do shùil a-mach airson sgudal! Ma bhrùthas tu air sgudal, gheibh sibh puingean cuideachd!`
       }
     ];
 
     const step = tutorialSteps[this.game3TutorialStep];
 
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const html = `
       <div class="game3-screen game3-tutorial-preview">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" /></button>
             <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
             <button class="ruairidh-help-button" disabled>?</button>
           </div>
@@ -4800,6 +4994,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Play audio based on game3 tutorial step
     const audioKeys = ['GAME3_TUT_STEP0', 'GAME3_TUT_STEP1', 'GAME3_TUT_STEP2'];
     const audioKey = audioKeys[this.game3TutorialStep];
@@ -4839,11 +5036,15 @@ class GameFlowController {
 
 
   renderGame3_Main() {
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const html = `
       <div class="game3-screen">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" /></button>
             <button class="ruairidh-pause-button" id="pause-button" onclick="gameController.toggleGame3Pause()">${SVG_ICONS.pause}</button>
             <button class="ruairidh-help-button" onclick="gameController.toggleGame3HelpModal()">?</button>
           </div>
@@ -4909,7 +5110,7 @@ class GameFlowController {
             <div class="help-tip">
               <span class="help-tip-number">2</span>
               <div class="help-tip-content">
-                <strong>Lorg an t-iasg ceart:</strong> <p>Brùth air an t-iasg anns a' mhuir a tha co-ionann ris an fhear a tha Ruairidh ag iarraidh.</p>
+                <strong>Lorg an t-iasg ceart:</strong> <p>Brùth air an t-iasg sa mhuir a tha co-ionann ris an fhear a tha Ruairidh ag iarraidh.</p>
               </div>
             </div>
 
@@ -4952,6 +5153,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Create and start the fishing game
     this.game3Board = new Game3FishingGame(this);
     this.game3Board.init();
@@ -4966,13 +5170,24 @@ class GameFlowController {
       modal.classList.toggle('active');
 
       if (isOpening) {
+        // CRITICAL: Log help request and update status to 'help'
+        if (this.dataLogger) {
+          this.dataLogger.logHelpCuideachadh('GAME3');
+          this.dataLogger.updateStatus('help');
+        }
+
         // Freeze the game while reading help module
         if (this.game3Board) {
           this.game3Board.isPaused = true;
         }
         this.audio.pauseGameSounds(this.currentState);
       } else {
-        // Back to gamepaly
+        // CRITICAL: Restore status to 'playing' when closing
+        if (this.dataLogger) {
+          this.dataLogger.updateStatus('playing');
+        }
+
+        // Back to gameplay
         if (this.game3Board) {
           this.game3Board.isPaused = false;
         }
@@ -5010,13 +5225,15 @@ class GameFlowController {
       <div class="login-screen">
         <h1>Deiseil!</h1>
         <p>Cluicheadair: ${this.participantCode}</p>
-        <div class="game-complete-emoji">🦞</div>
-        <p class="game-complete-score">Puingean: ${this.totalPoints} Giomaich</p>
+        <p class="game-complete-score">Puingean: ${this.totalPoints}</p>
         <p class="game-complete-message">Ceud taing airson an geama seo a' chluich, tha na puingean agad air a' shàbhaladh.</p>
-        <button class="play-button" onclick="location.reload()">Cluich a-rithist!</button>
+        <button class="play-button" style="background: #4caf50;" onclick="location.reload()">DEISEIL</button>
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
   }
 }
 
@@ -5029,8 +5246,23 @@ let gameController;
 
 // Start the game once the page has finished loading
 document.addEventListener('DOMContentLoaded', () => {
-  gameController = new GameFlowController();
-  gameController.setGameFlowState('LOGIN');  // show the login screen first
+  try {
+    console.log('Initializing game...');
+    gameController = new GameFlowController();
+    console.log('GameFlowController created successfully');
+    gameController.setGameFlowState('LOGIN');  // show the login screen first
+    console.log('Login screen should now be visible');
+  } catch (error) {
+    console.error('CRITICAL ERROR during game initialization:', error);
+    document.getElementById('game-container').innerHTML = `
+      <div style="padding: 40px; text-align: center; font-family: Arial;">
+        <h1 style="color: red;">Mearachd / Error</h1>
+        <p>Failed to initialize game: ${error.message}</p>
+        <p style="font-size: 12px; color: #666;">${error.stack}</p>
+        <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 20px;">Reload Page</button>
+      </div>
+    `;
+  }
 });
 
 // Re-render the hex grid if the window is resized during Game 1
