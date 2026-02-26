@@ -7,6 +7,8 @@ class GiomachVoice {
   constructor(audioManager) {
     this.audioManager = audioManager;
     this.currentAudio = null;
+    this.audioContext = null;
+    this.gainNode = null;
 
     // Map lobster messages to audio files
     this.audioMap = {
@@ -38,11 +40,12 @@ class GiomachVoice {
     // Base volume for most recordings (85%)
     this.baseVolume = 0.85;
 
-    // Volume boosts for specific quiet recordings (+50% = capped at 100%)
+    // Volume boosts for specific quiet recordings
+    // Using Web Audio API gain - can exceed 100% (1.5 = 150%)
     this.volumeBoosts = {
-      'aidh aidh': 1.0,
-      'Seo nis': 1.0,
-      'Dè fo ghrian?': 1.0
+      'aidh aidh': 1.5,        // 150% volume boost
+      'Seo nis': 1.0,          // 100% standard
+      'Dè fo ghrian?': 1.5     // 150% volume boost
     };
   }
 
@@ -66,26 +69,37 @@ class GiomachVoice {
     }
 
     // URL-encode the filename to handle special characters like "?" and "ò"
-    const encodedFilename = encodeURIComponent(filename);
+    // Use NFD normalization for macOS filesystem compatibility (ò = o + combining accent)
+    const normalizedFilename = filename.normalize('NFD');
+    const encodedFilename = encodeURIComponent(normalizedFilename);
     const audioPath = this.basePath + encodedFilename;
-
-    // Extra debugging for "Oh bhròinean..." which has special character ò
-    if (message === 'Oh bhròinean...') {
-      console.log(`DEBUGGING Oh bhròinean:`);
-      console.log(`  Original filename: "${filename}"`);
-      console.log(`  Encoded filename: "${encodedFilename}"`);
-      console.log(`  Full path: "${audioPath}"`);
-    }
 
     console.log(`Playing lobster voice: "${message}" -> ${audioPath}`);
 
     this.currentAudio = new Audio(audioPath);
 
-    // Apply volume boost if specified, otherwise use base volume
-    const volume = this.volumeBoosts[message] || this.baseVolume;
-    this.currentAudio.volume = volume;
+    // Determine gain level (can exceed 1.0 with Web Audio API)
+    const gainLevel = this.volumeBoosts[message] || this.baseVolume;
 
-    console.log(`Volume for "${message}": ${this.currentAudio.volume} (boosted: ${!!this.volumeBoosts[message]})`);
+    // If gain > 1.0, use Web Audio API for boost beyond 100%
+    if (gainLevel > 1.0) {
+      // Initialize audio context on first use (requires user interaction)
+      if (!this.audioContext) {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      // Create gain node for volume boost
+      const source = this.audioContext.createMediaElementSource(this.currentAudio);
+      this.gainNode = this.audioContext.createGain();
+      this.gainNode.gain.value = gainLevel;
+      source.connect(this.gainNode).connect(this.audioContext.destination);
+
+      console.log(`Volume for "${message}": ${gainLevel} (Web Audio API boost)`);
+    } else {
+      // Standard volume (≤100%)
+      this.currentAudio.volume = gainLevel;
+      console.log(`Volume for "${message}": ${gainLevel} (standard)`);
+    }
 
     this.currentAudio.addEventListener('error', (e) => {
       console.error(`Lobster audio playback error for "${message}":`, e);
@@ -112,6 +126,12 @@ class GiomachVoice {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       this.currentAudio = null;
+    }
+
+    // Clean up gain node
+    if (this.gainNode) {
+      this.gainNode.disconnect();
+      this.gainNode = null;
     }
   }
 
