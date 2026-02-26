@@ -4036,14 +4036,19 @@ class GameFlowController {
     this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
 
     // Initialize Firebase data logger (non-blocking - game continues even if logging fails)
-    try {
-      console.log('Initializing DataLogger for participant:', code);
-      this.dataLogger = new window.DataLogger(code);
-      await this.dataLogger.init();
-      console.log('DataLogger initialized successfully');
-    } catch (error) {
-      console.warn('DataLogger initialization failed (game will continue without logging):', error);
-      this.dataLogger = null;  // Disable logging but allow game to proceed
+    if (window.DataLogger && window.firebaseDb) {
+      try {
+        console.log('Initializing DataLogger for participant:', code);
+        this.dataLogger = new window.DataLogger(code);
+        await this.dataLogger.init();
+        console.log('DataLogger initialized successfully');
+      } catch (error) {
+        console.warn('DataLogger initialization failed (game will continue without logging):', error);
+        this.dataLogger = null;  // Disable logging but allow game to proceed
+      }
+    } else {
+      console.warn('Firebase or DataLogger not available - continuing without logging');
+      this.dataLogger = null;
     }
 
     // Continue to game intro
