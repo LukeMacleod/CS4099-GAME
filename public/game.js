@@ -4003,10 +4003,15 @@ class GameFlowController {
 
   // Handles participant/teacher code login with Firebase authentication
   async handleLoginSubmit() {
+    console.log('=== LOGIN SUBMIT CALLED ===');
     const input = document.getElementById('participant-code');
-    if (!input) return;
+    if (!input) {
+      console.error('Input not found!');
+      return;
+    }
 
     const code = input.value.trim().toUpperCase();
+    console.log('Code entered:', code);
 
     if (!code) {
       alert('Feuch gun cuir thu a-steach an còd ceart agad!');
@@ -4031,11 +4036,18 @@ class GameFlowController {
       return;
     }
 
+    console.log('=== STARTING PARTICIPANT FLOW ===');
+
     // Participant flow
     this.participantCode = code;
     this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
+    console.log('Participant code set:', this.participantCode);
 
     // Initialize Firebase data logger (non-blocking - game continues even if logging fails)
+    console.log('Checking Firebase availability...');
+    console.log('window.DataLogger:', typeof window.DataLogger);
+    console.log('window.firebaseDb:', typeof window.firebaseDb);
+
     if (window.DataLogger && window.firebaseDb) {
       try {
         console.log('Initializing DataLogger for participant:', code);
@@ -4052,7 +4064,9 @@ class GameFlowController {
     }
 
     // Continue to game intro
+    console.log('=== CALLING setGameFlowState(RUAIRIDH_INTRO) ===');
     this.setGameFlowState('RUAIRIDH_INTRO');
+    console.log('=== setGameFlowState COMPLETED ===');
   }
 
   // ----------------------------------------------------------
