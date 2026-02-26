@@ -7,8 +7,6 @@ class GiomachVoice {
   constructor(audioManager) {
     this.audioManager = audioManager;
     this.currentAudio = null;
-    this.audioContext = null;
-    this.gainNode = null;
 
     // Map lobster messages to audio files
     this.audioMap = {
@@ -40,12 +38,11 @@ class GiomachVoice {
     // Base volume for most recordings (85%)
     this.baseVolume = 0.85;
 
-    // Volume boosts for specific quiet recordings
-    // Using Web Audio API gain - can exceed 100% (1.5 = 150%)
+    // Volume boosts for specific quiet recordings (capped at 100%)
     this.volumeBoosts = {
-      'aidh aidh': 1.5,        // 150% volume boost
+      'aidh aidh': 1.0,        // 100% (max browser allows)
       'Seo nis': 1.0,          // 100% standard
-      'Dè fo ghrian?': 1.5     // 150% volume boost
+      'Dè fo ghrian?': 1.0     // 100% (max browser allows)
     };
   }
 
@@ -78,28 +75,11 @@ class GiomachVoice {
 
     this.currentAudio = new Audio(audioPath);
 
-    // Determine gain level (can exceed 1.0 with Web Audio API)
-    const gainLevel = this.volumeBoosts[message] || this.baseVolume;
+    // Set volume (capped at 100% - browser limit)
+    const volume = this.volumeBoosts[message] || this.baseVolume;
+    this.currentAudio.volume = volume;
 
-    // If gain > 1.0, use Web Audio API for boost beyond 100%
-    if (gainLevel > 1.0) {
-      // Initialize audio context on first use (requires user interaction)
-      if (!this.audioContext) {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
-
-      // Create gain node for volume boost
-      const source = this.audioContext.createMediaElementSource(this.currentAudio);
-      this.gainNode = this.audioContext.createGain();
-      this.gainNode.gain.value = gainLevel;
-      source.connect(this.gainNode).connect(this.audioContext.destination);
-
-      console.log(`Volume for "${message}": ${gainLevel} (Web Audio API boost)`);
-    } else {
-      // Standard volume (≤100%)
-      this.currentAudio.volume = gainLevel;
-      console.log(`Volume for "${message}": ${gainLevel} (standard)`);
-    }
+    console.log(`Volume for "${message}": ${volume}`);
 
     this.currentAudio.addEventListener('error', (e) => {
       console.error(`Lobster audio playback error for "${message}":`, e);
@@ -126,12 +106,6 @@ class GiomachVoice {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       this.currentAudio = null;
-    }
-
-    // Clean up gain node
-    if (this.gainNode) {
-      this.gainNode.disconnect();
-      this.gainNode = null;
     }
   }
 
