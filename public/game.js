@@ -4015,13 +4015,13 @@ class GameFlowController {
 
     // Simple client-side validation
     const participantPattern = /^P-([0-9]|[1-4][0-9]|50)$/;  // P-0 to P-50
-    const teacherPattern = /^T-(0[1-9]|10)$/;  // T-01 to T-10
+    const teacherPattern = /^T-([1-9]|10)$/;  // T-1 to T-10 (no leading zeros)
 
     const isParticipant = participantPattern.test(code);
     const isTeacher = teacherPattern.test(code);
 
     if (!isParticipant && !isTeacher) {
-      alert('Còd mì-dhligheach!\n\nFeumaidh an còd a bhith san fhoirm:\nP-0 gu P-50 (com-pàirtichean)\nno T-01 gu T-10 (tidsearan)');
+      alert('Còd mì-dhligheach!\n\nFeumaidh an còd a bhith san fhoirm:\nP-0 gu P-50 (com-pàirtichean)\nno T-1 gu T-10 (tidsearan)');
       return;
     }
 
