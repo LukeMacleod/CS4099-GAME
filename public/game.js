@@ -2056,10 +2056,10 @@ class Game3FishingGame {
     this.fishNames = {
       shrimp: "Carran", crubag: "Crùbag", giomach_side: "Giomach",
       banag_beag: "Banag Beag", banag_mor: "Banag Mòr", creachann: "Creachann",
-      stroilleag: "Stroilleag", creagag: "Creagag",
+      stroilleag: "Stròilleag", creagag: "Creagag",
       cuiteag: "Cuiteag", cudan: "Cùdan", bradan: "Bradan", leobag: "Leòbag",
       breac_geal: "Breac Geal", iasg_galldach: "Sgeit", breac_garbh: "Breac Garbh",
-      trosg: "Trosg", cat_mara: "Cat-mara", manach: "Manach",
+      trosg: "Trosg", cat_mara: "Cat-mara", manach: "Mànach",
       muc_mara: "Muc-mhara", tuna: "Tùna"
     };
   }
