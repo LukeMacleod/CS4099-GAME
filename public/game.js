@@ -4857,8 +4857,34 @@ class GameFlowController {
           </div>
           <div class="game2-tutorial-cards-section">
             <div class="tutorial-card-grid">
-              <div class="tutorial-card"><div class="tutorial-card-inner"><div class="tutorial-card-face"><img src="./svgs/game-2/tweeds/tweed-${tweed1}.svg" alt="Card back" /></div></div></div>
-              <div class="tutorial-card"><div class="tutorial-card-inner"><div class="tutorial-card-face"><img src="./svgs/game-2/tweeds/tweed-${tweed2}.svg" alt="Card back" /></div></div></div>
+              <!-- First Sgadan card -->
+              <div class="tutorial-demo-card" id="tutorial-card-1">
+                <div class="card-inner">
+                  <!-- Back of card - tweed pattern -->
+                  <div class="card-face card-back">
+                    <img src="./svgs/game-2/tweeds/tweed-${tweed1}.svg" alt="Cùl na cairt" />
+                  </div>
+                  <!-- Front of card - Sgadan (herring) -->
+                  <div class="card-face card-front">
+                    <img src="./svgs/game-2/card-items/herring.svg" alt="Sgadan" class="card-image" />
+                    <div class="card-label">Sgadan</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Second Sgadan card (matching pair) -->
+              <div class="tutorial-demo-card" id="tutorial-card-2">
+                <div class="card-inner">
+                  <!-- Back of card - tweed pattern -->
+                  <div class="card-face card-back">
+                    <img src="./svgs/game-2/tweeds/tweed-${tweed2}.svg" alt="Cùl na cairt" />
+                  </div>
+                  <!-- Front of card - Sgadan (herring) -->
+                  <div class="card-face card-front">
+                    <img src="./svgs/game-2/card-items/herring.svg" alt="Sgadan" class="card-image" />
+                    <div class="card-label">Sgadan</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -4877,6 +4903,17 @@ class GameFlowController {
         btn.style.backgroundColor = '#4CAF50';
       }
     });
+
+    // Automatically flip the tutorial cards after 1.5 seconds to demonstrate
+    setTimeout(() => {
+      const card1 = document.getElementById('tutorial-card-1');
+      const card2 = document.getElementById('tutorial-card-2');
+      if (card1) card1.classList.add('flipped');
+      // Flip second card slightly after first for staggered effect
+      setTimeout(() => {
+        if (card2) card2.classList.add('flipped');
+      }, 300);
+    }, 1500);
   }
 
   // ----------------------------------------------------------
