@@ -2075,8 +2075,9 @@ class Game3FishingGame {
     return {
       // ===== SHALLOW ZONE (0-45 seconds) =====
       // Balanced by size: smaller = slower, bigger = faster
-      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'L', basePoints: 1, speed: 12.0, size: 85, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
-      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 7.0, size: 115, spawnWeight: 4, isValid: true },
+      // ALL ITEMS MINIMUM 100px for easy finger tapping
+      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'L', basePoints: 1, speed: 12.0, size: 105, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
+      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 7.0, size: 120, spawnWeight: 4, isValid: true },
       giomach_side: { id: 'giomach_side', svg: './svgs/game-3/game-3-fish/giomach-side-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 10.0, size: 170, spawnWeight: 3, isValid: true },
       banag_beag: { id: 'banag_beag', svg: './svgs/game-3/game-3-fish/bànag beag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 155, spawnWeight: 4, isDarting: true, isValid: true },
       banag_mor: { id: 'banag_mor', svg: './svgs/game-3/game-3-fish/bànag mòr-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 175, spawnWeight: 3, isDarting: true, isValid: true },
@@ -2087,12 +2088,13 @@ class Game3FishingGame {
       // ===== GARBAGE ITEMS =====
       // These float around and the player should catch them for extra points
       // isValid: false means catching these is wrong
-      garbage_bag: { id: 'garbage_bag', svg: './svgs/game-3/game-3-garbage/garbage-bag-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 100, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bag: { id: 'plastic_bag', svg: './svgs/game-3/game-3-garbage/plastic bag.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 18.0, size: 90, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bottle_1: { id: 'plastic_bottle_1', svg: './svgs/game-3/game-3-garbage/plastic-bottle-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 80, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bottle_2: { id: 'plastic_bottle_2', svg: './svgs/game-3/game-3-garbage/plastic bottle-2.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 17.0, size: 85, spawnWeight: 2, isFloater: true, isValid: false },
-      straw: { id: 'straw', svg: './svgs/game-3/game-3-garbage/straw.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 20.0, size: 70, spawnWeight: 1, isFloater: true, isValid: false },
-      welly: { id: 'welly', svg: './svgs/game-3/game-3-garbage/welly-either.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 100, spawnWeight: 1, isFloater: true, isValid: false },
+      // ALL ITEMS MINIMUM 100px for easy finger tapping
+      garbage_bag: { id: 'garbage_bag', svg: './svgs/game-3/game-3-garbage/garbage-bag-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 110, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bag: { id: 'plastic_bag', svg: './svgs/game-3/game-3-garbage/plastic bag.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 18.0, size: 105, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bottle_1: { id: 'plastic_bottle_1', svg: './svgs/game-3/game-3-garbage/plastic-bottle-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 100, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bottle_2: { id: 'plastic_bottle_2', svg: './svgs/game-3/game-3-garbage/plastic bottle-2.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 17.0, size: 100, spawnWeight: 2, isFloater: true, isValid: false },
+      straw: { id: 'straw', svg: './svgs/game-3/game-3-garbage/straw.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 20.0, size: 100, spawnWeight: 1, isFloater: true, isValid: false },
+      welly: { id: 'welly', svg: './svgs/game-3/game-3-garbage/welly-either.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 110, spawnWeight: 1, isFloater: true, isValid: false },
 
       // ===== MID-DEPTH ZONE (45-90 seconds) =====
       // Bigger fish get faster speeds
@@ -2659,10 +2661,9 @@ class Game3FishingGame {
     fish.style.height = `${fishSize}px`;
     fish.style.transform = 'scale(1)';
 
-    // GENEROUS hitbox padding to make touch/tap more forgiving
-    // Especially important for children and touch screens
-    // Give 20-40px of extra clickable area based on fish size
-    const paddingSize = Math.max(20, Math.min(40, fishSize * 0.15));
+    // Hitbox padding based on fish size to reduce finger errors
+    // Also made it easier for children
+    const paddingSize = Math.max(5, Math.min(15, fishSize * 0.05));
     fish.style.padding = `${paddingSize}px`;
     fish.style.margin = `-${paddingSize}px`;
 
@@ -2977,15 +2978,15 @@ class Game3FishingGame {
       // Regular fish movement (frame-rate independent)
       fish.x += fish.speed * this.deltaTime;
 
-      // Realistic swimming motion
+      // Realistic swimming motion - STRONGER oscillation for more realistic swimming
       if (fish.isWavy) {
         // Squid/octopus - dramatic wavy movement
         fish.wavyOffset += 0.15 * this.deltaTime;
-        fish.y += Math.sin(fish.wavyOffset) * 3.5 * this.deltaTime;
+        fish.y += Math.sin(fish.wavyOffset) * 6.0 * this.deltaTime;  // Increased from 3.5 to 6.0
       } else {
-        // Natural swimming - subtle up/down bobbing
+        // Natural swimming - enhanced up/down bobbing
         fish.wavyOffset += 0.08 * this.deltaTime;
-        fish.y += Math.sin(fish.wavyOffset) * 1.2 * this.deltaTime;
+        fish.y += Math.sin(fish.wavyOffset) * 2.5 * this.deltaTime;  // Increased from 1.2 to 2.5
       }
 
       // Clamp Y position to prevent fish from going off-screen (top or bottom)
