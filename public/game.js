@@ -2109,8 +2109,8 @@ class Game3FishingGame {
       // ===== DEEP ZONE (90-135 seconds) =====
       // Larger fish faster, smaller fish slower (increased by ~20%)
       // Bradan (SALMON) - "Cho luath ris a' bhradan" (As fast as a salmon)
-      // The star! 5 points, DOUBLED SPEED - truly the fastest!
-      bradan: { id: 'bradan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 5, speed: 40.0, size: 440, spawnWeight: 3, isWavy: true, isValid: true, maxOnScreen: 1 },
+      // The star! 5 points, 60% faster than original - truly the fastest!
+      bradan: { id: 'bradan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 5, speed: 32.0, size: 440, spawnWeight: 3, isWavy: true, isValid: true, maxOnScreen: 1 },
       trosg: { id: 'trosg', svg: './svgs/game-3/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 18.0, size: 220, spawnWeight: 4, isValid: true },
       cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 19.0, size: 230, spawnWeight: 3, isValid: true },
       manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 19.0, size: 250, spawnWeight: 3, isValid: true },
