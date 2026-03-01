@@ -1990,6 +1990,7 @@ class Game3FishingGame {
 
     // ===== FISH SPAWNING =====
     this.activeFish = [];      // array of fish CURRENTLY swimming on screen
+    this.fishPositionHistory = [];  // "GHOST TAP" DETECTION - recent fish positions (last 400ms)
     this.lastSpawnTime = 0;
     this.spawnInterval = 400;  // milliseconds between spawns
     this.maxFish = 8;          // dont want too many fish cluttering the screen
@@ -2075,9 +2076,9 @@ class Game3FishingGame {
     return {
       // ===== SHALLOW ZONE (0-45 seconds) =====
       // Balanced by size: smaller = slower, bigger = faster
-      // ALL ITEMS MINIMUM 100px for easy finger tapping
-      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'L', basePoints: 1, speed: 12.0, size: 105, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
-      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 7.0, size: 120, spawnWeight: 4, isValid: true },
+      // SHRIMP ENLARGED: 130px minimum for reliable tapping (especially at screen edges!)
+      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'L', basePoints: 1, speed: 12.0, size: 130, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
+      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 7.0, size: 130, spawnWeight: 4, isValid: true },
       giomach_side: { id: 'giomach_side', svg: './svgs/game-3/game-3-fish/giomach-side-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 10.0, size: 170, spawnWeight: 3, isValid: true },
       banag_beag: { id: 'banag_beag', svg: './svgs/game-3/game-3-fish/bànag beag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 155, spawnWeight: 4, isDarting: true, isValid: true },
       banag_mor: { id: 'banag_mor', svg: './svgs/game-3/game-3-fish/bànag mòr-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 175, spawnWeight: 3, isDarting: true, isValid: true },
@@ -2718,6 +2719,26 @@ class Game3FishingGame {
 
     const canvasRect = canvas.getBoundingClientRect();
 
+    // GHOST TAP: Record current fish positions for temporal proximity detection
+    // Allows tapping where a fish WAS recently (last 400ms)
+    const now = Date.now();
+    this.activeFish
+      .filter(f => !f.caught)
+      .forEach(fish => {
+        this.fishPositionHistory.push({
+          fish: fish,
+          x: fish.x,
+          y: fish.y,
+          size: fish.data.size,
+          timestamp: now
+        });
+      });
+
+    // Clean up old history (older than 400ms)
+    this.fishPositionHistory = this.fishPositionHistory.filter(
+      entry => now - entry.timestamp < 400
+    );
+
     for (let i = this.activeFish.length - 1; i >= 0; i--) {
       const fish = this.activeFish[i];
 
@@ -3034,8 +3055,9 @@ class Game3FishingGame {
   }
 
   /**
-   * PROXIMITY TAP DETECTION
+   * PROXIMITY TAP DETECTION + GHOST TAP (temporal forgiveness)
    * Handles clicks on the canvas - checks if tap is NEAR any fish
+   * Also checks if tap is where a fish WAS recently (last 400ms)
    * Makes the game much more forgiving for touch screens and children
    */
   handleCanvasClick(event) {
@@ -3049,7 +3071,7 @@ class Game3FishingGame {
     // GENEROUS proximity radius - 80px means tap can be 80px away from fish center
     const PROXIMITY_RADIUS = 80;
 
-    // Find all fish within proximity radius
+    // STEP 1: Check CURRENT fish positions first
     const nearbyFish = this.activeFish
       .filter(fish => !fish.caught)
       .map(fish => {
@@ -3063,7 +3085,7 @@ class Game3FishingGame {
           Math.pow(clickY - fishCenterY, 2)
         );
 
-        return { fish, distance };
+        return { fish, distance, isGhost: false };
       })
       .filter(item => item.distance <= PROXIMITY_RADIUS)
       .sort((a, b) => a.distance - b.distance); // Closest first
@@ -3073,6 +3095,38 @@ class Game3FishingGame {
       const closestFish = nearbyFish[0].fish;
       console.log(`Proximity tap detected! Distance: ${Math.round(nearbyFish[0].distance)}px from ${closestFish.data.id}`);
       this.catchFish(closestFish);
+      return; // Done!
+    }
+
+    // STEP 2: GHOST TAP - Check if tap is where a fish WAS recently (last 400ms)
+    // This is CRITICAL for fast-moving small fish like shrimp!
+    const ghostFish = this.fishPositionHistory
+      .map(entry => {
+        const fishCenterX = entry.x + (entry.size / 2);
+        const fishCenterY = entry.y + (entry.size / 2);
+
+        const distance = Math.sqrt(
+          Math.pow(clickX - fishCenterX, 2) +
+          Math.pow(clickY - fishCenterY, 2)
+        );
+
+        const age = Date.now() - entry.timestamp; // How long ago was fish here?
+        return { fish: entry.fish, distance, age, isGhost: true };
+      })
+      .filter(item => item.distance <= PROXIMITY_RADIUS)
+      .sort((a, b) => {
+        // Prefer NEWER ghost positions (lower age) if distances are similar
+        if (Math.abs(a.distance - b.distance) < 20) {
+          return a.age - b.age; // Newer first
+        }
+        return a.distance - b.distance; // Otherwise closest first
+      });
+
+    // If we found a ghost position, catch that fish!
+    if (ghostFish.length > 0 && !ghostFish[0].fish.caught) {
+      const ghostHit = ghostFish[0];
+      console.log(`🎯 GHOST TAP! Caught ${ghostHit.fish.data.id} ${ghostHit.age}ms after it was there (${Math.round(ghostHit.distance)}px away)`);
+      this.catchFish(ghostHit.fish);
     }
   }
 
