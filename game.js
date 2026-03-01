@@ -2074,14 +2074,14 @@ class Game3FishingGame {
     return {
       // ===== SHALLOW ZONE (0-45 seconds) =====
       // Small creatures near the shore
-      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'L', basePoints: 1, speed: 8.0, size: 85, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
-      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 4.5, size: 115, spawnWeight: 4, isValid: true },
-      giomach_side: { id: 'giomach_side', svg: './svgs/game-3/game-3-fish/giomach-side-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 4.0, size: 170, spawnWeight: 3, isValid: true },
-      banag_beag: { id: 'banag_beag', svg: './svgs/game-3/game-3-fish/bànag beag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 5.5, size: 155, spawnWeight: 4, isDarting: true, isValid: true },
-      banag_mor: { id: 'banag_mor', svg: './svgs/game-3/game-3-fish/bànag mòr-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 5.5, size: 175, spawnWeight: 3, isDarting: true, isValid: true },
-      creachann: { id: 'creachann', svg: './svgs/game-3/game-3-fish/creachann.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 2, speed: 3.0, size: 110, spawnWeight: 2, isValid: true },
-      stroilleag: { id: 'stroilleag', svg: './svgs/game-3/game-3-fish/stròilleag.svg', zone: 'SHALLOW', direction: 'UP', basePoints: 2, speed: 5.0, size: 185, spawnWeight: 3, isMultiDirectional: true, isValid: true },
-      creagag: { id: 'creagag', svg: './svgs/game-3/game-3-fish/creagag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 5.0, size: 120, spawnWeight: 3, isValid: true },
+      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'L', basePoints: 1, speed: 16.0, size: 85, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
+      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 9.0, size: 115, spawnWeight: 4, isValid: true },
+      giomach_side: { id: 'giomach_side', svg: './svgs/game-3/game-3-fish/giomach-side-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 8.0, size: 170, spawnWeight: 3, isValid: true },
+      banag_beag: { id: 'banag_beag', svg: './svgs/game-3/game-3-fish/bànag beag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 155, spawnWeight: 4, isDarting: true, isValid: true },
+      banag_mor: { id: 'banag_mor', svg: './svgs/game-3/game-3-fish/bànag mòr-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 175, spawnWeight: 3, isDarting: true, isValid: true },
+      creachann: { id: 'creachann', svg: './svgs/game-3/game-3-fish/creachann.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 2, speed: 6.0, size: 110, spawnWeight: 2, isValid: true },
+      stroilleag: { id: 'stroilleag', svg: './svgs/game-3/game-3-fish/stròilleag.svg', zone: 'SHALLOW', direction: 'UP', basePoints: 2, speed: 10.0, size: 185, spawnWeight: 3, isMultiDirectional: true, isValid: true },
+      creagag: { id: 'creagag', svg: './svgs/game-3/game-3-fish/creagag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 10.0, size: 120, spawnWeight: 3, isValid: true },
 
       // ===== GARBAGE ITEMS =====
       // These float around and the player should catch them for extra points
@@ -2095,23 +2095,23 @@ class Game3FishingGame {
 
       // ===== MID-DEPTH ZONE (45-90 seconds) =====
       // Medium sized fish
-      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 7.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
-      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 7.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
-      leobag: { id: 'leobag', svg: './svgs/game-3/game-3-fish/leòbag-L.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 6.0, size: 240, spawnWeight: 3, isValid: true },
-      breac_geal: { id: 'breac_geal', svg: './svgs/game-3/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 7.5, size: 270, spawnWeight: 3, isValid: true },
-      iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3/game-3-fish/sgeit.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 7.5, size: 280, spawnWeight: 3, isValid: true },
-      breac_garbh: { id: 'breac_garbh', svg: './svgs/game-3/game-3-fish/breac-garbh-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 7.0, size: 300, spawnWeight: 2, isValid: true },
+      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 14.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
+      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 14.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
+      leobag: { id: 'leobag', svg: './svgs/game-3/game-3-fish/leòbag-L.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 12.0, size: 240, spawnWeight: 3, isValid: true },
+      breac_geal: { id: 'breac_geal', svg: './svgs/game-3/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 15.0, size: 270, spawnWeight: 3, isValid: true },
+      iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3/game-3-fish/sgeit.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 15.0, size: 280, spawnWeight: 3, isValid: true },
+      breac_garbh: { id: 'breac_garbh', svg: './svgs/game-3/game-3-fish/breac-garbh-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 14.0, size: 300, spawnWeight: 2, isValid: true },
 
       // ===== DEEP ZONE (90-135 seconds) =====
       // Big fish
       // Bradan (SALMON) - "Cho luath ris a' bhradan" (As fast as a salmon)
       // The star! 5 points, fastest fish!
-      bradan: { id: 'bradan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 5, speed: 10.0, size: 440, spawnWeight: 0, isWavy: true, isValid: true, maxOnScreen: 1 },
-      trosg: { id: 'trosg', svg: './svgs/game-3/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 8.5, size: 220, spawnWeight: 4, isValid: true },
-      cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 9.0, size: 230, spawnWeight: 3, isValid: true },
-      manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 8.0, size: 250, spawnWeight: 3, isValid: true },
-      muc_mara: { id: 'muc_mara', svg: './svgs/game-3/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 7.5, size: 280, spawnWeight: 2, isValid: true },
-      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 4, speed: 10.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 165 }
+      bradan: { id: 'bradan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 5, speed: 20.0, size: 440, spawnWeight: 0, isWavy: true, isValid: true, maxOnScreen: 1 },
+      trosg: { id: 'trosg', svg: './svgs/game-3/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 17.0, size: 220, spawnWeight: 4, isValid: true },
+      cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 18.0, size: 230, spawnWeight: 3, isValid: true },
+      manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 16.0, size: 250, spawnWeight: 3, isValid: true },
+      muc_mara: { id: 'muc_mara', svg: './svgs/game-3/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 15.0, size: 280, spawnWeight: 2, isValid: true },
+      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 4, speed: 20.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 165 }
     };
   }
 
