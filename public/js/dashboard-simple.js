@@ -205,6 +205,7 @@ function getActivityLabel(currentGame) {
   const normalizedState = (currentGame || '').toLowerCase().trim();
 
   const stateLabels = {
+    'intro': 'Toiseach',
     'login': 'Logadh a-steach',
     'ruairidh_intro': 'Fàilte le Ruairidh',
     'pregame_tutorial': 'Oideachadh: Sgrìn',
