@@ -8,24 +8,24 @@ class RuairidhVoice {
     this.audioManager = audioManager;
     this.currentAudio = null;
     this.audioMap = {
-      'RUAIRIDH_INTRO': 'R1 - Halo is mise Ruairidh an Ròn.mp3',
-      'LAYOUT_SOUND': 'R2 - Seo am putan airson an fhuaim a chur.mp3',
-      'LAYOUT_PAUSE': 'R3 - Ma tha thu ag iarraidh stad a chur air a gheama.mp3',
-      'LAYOUT_HELP': 'R4 - Seo am putan airson barrachd fiosrachadh fhaighinn.mp3',
-      'LAYOUT_CAIRN': 'R5 - Nise tha mise a\' cumail sùil air na puingean.mp3',
-      'LAYOUT_READY': 'R6 - A chiad gheama a chluicheas sinn \'s e glad an giomach.mp3',
-      'GAME1_TUT_STEP1': 'R7 - Fàilte dhan tràigh a charaid.mp3',
-      'GAME1_TUT_STEP1B': 'R8 - \'S fìor thoil leam giomaich, ach tha iad cho.mp3',
-      'GAME1_TUT_STEP2': 'R9 - Ri mo thaobh chì thu giomach agus blocaichean.mp3',
-      'GAME1_TUT_STEP3': 'R10 - Nuair a bhrùthas tu air…càirn agad.mp3',
-      'GAME1_TUT_STEP4': 'R11 - Cuimhnich, tha na giomaich…steall ort!.mp3',
-      'GAME2_READY': 'R-12 Tapadh leibh airson…an ath gheama?.mp3',
-      'GAME2_TUT_STEP1': 'R-13 Anns an geama seo…tràigh neo aig muir.mp3',
-      'GAME2_TUT_STEP2': 'R-14 Bidh pìosan clò Hearaich - a dheanmah asta..mp3',
-      'GAME3_READY': 'R-15 - \'S e an ath gheama cho luath ris a bhradan…innis mi barrachd dhuibh.mp3',
-      'GAME3_TUT_STEP0': 'R-16 - Bidh mise…t-iasg a tha mi ag iarraidh.mp3',
-      'GAME3_TUT_STEP1': 'R-17 - Ma gheibh sibh…gheibh sibh puingean.mp3',
-      'GAME3_TUT_STEP2': 'R-18 - Cùm do shùil…puingean cuideachd!.mp3'
+      'RUAIRIDH_INTRO': 'ruairidh-1.m4a',
+      'LAYOUT_SOUND': 'ruairidh-2.m4a',
+      'LAYOUT_PAUSE': 'ruairidh-3.m4a',
+      'LAYOUT_HELP': 'ruairidh-4.m4a',
+      'LAYOUT_CAIRN': 'ruairidh-5.m4a',
+      'LAYOUT_READY': 'ruairidh-6.m4a',
+      'GAME1_TUT_STEP1': 'ruairidh-7.m4a',
+      'GAME1_TUT_STEP1B': 'ruairidh-8.m4a',
+      'GAME1_TUT_STEP2': 'ruairidh-9.m4a',
+      'GAME1_TUT_STEP3': 'ruairidh-10.m4a',
+      'GAME1_TUT_STEP4': 'ruairidh-11.m4a',
+      'GAME2_READY': 'ruairidh-12.m4a',
+      'GAME2_TUT_STEP1': 'ruairidh-13.m4a',
+      'GAME2_TUT_STEP2': 'ruairidh-14.m4a',
+      'GAME3_READY': 'ruairidh-15.m4a',
+      'GAME3_TUT_STEP0': 'ruairidh-16.m4a',
+      'GAME3_TUT_STEP1': 'ruairidh-17.m4a',
+      'GAME3_TUT_STEP2': 'ruairidh-18.m4a'
     };
 
     this.basePath = './music/voice-recordings/ruairidh/';
@@ -56,6 +56,7 @@ class RuairidhVoice {
       return;
     }
 
+    // Build audio path - browser handles special characters automatically
     const audioPath = this.basePath + filename;
     console.log(`Playing Ruairidh voice: ${dialogKey} -> ${audioPath}`);
     this.currentAudio = new Audio(audioPath);
@@ -70,7 +71,7 @@ class RuairidhVoice {
       this.handleAudioEnd();
     });
 
-    this.currentAudio.volume = 1.0; // Ensure volume is set
+    this.currentAudio.volume = 0.4; // Set to 40% volume for comfortable listening
 
     this.currentAudio.play().then(() => {
       console.log(`Successfully started playing: ${dialogKey}`);
@@ -117,23 +118,7 @@ class RuairidhVoice {
         max-width: 500px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.3);
       ">
-        <h2 style="margin: 0 0 20px 0; color: #2c3e50;">🔊 Èist ri Ruairidh</h2>
-        <p style="margin: 0 0 30px 0; font-size: 18px; color: #555;">
-          Briog an seo airson fuaim Ruairidh a chluinntinn!<br>
-          <span style="font-size: 14px; color: #888;">Click here to hear Ruairidh's voice!</span>
-        </p>
-        <button style="
-          background: #4CAF50;
-          color: white;
-          border: none;
-          padding: 15px 40px;
-          font-size: 18px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: bold;
-        ">
-          Cluich Fuaim / Play Audio
-        </button>
+        <h2 style="margin: 0 0 20px 0; color: #2c3e50; font-size: 48px;">TÒISICH...</h2>
       </div>
     `;
 
@@ -167,6 +152,12 @@ class RuairidhVoice {
     const prompt = document.getElementById('audio-prompt-overlay');
     if (prompt) {
       document.body.removeChild(prompt);
+    }
+
+    // CRITICAL: Trigger callback to enable forward button
+    if (this.onAudioComplete) {
+      this.onAudioComplete();
+      this.onAudioComplete = null;
     }
   }
 

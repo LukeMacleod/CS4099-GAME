@@ -542,6 +542,33 @@ body {
   margin-right: 8px;
 }
 
+/* Game Badges for Help Panels */
+.game-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 6px;
+  color: white;
+  background: #6b7280;
+}
+
+.game-badge.game1 {
+  background: #60a5fa;
+  color: white;
+}
+
+.game-badge.game2 {
+  background: #3b82f6;
+  color: white;
+}
+
+.game-badge.game3 {
+  background: #1e40af;
+  color: white;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .dashboard-header {

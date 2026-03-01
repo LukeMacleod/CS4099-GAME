@@ -40,8 +40,8 @@ class DataLogger {
       throw error;
     }
 
-    // Start auto-sync every 10 seconds
-    this.syncInterval = setInterval(() => this.sync(), 10000);
+    // Start auto-sync every 5 seconds (balances real-time updates with Firestore limits)
+    this.syncInterval = setInterval(() => this.sync(), 5000);
   }
 
   // Debounced sync - prevents hitting 1 write/second limit
@@ -54,14 +54,17 @@ class DataLogger {
   updateGame(game) {
     this.state.currentGame = game;
     this.state.lastUpdate = new Date();
-    this.debouncedSync();
+    // CRITICAL: Sync immediately for state transitions (teachers see screen changes fast)
+    this.sync();
   }
 
   // Update status (playing, paused, help, idle, tutorial)
   updateStatus(status) {
     this.state.currentStatus = status;
     this.state.lastUpdate = new Date();
-    this.debouncedSync();
+    // CRITICAL: Sync immediately for status changes (not debounced)
+    // Teachers need to see pause/help status in real-time
+    this.sync();
   }
 
   // Add points to total and current game
@@ -73,6 +76,10 @@ class DataLogger {
     if (this.state.currentGame === 'game3') this.state.game3Points += points;
 
     this.state.lastUpdate = new Date();
+
+    // Sync points to Firestore with debounce (prevents too many writes)
+    // Points will sync within 500ms, ensuring dashboard updates quickly
+    this.debouncedSync();
   }
 
   // Update progress percentage (0-100)
@@ -98,6 +105,39 @@ class DataLogger {
       game: game
     });
     this.sync(); // Immediate sync for help requests
+  }
+
+  // Log sound toggle events
+  logSoundToggle(enabled) {
+    // Optional: track sound toggles if needed for research
+    console.log('Sound toggled:', enabled);
+  }
+
+  // Log state transitions (e.g., LOGIN -> RUAIRIDH_INTRO -> GAME1)
+  logStateTransition(oldState, newState) {
+    console.log('State transition:', oldState, '->', newState);
+    this.updateGame(newState.toLowerCase());
+  }
+
+  // Log game start events
+  logGameStart(gameNumber) {
+    console.log('Game started:', gameNumber);
+    this.updateStatus('playing');
+  }
+
+  // Log help requests
+  logHelpRequest(currentState, timeInGame) {
+    this.logHelpCuideachadh(currentState);
+  }
+
+  // Log points increment (batched)
+  logPointsIncrement(points) {
+    this.addPoints(points);
+  }
+
+  // Finalize session at game completion
+  async finalizeSession(data) {
+    await this.complete();
   }
 
   // Sync current state to Firestore
