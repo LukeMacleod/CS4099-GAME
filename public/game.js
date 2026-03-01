@@ -2127,6 +2127,10 @@ class Game3FishingGame {
       return;
     }
 
+    // PROXIMITY TAP DETECTION: Add canvas-wide click handler
+    // This catches taps that MISS the fish element but are NEAR it
+    this.canvasElement.addEventListener('click', (e) => this.handleCanvasClick(e));
+
     this.gameActive = true;
     this.timeRemaining = GAME_SETTINGS.TIMING.game3Duration;
     this.elapsedTime = 0;
@@ -2481,7 +2485,8 @@ class Game3FishingGame {
 
     // Scarcity mechanic: Sometimes skip spawning the fish Ruairidh wants
     // This stops the target fish from appearing constantly, making it more rewarding to catch
-    if (this.currentOrder && selectedFish.id === this.currentOrder.target) {
+    // EXCEPTION: Never skip bradan - it's too important and rare!
+    if (this.currentOrder && selectedFish.id === this.currentOrder.target && selectedFish.id !== 'bradan') {
       const timeSinceOrder = Date.now() - this.lastOrderChange;
 
       // Be generous at first (only skip 20%) so the player can find the fish
@@ -3025,6 +3030,49 @@ class Game3FishingGame {
       this.handleCorrectCatch(fishObj);
     } else {
       this.handleWrongCatch(fishObj);
+    }
+  }
+
+  /**
+   * PROXIMITY TAP DETECTION
+   * Handles clicks on the canvas - checks if tap is NEAR any fish
+   * Makes the game much more forgiving for touch screens and children
+   */
+  handleCanvasClick(event) {
+    const canvas = this.getCanvas();
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    // GENEROUS proximity radius - 80px means tap can be 80px away from fish center
+    const PROXIMITY_RADIUS = 80;
+
+    // Find all fish within proximity radius
+    const nearbyFish = this.activeFish
+      .filter(fish => !fish.caught)
+      .map(fish => {
+        // Calculate fish center position
+        const fishCenterX = fish.x + (fish.data.size / 2);
+        const fishCenterY = fish.y + (fish.data.size / 2);
+
+        // Calculate distance from tap to fish center
+        const distance = Math.sqrt(
+          Math.pow(clickX - fishCenterX, 2) +
+          Math.pow(clickY - fishCenterY, 2)
+        );
+
+        return { fish, distance };
+      })
+      .filter(item => item.distance <= PROXIMITY_RADIUS)
+      .sort((a, b) => a.distance - b.distance); // Closest first
+
+    // If we found nearby fish, catch the closest one
+    if (nearbyFish.length > 0) {
+      const closestFish = nearbyFish[0].fish;
+      console.log(`Proximity tap detected! Distance: ${Math.round(nearbyFish[0].distance)}px from ${closestFish.data.id}`);
+      this.catchFish(closestFish);
     }
   }
 
