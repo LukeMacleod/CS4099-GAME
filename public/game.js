@@ -2094,9 +2094,9 @@ class Game3FishingGame {
       welly: { id: 'welly', svg: './svgs/game-3/game-3-garbage/welly-either.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 100, spawnWeight: 1, isFloater: true, isValid: false },
 
       // ===== MID-DEPTH ZONE (45-90 seconds) =====
-      // Medium sized fish
-      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 14.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
-      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 14.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
+      // Medium sized fish - balanced speed for size
+      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
+      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
       leobag: { id: 'leobag', svg: './svgs/game-3/game-3-fish/leòbag-L.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 12.0, size: 240, spawnWeight: 3, isValid: true },
       breac_geal: { id: 'breac_geal', svg: './svgs/game-3/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 15.0, size: 270, spawnWeight: 3, isValid: true },
       iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3/game-3-fish/sgeit.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 15.0, size: 280, spawnWeight: 3, isValid: true },
