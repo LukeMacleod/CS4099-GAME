@@ -7,6 +7,7 @@ class RuairidhVoice {
   constructor(audioManager) {
     this.audioManager = audioManager;
     this.currentAudio = null;
+    this.preloadedAudio = new Map(); // Cache of preloaded audio elements
     this.audioMap = {
       'RUAIRIDH_INTRO': 'ruairidh-1.m4a',
       'LAYOUT_SOUND': 'ruairidh-2.m4a',
@@ -30,6 +31,29 @@ class RuairidhVoice {
 
     this.basePath = './music/voice-recordings/ruairidh/';
     this.onAudioComplete = null;
+
+    // Preload all audio files for instant playback
+    this.preloadAllAudio();
+  }
+
+  /**
+   * Preload all Ruairidh audio files to eliminate loading delays
+   */
+  preloadAllAudio() {
+    console.log('Preloading all Ruairidh audio files...');
+
+    Object.entries(this.audioMap).forEach(([dialogKey, filename]) => {
+      const audioPath = this.basePath + filename;
+
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.src = audioPath;
+      audio.volume = 0.4; // Set to 40% volume for comfortable listening
+
+      this.preloadedAudio.set(dialogKey, audio);
+    });
+
+    console.log(`Preloaded ${this.preloadedAudio.size} Ruairidh audio files`);
   }
 
   /**
@@ -56,10 +80,22 @@ class RuairidhVoice {
       return;
     }
 
-    // Build audio path - browser handles special characters automatically
-    const audioPath = this.basePath + filename;
-    console.log(`Playing Ruairidh voice: ${dialogKey} -> ${audioPath}`);
-    this.currentAudio = new Audio(audioPath);
+    // Get preloaded audio or create new one as fallback
+    let audio = this.preloadedAudio.get(dialogKey);
+
+    if (audio) {
+      // Reset preloaded audio to start
+      audio.currentTime = 0;
+      console.log(`Playing preloaded Ruairidh voice: ${dialogKey}`);
+    } else {
+      // Fallback: create new audio if not preloaded
+      const audioPath = this.basePath + filename;
+      audio = new Audio(audioPath);
+      audio.volume = 0.4;
+      console.log(`Playing non-preloaded Ruairidh voice: ${dialogKey} -> ${audioPath}`);
+    }
+
+    this.currentAudio = audio;
 
     this.currentAudio.addEventListener('ended', () => {
       console.log(`Ruairidh voice completed: ${dialogKey}`);
@@ -70,8 +106,6 @@ class RuairidhVoice {
       console.error(`Audio playback error for ${dialogKey}:`, e);
       this.handleAudioEnd();
     });
-
-    this.currentAudio.volume = 0.4; // Set to 40% volume for comfortable listening
 
     this.currentAudio.play().then(() => {
       console.log(`Successfully started playing: ${dialogKey}`);
