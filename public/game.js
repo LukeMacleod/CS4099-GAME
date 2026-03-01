@@ -2098,24 +2098,24 @@ class Game3FishingGame {
       welly: { id: 'welly', svg: './svgs/game-3/game-3-garbage/welly-either.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 110, spawnWeight: 1, isFloater: true, isValid: false },
 
       // ===== MID-DEPTH ZONE (45-90 seconds) =====
-      // Bigger fish get faster speeds
-      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
-      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 11.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
-      leobag: { id: 'leobag', svg: './svgs/game-3/game-3-fish/leòbag-L.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 14.0, size: 240, spawnWeight: 3, isValid: true },
-      breac_geal: { id: 'breac_geal', svg: './svgs/game-3/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 15.0, size: 270, spawnWeight: 3, isValid: true },
-      iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3/game-3-fish/sgeit.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 15.0, size: 280, spawnWeight: 3, isValid: true },
-      breac_garbh: { id: 'breac_garbh', svg: './svgs/game-3/game-3-fish/breac-garbh-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 16.0, size: 300, spawnWeight: 2, isValid: true },
+      // Bigger fish get faster speeds (increased by ~25% for better challenge)
+      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 13.5, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
+      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 13.5, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
+      leobag: { id: 'leobag', svg: './svgs/game-3/game-3-fish/leòbag-L.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 17.0, size: 240, spawnWeight: 3, isValid: true },
+      breac_geal: { id: 'breac_geal', svg: './svgs/game-3/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 18.0, size: 270, spawnWeight: 3, isValid: true },
+      iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3/game-3-fish/sgeit.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 18.0, size: 280, spawnWeight: 3, isValid: true },
+      breac_garbh: { id: 'breac_garbh', svg: './svgs/game-3/game-3-fish/breac-garbh-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 19.0, size: 300, spawnWeight: 2, isValid: true },
 
       // ===== DEEP ZONE (90-135 seconds) =====
-      // Larger fish faster, smaller fish slower
+      // Larger fish faster, smaller fish slower (increased by ~20%)
       // Bradan (SALMON) - "Cho luath ris a' bhradan" (As fast as a salmon)
-      // The star! 5 points, fastest fish!
-      bradan: { id: 'bradan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 5, speed: 20.0, size: 440, spawnWeight: 3, isWavy: true, isValid: true, maxOnScreen: 1 },
-      trosg: { id: 'trosg', svg: './svgs/game-3/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 15.0, size: 220, spawnWeight: 4, isValid: true },
-      cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 16.0, size: 230, spawnWeight: 3, isValid: true },
-      manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 16.0, size: 250, spawnWeight: 3, isValid: true },
-      muc_mara: { id: 'muc_mara', svg: './svgs/game-3/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 17.0, size: 280, spawnWeight: 2, isValid: true },
-      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 4, speed: 20.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 165 }
+      // The star! 5 points, DOUBLED SPEED - truly the fastest!
+      bradan: { id: 'bradan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 5, speed: 40.0, size: 440, spawnWeight: 3, isWavy: true, isValid: true, maxOnScreen: 1 },
+      trosg: { id: 'trosg', svg: './svgs/game-3/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 18.0, size: 220, spawnWeight: 4, isValid: true },
+      cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 19.0, size: 230, spawnWeight: 3, isValid: true },
+      manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 19.0, size: 250, spawnWeight: 3, isValid: true },
+      muc_mara: { id: 'muc_mara', svg: './svgs/game-3/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 20.0, size: 280, spawnWeight: 2, isValid: true },
+      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 4, speed: 24.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 165 }
     };
   }
 
