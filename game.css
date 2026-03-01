@@ -833,12 +833,12 @@ TBD NEEEDS TO BE COMBINED WITH OTHER POPUPS  */
 
 .modal-close:hover {
   background: rgba(255, 255, 255, 0.35);
-  transform: rotate(90deg) scale(1.1);
+  transform: scale(1.08);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .modal-close:active {
-  transform: rotate(90deg) scale(0.95);
+  transform: scale(0.95);
 }
 
 /* Simpler version for quick help popups */
@@ -1167,7 +1167,7 @@ Had issues where i didnt want the title to be squished so that onky some of the 
 .game1-title-fun {
   font-size: clamp(1.4rem, 3vw, 2.2rem);
   font-weight: 900;
-  color: var(--primary-orange);
+  color: var(--text-white);
   text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.35);
   letter-spacing: 0.05em;
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -2387,8 +2387,9 @@ TBD - Case where bubble is blocking the sand bloxk where a user could put down. 
   will-change: transform, left, top;
   backface-visibility: hidden;
   transform: translate3d(0, 0, 0);
-  padding: 20px;
-  margin: -20px;
+  /* Increased tap sensitivity - larger clickable area for moving targets */
+  padding: 35px;
+  margin: -35px;
 }
 
 .game3-fish:hover {
@@ -2609,6 +2610,24 @@ TBD - Case where bubble is blocking the sand bloxk where a user could put down. 
   letter-spacing: 0.3px;
   text-align: center;
   margin: 0;
+}
+
+/* Bradan Special - Red flashing text for the star fish! */
+.target-fish-name.bradan-special {
+  color: #dc2626;
+  font-weight: 900;
+  animation: bradanFlash 1.5s ease-in-out infinite;
+}
+
+@keyframes bradanFlash {
+  0%, 100% {
+    color: #dc2626;
+    text-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+  }
+  50% {
+    color: #ef4444;
+    text-shadow: 0 0 16px rgba(220, 38, 38, 0.9);
+  }
 }
 
 /* Game 3 Tutorial Preview Layout */

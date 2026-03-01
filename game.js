@@ -62,7 +62,7 @@ const GAME_SETTINGS = {
     pointsAnimationDuration: 800,
     rewardAnimationDuration: 600,
     stateTransitionDelay: 500,
-    messageDisplayDuration: 1500,
+    messageDisplayDuration: 2000,  // 2 seconds for lobster voice to finish
     cairnPulsingDuration: 800,
     pointsTextDuration: 1000,
     flashRemoveDuration: 1500,
@@ -149,7 +149,7 @@ const LAYOUT_TUTORIAL_STEPS = {
     pauseButtonGlowing: true,
     helpButtonGlowing: false,
     cairnGlowing: false,
-    speechText: 'Ma tha thu ag iarraidh stad a chur air a gheama, brùth pause an seo.',
+    speechText: 'Ma tha thu ag iarraidh stad a chur air a\' gheama, brùth air "pause" an seo.',
     backAction: 'gameController.renderLayoutTutorialStep(0)',
     forwardAction: 'gameController.advanceLayoutTutorialStep()'
   },
@@ -169,7 +169,7 @@ const LAYOUT_TUTORIAL_STEPS = {
     pauseButtonGlowing: false,
     helpButtonGlowing: false,
     cairnGlowing: true,
-    speechText: 'Nise, tha mise a\' cumail sùil air na puingean. Nuair a gheibh thu puing, gheibh thu clach air an càirn agad.<br><br><span class="phrase-underline">Cuimhich, nithear càirn mòr bho chlachan bheaga.</span> <button class="phrase-help-btn" onclick="gameController.showPhraseExplanation(\'cairn\')">?</button>',
+    speechText: 'Nise, tha mise a\' cumail sùil air na puingean. Nuair a gheibh thu puing, gheibh thu clach air an càrn agad.<br><br><span class="phrase-underline">Cuimhnich, nithear càrn mòr bho clachan beaga.</span> <button class="phrase-help-btn" onclick="gameController.showPhraseExplanation(\'cairn\')">?</button>',
     backAction: 'gameController.renderLayoutTutorialStep(2)',
     forwardAction: 'gameController.advanceLayoutTutorialStep()'
   },
@@ -179,7 +179,7 @@ const LAYOUT_TUTORIAL_STEPS = {
     pauseButtonGlowing: false,
     helpButtonGlowing: false,
     cairnGlowing: false,
-    speechText: 'A chiad gheama a chluicheas sinn se Glac an Giomach. A bheil thu deiseil?',
+    speechText: 'A\' chiad gheama a chluicheas sinn \'s e Glac an Giomach. A bheil thu deiseil?',
     backAction: 'gameController.renderLayoutTutorialStep(3)',
     forwardAction: null,
     showPlayButton: true,
@@ -470,12 +470,24 @@ class SmartHelpSystem {
     }
   }
 
-  // Show the help modal - doesn't pause the game, just overlays it
-  // (matching the public version which works correctly)
+  // Show the help modal - pauses game and stops timer
   open() {
     this.createModal();
     this.isOpen = true;
     document.body.style.overflow = 'hidden';  // stop background from scrolling
+
+    // CRITICAL: Stop the countdown timer (Game 1)
+    if (this.controller.gameTimer) {
+      clearInterval(this.controller.gameTimer);
+    }
+
+    // CRITICAL: Pause game board (freeze animations)
+    if (this.controller.game1Board) {
+      this.controller.game1Board.isAnimating = true;
+    }
+
+    // CRITICAL: Pause all game audio
+    this.controller.audio.pauseGameSounds(this.controller.currentState);
   }
 
   // Hide the modal
@@ -483,6 +495,40 @@ class SmartHelpSystem {
     // Set isOpen to false immediately to prevent double-close issues
     this.isOpen = false;
     document.body.style.overflow = '';  // restore scrolling immediately
+
+    // CRITICAL: Restore status to 'playing' when closing help modal
+    if (this.controller.dataLogger) {
+      this.controller.dataLogger.updateStatus('playing');
+    }
+
+    // CRITICAL: Resume game board (resume animations)
+    if (this.controller.game1Board) {
+      this.controller.game1Board.isAnimating = false;
+    }
+
+    // CRITICAL: Restart the countdown timer (Game 1 only)
+    if (this.controller.currentState === 'GAME1' && this.controller.timeRemaining > 0) {
+      if (this.controller.gameTimer) clearInterval(this.controller.gameTimer);
+      this.controller.gameTimer = setInterval(() => {
+        // CRITICAL: Only run timer if we're still in GAME1
+        if (this.controller.currentState !== 'GAME1') {
+          clearInterval(this.controller.gameTimer);
+          this.controller.gameTimer = null;
+          return;
+        }
+
+        this.controller.timeRemaining--;
+        this.controller.updateGame1TimerDisplay();
+        if (this.controller.timeRemaining <= 0) {
+          clearInterval(this.controller.gameTimer);
+          this.controller.gameTimer = null;
+          setTimeout(() => this.controller.setGameFlowState('GAME2_READY'), 500);
+        }
+      }, 1000);
+    }
+
+    // CRITICAL: Resume all game audio
+    this.controller.audio.resumeGameSounds(this.controller.currentState);
 
     if (this.modalElement) {
       const modalToRemove = this.modalElement;  // capture reference to avoid race condition
@@ -554,7 +600,7 @@ class SmartHelpSystem {
           <div class="help-tip">
             <span class="help-tip-number">1</span>
             <div class="help-tip-content">
-              <strong>Coimhead!</strong> <p>Faic dè an oir den bhòrd as fhaisge air a' ghiomach - sin far a bheil e airson dol!</p>
+              <strong>Coimhead!</strong> <p>Faic dè an t-oire den bhòrd as fhaisge air a' ghiomach - sin far a bheil e airson a dhol!</p>
             </div>
           </div>
 
@@ -568,14 +614,14 @@ class SmartHelpSystem {
           <div class="help-tip">
             <span class="help-tip-number">3</span>
             <div class="help-tip-content">
-              <strong>Dùin na beàrnan!</strong> <p>Teichidh a' ghiomach tron toll as lugha - cum ort gus nach bi beàrn sam bith!</p>
+              <strong>Dùin na beàrnan!</strong> <p>Teichidh a' ghiomach tron toll as lugha - cùm ort gus nach bi beàrn sam bith ann!</p>
             </div>
           </div>
 
           <div class="help-tip">
             <span class="help-tip-number">4</span>
             <div class="help-tip-content">
-              <strong>Glac e!</strong> <p>Nuair nach urrainn dha na h-oirean a ruighinn, tha thu ga ghlacadh!</p>
+              <strong>Glac e!</strong> <p>Nuair nach urrainn dha na h-oirean a ruigsinn tuilleadh, tha thu air a' ghiomach a ghlacadh - math fhèin!</p>
             </div>
           </div>
         </div>
@@ -956,6 +1002,9 @@ class Game1Board {
 
     this.activeBubble = null;  // Currently showing speech bubble
 
+    // Initialize lobster voice system
+    this.giomachVoice = new GiomachVoice(this.controller.audio);
+
     // Set up the board
     this.boardSquares = new Map();  // All hexagons on the board
     this.initialiseBoard();
@@ -973,22 +1022,59 @@ class Game1Board {
   // above it and disappears after the duration.
 
   // Show a message above the lobster for a certain duration (in ms)
-  showSpeechBubble(message, duration) {
-    this.activeBubble = {
-      message: message,
-      startTime: Date.now(),
-      duration: duration,
-      hasBeenRendered: false  // So we know if this is a fresh bubble
-    };
+  // CRITICAL: Speech bubble only appears when audio ACTUALLY starts playing
+  // This ensures perfect synchronization - no mismatches between audio and text
+  showSpeechBubble(message, duration, onComplete = null) {
+    // Queue the voice audio with callbacks for start and completion
+    if (this.giomachVoice) {
+      this.giomachVoice.play(
+        message,
+        // onStart callback: fires when audio ACTUALLY begins playing
+        () => {
+          // NOW we can safely show the speech bubble
+          this.activeBubble = {
+            message: message,
+            startTime: Date.now(),
+            duration: duration,
+            hasBeenRendered: false
+          };
 
-    // Auto-remove the bubble after the duration
-    setTimeout(() => {
-      // Check it's still the same bubble (in case another was shown)
-      if (this.activeBubble && this.activeBubble.message === message) {
-        this.activeBubble = null;
-        this.render();  // Redraw to remove the bubble
-      }
-    }, duration);
+          // Render immediately to show the bubble
+          this.render();
+
+          // Auto-remove the bubble after the duration
+          setTimeout(() => {
+            // Check it's still the same bubble (in case another was shown)
+            if (this.activeBubble && this.activeBubble.message === message) {
+              this.activeBubble = null;
+              this.render();  // Redraw to remove the bubble
+            }
+          }, duration);
+        },
+        // onComplete callback: fires when audio finishes
+        () => {
+          console.log(`Lobster audio completed for: "${message}"`);
+          if (onComplete) onComplete();
+        }
+      );
+    } else {
+      // Fallback if no voice system: show bubble immediately
+      this.activeBubble = {
+        message: message,
+        startTime: Date.now(),
+        duration: duration,
+        hasBeenRendered: false
+      };
+
+      setTimeout(() => {
+        if (this.activeBubble && this.activeBubble.message === message) {
+          this.activeBubble = null;
+          this.render();
+        }
+        // Trigger onComplete even without voice system
+        if (onComplete) onComplete();
+      }, duration);
+    }
   }
 
   // Called by render() to check if we need to  draw a bubble
@@ -1106,32 +1192,41 @@ class Game1Board {
       // Lobster says something when caught (cycles through messages)
       const message = this.caughtMessages[this.caughtMessageIndex];
       this.caughtMessageIndex = (this.caughtMessageIndex + 1) % this.caughtMessages.length;
-      this.showSpeechBubble(message, 2000);
 
       this.render();  // Show the bubble
 
-      // After a moment, animate the point and reset for next round
+      // CRITICAL: Capture lobster tile position RIGHT NOW before anything changes
       const lobsterTile = this.getCurrentLobsterTile();
+      let startX, startY;
+
       if (lobsterTile) {
         const tileRect = lobsterTile.getBoundingClientRect();
-        setTimeout(() => {
-          // Stone flies to cairn, then we reset the board
-          this.controller.animateStoneToCairn(tileRect.left, tileRect.top, () => {
-            setTimeout(() => {
-              this.reset();
-              this.render();
-            }, 400);
-          });
-        }, 1200);  // Wait a bit so player can see the caught lobster
+        startX = tileRect.left + tileRect.width / 2;
+        startY = tileRect.top + tileRect.height / 2;
       } else {
-        // Fallback: if tile not found, still add point and reset after delay
-        // This prevents the game from getting stuck
-        setTimeout(() => {
-          this.controller.addPointToCairn();
-          this.reset();
-          this.render();
-        }, 1600);
+        // Fallback to board center if no tile found
+        const board = document.getElementById('game1-board');
+        const boardRect = board.getBoundingClientRect();
+        startX = boardRect.left + boardRect.width / 2;
+        startY = boardRect.top + boardRect.height / 2;
       }
+
+      // Show speech bubble with audio, WAIT for audio to finish before point animation
+      // This prevents board reset from cutting off the lobster's caught message
+      this.showSpeechBubble(message, 2500, () => {
+        // This callback fires when the lobster's audio FINISHES
+        // Use the CAPTURED coordinates (not trying to get them again)
+        console.log('Lobster audio finished, triggering stone animation');
+
+        // Stone flies to cairn using the saved coordinates, then we reset the board
+        this.controller.animateStoneToCairn(startX, startY, () => {
+          // Wait briefly to ensure all animations complete before resetting
+          setTimeout(() => {
+            this.reset();
+            this.render();
+          }, 500);
+        });
+      });  // End of showSpeechBubble onComplete callback
       return;
     }
 
@@ -1225,6 +1320,11 @@ class Game1Board {
 
     // Clear any active speech bubble
     this.activeBubble = null;
+
+    // Stop any playing lobster voice
+    if (this.giomachVoice) {
+      this.giomachVoice.stop();
+    }
 
     // Clear the "Lobster escaped!" or "Lobster caught!" message from last round
     const status = document.getElementById('round-status');
@@ -1580,6 +1680,12 @@ class Game1Board {
     this.gameLost = true;  // Mark that lobster escaped (player loses this round)
     this.activeBubble = null;  // Hide speech bubble during escape
 
+    // CRITICAL: Clear all queued voice messages and stop any playing audio
+    // Prevents lobster from "talking" after it has already escaped
+    if (this.giomachVoice) {
+      this.giomachVoice.stop();
+    }
+
     // If we don't have a tile, skip the animation but still reset
     if (!tile) {
       setTimeout(() => {
@@ -1824,11 +1930,15 @@ class CardMatchingGame {
     this.controller.animateStoneToCairn(startX, startY);
   }
 
-  // Called when all pairs are matched - move to game 3 after a short delay
+  // Called when all pairs are matched
   gameComplete() {
+    console.log('Game 2 completed - all pairs matched!');
+
+    // Auto-transition to Game 3 intro after brief delay (2 seconds)
+    // Allows player to see completion state before proceeding
     setTimeout(() => {
       this.controller.setGameFlowState('GAME3_READY');
-    }, 3000);
+    }, 2000);
   }
 
   // Resets everything for a fresh game
@@ -1905,6 +2015,11 @@ class Game3FishingGame {
     this.animationFrameId = null;
     this.timerIntervalId = null;
 
+    // ===== DELTA TIME (Frame-rate independence) =====
+    // Ensures consistent movement speed across all devices/frame rates
+    this.lastTimestamp = 0;
+    this.deltaTime = 0;
+
     // Load all the fish data
     this.fishList = this.getFishList();
 
@@ -1940,7 +2055,7 @@ class Game3FishingGame {
       shrimp: "Carran", crubag: "Crùbag", giomach_side: "Giomach",
       banag_beag: "Banag Beag", banag_mor: "Banag Mòr", creachann: "Creachann",
       stroilleag: "Stroilleag", creagag: "Creagag",
-      cuiteag: "Cuiteag", cudan: "Cùdan", sgadan: "Sgadan", leobag: "Leòbag",
+      cuiteag: "Cuiteag", cudan: "Cùdan", bradan: "Bradan", leobag: "Leòbag",
       breac_geal: "Breac Geal", iasg_galldach: "Sgeit", breac_garbh: "Breac Garbh",
       trosg: "Trosg", cat_mara: "Cat-mara", manach: "Manach",
       muc_mara: "Muc-mhara", tuna: "Tùna"
@@ -1958,44 +2073,45 @@ class Game3FishingGame {
   getFishList() {
     return {
       // ===== SHALLOW ZONE (0-45 seconds) =====
-      // Small creatures near the shore - shrimp, crabs, small fish
-      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'L', basePoints: 1, speed: 8.0, size: 85, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
-      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 4.5, size: 115, spawnWeight: 4, isValid: true },
-      giomach_side: { id: 'giomach_side', svg: './svgs/game-3/game-3-fish/giomach-side-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 4.0, size: 170, spawnWeight: 3, isValid: true },
-      banag_beag: { id: 'banag_beag', svg: './svgs/game-3/game-3-fish/bànag beag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 5.5, size: 155, spawnWeight: 4, isDarting: true, isValid: true },
-      banag_mor: { id: 'banag_mor', svg: './svgs/game-3/game-3-fish/bànag mòr-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 5.5, size: 175, spawnWeight: 3, isDarting: true, isValid: true },
-      creachann: { id: 'creachann', svg: './svgs/game-3/game-3-fish/creachann.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 2, speed: 3.0, size: 110, spawnWeight: 2, isValid: true },
-      stroilleag: { id: 'stroilleag', svg: './svgs/game-3/game-3-fish/stròilleag.svg', zone: 'SHALLOW', direction: 'UP', basePoints: 3, speed: 5.0, size: 185, spawnWeight: 3, isMultiDirectional: true, isValid: true },
-      creagag: { id: 'creagag', svg: './svgs/game-3/game-3-fish/creagag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 5.0, size: 120, spawnWeight: 3, isValid: true },
+      // Small creatures near the shore - ULTRA FAST for exciting gameplay!
+      shrimp: { id: 'shrimp', svg: './svgs/game-3/game-3-fish/shrimp-L.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'L', basePoints: 1, speed: 50.0, size: 85, spawnWeight: 5, isShoaling: true, isScurrying: true, isValid: true },
+      crubag: { id: 'crubag', svg: './svgs/game-3/game-3-fish/crùbag-either.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 1, speed: 35.0, size: 115, spawnWeight: 4, isValid: true },
+      giomach_side: { id: 'giomach_side', svg: './svgs/game-3/game-3-fish/giomach-side-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 40.0, size: 170, spawnWeight: 3, isValid: true },
+      banag_beag: { id: 'banag_beag', svg: './svgs/game-3/game-3-fish/bànag beag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 45.0, size: 155, spawnWeight: 4, isDarting: true, isValid: true },
+      banag_mor: { id: 'banag_mor', svg: './svgs/game-3/game-3-fish/bànag mòr-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 45.0, size: 175, spawnWeight: 3, isDarting: true, isValid: true },
+      creachann: { id: 'creachann', svg: './svgs/game-3/game-3-fish/creachann.svg', zone: 'SHALLOW', direction: 'EITHER', basePoints: 2, speed: 30.0, size: 110, spawnWeight: 2, isValid: true },
+      stroilleag: { id: 'stroilleag', svg: './svgs/game-3/game-3-fish/stròilleag.svg', zone: 'SHALLOW', direction: 'UP', basePoints: 2, speed: 22.0, size: 185, spawnWeight: 3, isMultiDirectional: true, isValid: true },
+      creagag: { id: 'creagag', svg: './svgs/game-3/game-3-fish/creagag-R.svg', zone: 'SHALLOW', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 22.0, size: 120, spawnWeight: 3, isValid: true },
 
       // ===== GARBAGE ITEMS =====
       // These float around and the player should catch them for extra points
       // isValid: false means catching these is wrong
-      garbage_bag: { id: 'garbage_bag', svg: './svgs/game-3/game-3-garbage/garbage-bag-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 100, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bag: { id: 'plastic_bag', svg: './svgs/game-3/game-3-garbage/plastic bag.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.5, size: 90, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bottle_1: { id: 'plastic_bottle_1', svg: './svgs/game-3/game-3-garbage/plastic-bottle-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 80, spawnWeight: 2, isFloater: true, isValid: false },
-      plastic_bottle_2: { id: 'plastic_bottle_2', svg: './svgs/game-3/game-3-garbage/plastic bottle-2.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.2, size: 85, spawnWeight: 2, isFloater: true, isValid: false },
-      straw: { id: 'straw', svg: './svgs/game-3/game-3-garbage/straw.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.8, size: 70, spawnWeight: 1, isFloater: true, isValid: false },
-      welly: { id: 'welly', svg: './svgs/game-3/game-3-garbage/welly-either.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 2.0, size: 100, spawnWeight: 1, isFloater: true, isValid: false },
+      garbage_bag: { id: 'garbage_bag', svg: './svgs/game-3/game-3-garbage/garbage-bag-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 100, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bag: { id: 'plastic_bag', svg: './svgs/game-3/game-3-garbage/plastic bag.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 18.0, size: 90, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bottle_1: { id: 'plastic_bottle_1', svg: './svgs/game-3/game-3-garbage/plastic-bottle-1.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 80, spawnWeight: 2, isFloater: true, isValid: false },
+      plastic_bottle_2: { id: 'plastic_bottle_2', svg: './svgs/game-3/game-3-garbage/plastic bottle-2.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 17.0, size: 85, spawnWeight: 2, isFloater: true, isValid: false },
+      straw: { id: 'straw', svg: './svgs/game-3/game-3-garbage/straw.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 20.0, size: 70, spawnWeight: 1, isFloater: true, isValid: false },
+      welly: { id: 'welly', svg: './svgs/game-3/game-3-garbage/welly-either.svg', zone: 'GARBAGE', direction: 'EITHER', basePoints: 1, speed: 15.0, size: 100, spawnWeight: 1, isFloater: true, isValid: false },
 
       // ===== MID-DEPTH ZONE (45-90 seconds) =====
-      // Medium sized fish - worth more points but swim faster
-      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 5, speed: 7.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
-      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 5, speed: 7.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
-      sgadan: { id: 'sgadan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 6, speed: 7.5, size: 220, spawnWeight: 4, isWavy: true, isValid: true },
-      leobag: { id: 'leobag', svg: './svgs/game-3/game-3-fish/leòbag-L.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 7, speed: 6.0, size: 240, spawnWeight: 3, isValid: true },
-      breac_geal: { id: 'breac_geal', svg: './svgs/game-3/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 8, speed: 7.5, size: 270, spawnWeight: 3, isValid: true },
-      iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3/game-3-fish/sgeit.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 10, speed: 7.5, size: 280, spawnWeight: 3, isValid: true },
-      breac_garbh: { id: 'breac_garbh', svg: './svgs/game-3/game-3-fish/breac-garbh-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 12, speed: 7.0, size: 300, spawnWeight: 2, isValid: true },
+      // Medium sized fish - BLAZING FAST (6x-8x original speeds!)
+      cuiteag: { id: 'cuiteag', svg: './svgs/game-3/game-3-fish/cuiteag-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 60.0, size: 210, spawnWeight: 4, isDarting: true, isValid: true },
+      cudan: { id: 'cudan', svg: './svgs/game-3/game-3-fish/cudan-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 2, speed: 60.0, size: 210, spawnWeight: 4, isWavy: true, isValid: true },
+      leobag: { id: 'leobag', svg: './svgs/game-3/game-3-fish/leòbag-L.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 55.0, size: 240, spawnWeight: 3, isValid: true },
+      breac_geal: { id: 'breac_geal', svg: './svgs/game-3/game-3-fish/breac-geal-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 65.0, size: 270, spawnWeight: 3, isValid: true },
+      iasg_galldach: { id: 'iasg_galldach', svg: './svgs/game-3/game-3-fish/sgeit.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'L', basePoints: 3, speed: 65.0, size: 280, spawnWeight: 3, isValid: true },
+      breac_garbh: { id: 'breac_garbh', svg: './svgs/game-3/game-3-fish/breac-garbh-R.svg', zone: 'MID_DEPTH', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 60.0, size: 300, spawnWeight: 2, isValid: true },
 
       // ===== DEEP ZONE (90-135 seconds) =====
-      // Big fish worth lots of points - fast and harder to catch - TBD
-      // Tuna only appears in the last 15 seconds and is worth 50 points
-      trosg: { id: 'trosg', svg: './svgs/game-3/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 15, speed: 8.5, size: 220, spawnWeight: 4, isValid: true },
-      cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 18, speed: 9.0, size: 230, spawnWeight: 3, isValid: true },
-      manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 22, speed: 8.0, size: 250, spawnWeight: 3, isValid: true },
-      muc_mara: { id: 'muc_mara', svg: './svgs/game-3/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 28, speed: 7.5, size: 280, spawnWeight: 2, isValid: true },
-      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 50, speed: 10.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 165 }
+      // Big fish - INSANELY FAST (6x-8x original speeds!)
+      // Bradan (SALMON) - "Cho luath ris a' bhradan" (As fast as a salmon)
+      // The star! 5 points, ROCKETS ACROSS at speed 100.0!!!
+      bradan: { id: 'bradan', svg: './svgs/game-3/game-3-fish/sgadan-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 5, speed: 100.0, size: 440, spawnWeight: 0, isWavy: true, isValid: true, maxOnScreen: 1 },
+      trosg: { id: 'trosg', svg: './svgs/game-3/game-3-fish/trosg-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 3, speed: 70.0, size: 220, spawnWeight: 4, isValid: true },
+      cat_mara: { id: 'cat_mara', svg: './svgs/game-3/game-3-fish/cat-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 75.0, size: 230, spawnWeight: 3, isValid: true },
+      manach: { id: 'manach', svg: './svgs/game-3/game-3-fish/mànach.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 65.0, size: 250, spawnWeight: 3, isValid: true },
+      muc_mara: { id: 'muc_mara', svg: './svgs/game-3/game-3-fish/muc-mara-R.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'R', basePoints: 4, speed: 60.0, size: 280, spawnWeight: 2, isValid: true },
+      tuna: { id: 'tuna', svg: './svgs/game-3/game-3-fish/tùna-L.svg', zone: 'DEEP', direction: 'EITHER', svgFaces: 'L', basePoints: 4, speed: 80.0, size: 300, spawnWeight: 1, isValid: true, onlyAfter: 165 }
     };
   }
 
@@ -2071,9 +2187,13 @@ class Game3FishingGame {
     const fishData = this.fishList[fishId];
     const fishName = this.fishNames[fishId];
 
+    // Bradan gets special red flashing text to show its exclusivity!
+    const isBradan = fishId === 'bradan';
+    const nameClass = isBradan ? 'target-fish-name bradan-special' : 'target-fish-name';
+
     targetFishDisplay.innerHTML = `
       <img src="${fishData.svg}" alt="${fishName}" class="target-fish-image" />
-      <div class="target-fish-name">${fishName}</div>
+      <div class="${nameClass}">${fishName}</div>
     `;
   }
 
@@ -2124,6 +2244,15 @@ class Game3FishingGame {
   startGameLoop() {
     const gameLoop = (timestamp) => {
       if (!this.gameActive) return;
+
+      // Calculate delta time for frame-rate independent movement
+      if (this.lastTimestamp === 0) {
+        this.lastTimestamp = timestamp;
+      }
+      const deltaMs = timestamp - this.lastTimestamp;
+      this.deltaTime = deltaMs / 16.67; // Normalize to 60 FPS (16.67ms per frame)
+      this.lastTimestamp = timestamp;
+
       if (!this.isPaused) {
         this.updateFish();              // move fish across screen
         this.spawnFishIfNeeded(timestamp);
@@ -2298,6 +2427,22 @@ class Game3FishingGame {
       return false;
     });
 
+    // BRADAN (SALMON) SPECIAL RULES - "Cho luath ris a' bhradan"
+    // The star of the game! Only spawns when Ruairidh asks for it, max one at a time
+    validFish.forEach((fish, index) => {
+      if (fish.id === 'bradan') {
+        // Check if bradan is already on screen
+        const bradanAlreadyOnScreen = this.activeFish.some(f => f.typeId === 'bradan');
+
+        // Remove bradan from spawn pool if:
+        // 1. One is already on screen (maxOnScreen: 1)
+        // 2. OR it's not the currently requested fish
+        if (bradanAlreadyOnScreen || !this.currentOrder || this.currentOrder.target !== 'bradan') {
+          validFish.splice(index, 1);
+        }
+      }
+    });
+
     if (validFish.length === 0) return;
 
     // Pick a random fish using weighted selection
@@ -2413,20 +2558,11 @@ class Game3FishingGame {
 
 
 
-      // Speed increases as game progresses - same formula as regular fish
-      let baseSpeed;
+      // Use fish's actual configured speed from getFishList(), scaled by difficulty progression
       const zoneProgress = this.elapsedTime % 45;
       const progressFactor = zoneProgress / 45;
-
-      if (this.currentDepth === 'SHALLOW') {
-        baseSpeed = 5 + progressFactor * 2;
-      } else if (this.currentDepth === 'MID_DEPTH') {
-        baseSpeed = 7 + progressFactor * 3;
-      } else if (this.currentDepth === 'DEEP') {
-        baseSpeed = 10 + progressFactor * 4;
-      } else {
-        baseSpeed = fishData.speed;
-      }
+      // Scale up by 0-50% over 45 seconds for progressive difficulty
+      let baseSpeed = fishData.speed * (1.0 + progressFactor * 0.5);
 
       actualSpeed = baseSpeed + speedVariation;
       if (dir === 'R') {
@@ -2491,20 +2627,11 @@ class Game3FishingGame {
         }
       }
 
-      // Trying to achieve smoother difficulty progression
-      let baseSpeed;
+      // Use fish's actual configured speed from getFishList(), scaled by difficulty progression
       const zoneProgress = this.elapsedTime % 45; // 0-44 within current zone
       const progressFactor = zoneProgress / 45;    // 0.0 to 1.0
-
-      if (this.currentDepth === 'SHALLOW') {
-        baseSpeed = 5 + progressFactor * 2;  // 5 to 7 over 45 seconds
-      } else if (this.currentDepth === 'MID_DEPTH') {
-        baseSpeed = 7 + progressFactor * 3;  // 7to10 over 45 seconds
-      } else if (this.currentDepth === 'DEEP') {
-        baseSpeed = 10 + progressFactor * 4; // 10 to 14 over 45 seconds
-      } else {
-        baseSpeed = fishData.speed; // Fallback optiob
-      }
+      // Scale up by 0-50% over 45 seconds for progressive difficulty
+      let baseSpeed = fishData.speed * (1.0 + progressFactor * 0.5);
 
       actualSpeed = baseSpeed + speedVariation;
       if (dir === 'R') {
@@ -2598,12 +2725,12 @@ class Game3FishingGame {
 
       // Handle fish emerging from bottom during zone transition
       if (fish.isEmerging) {
-        // Swim upward from bottom
-        fish.y -= 6; // Move upward
+        // Swim upward from bottom (frame-rate independent)
+        fish.y -= 6 * this.deltaTime;
 
         // Add a slight horizontal drifting effedct
-        fish.x += Math.sin(fish.wavyOffset) * 2;
-        fish.wavyOffset += 0.08;
+        fish.x += Math.sin(fish.wavyOffset) * 2 * this.deltaTime;
+        fish.wavyOffset += 0.08 * this.deltaTime;
 
         fish.element.style.left = `${fish.x}px`;
         fish.element.style.top = `${fish.y}px`;
@@ -2619,14 +2746,14 @@ class Game3FishingGame {
 
       // Special movement for all garbage items (floating upward)
       if (fish.isFloater) {
-        // All garbage floats upward from bottom to top
-        fish.y += fish.speed; // Negative speed = upward
-        fish.rotation = (fish.rotation || 0) + 3;
+        // All garbage floats upward from bottom to top (frame-rate independent)
+        fish.y += fish.speed * this.deltaTime;
+        fish.rotation = (fish.rotation || 0) + 3 * this.deltaTime;
         fish.element.style.transform = `rotate(${fish.rotation}deg)`;
 
         // Slight horizontal drift
-        fish.wavyOffset += 0.08;
-        fish.x += Math.sin(fish.wavyOffset) * 1.5;
+        fish.wavyOffset += 0.08 * this.deltaTime;
+        fish.x += Math.sin(fish.wavyOffset) * 1.5 * this.deltaTime;
 
         fish.element.style.left = `${fish.x}px`;
         fish.element.style.top = `${fish.y}px`;
@@ -2643,34 +2770,34 @@ class Game3FishingGame {
       if (fish.isBottomDweller) {
         if (fish.data.id === 'crubag') {
           // Crabs:Timid side-to-side movement with pauses and darts
-          fish.crabTimer++;
+          fish.crabTimer += this.deltaTime;
 
           // Phase 1: Pause (30 frames 0.5 seconds)
           if (fish.crabTimer < 30) {
             // Stationary, slight wobble
-            fish.crabPhase += 0.1;
-            fish.y += Math.sin(fish.crabPhase) * 0.5;
+            fish.crabPhase += 0.1 * this.deltaTime;
+            fish.y += Math.sin(fish.crabPhase) * 0.5 * this.deltaTime;
           }
           // Phase 2: Side-to-side movement (60 frames)
           else if (fish.crabTimer < 90) {
-            fish.x += fish.speed * 0.3; // Slow sideways
-            fish.crabPhase += 0.15;
-            fish.y += Math.sin(fish.crabPhase) * 2; // Side-to-side wobble
+            fish.x += fish.speed * 0.3 * this.deltaTime; // Slow sideways
+            fish.crabPhase += 0.15 * this.deltaTime;
+            fish.y += Math.sin(fish.crabPhase) * 2 * this.deltaTime; // Side-to-side wobble
           }
           // Phase 3: Quick dart (20 frames)
           else if (fish.crabTimer < 110) {
-            fish.x += fish.speed * 3; // Fast darting
+            fish.x += fish.speed * 3 * this.deltaTime; // Fast darting
           }
           // Reset cycle
           else {
             fish.crabTimer = 0;
           }
         } else {
-          // Lobsters: Steady-ish crawl along bottom
-          fish.x += fish.speed;
+          // Lobsters: Steady-ish crawl along bottom (frame-rate independent)
+          fish.x += fish.speed * this.deltaTime;
           // Minimal vertical movement (crawling effect)
-          fish.wavyOffset += 0.05;
-          fish.y += Math.sin(fish.wavyOffset) * 0.8;
+          fish.wavyOffset += 0.05 * this.deltaTime;
+          fish.y += Math.sin(fish.wavyOffset) * 0.8 * this.deltaTime;
         }
 
         // Clamp Y position to prevent bottom dwellers from going off-screen
@@ -2696,7 +2823,7 @@ class Game3FishingGame {
           fish.multidirPhase = Math.floor(Math.random() * 4); // 0=up, 1=down, 2=diagonal-up, 3=diagonal-down
         }
 
-        fish.multidirTimer++;
+        fish.multidirTimer += this.deltaTime;
 
         // Change direction every 60-120 frames
         if (fish.multidirTimer > 60 + Math.random() * 60) {
@@ -2706,25 +2833,25 @@ class Game3FishingGame {
 
         // Tentacles at bottom, head at top - always swim head-first (upward bias -current fix for bad directionlity bug)
         if (fish.multidirPhase === 0) {
-          // Straight up
-          fish.y -= fish.speed * 0.8;
-          fish.x += Math.sin(fish.wavyOffset) * 2; // Slight drift
+          // Straight up (frame-rate independent)
+          fish.y -= fish.speed * 0.8 * this.deltaTime;
+          fish.x += Math.sin(fish.wavyOffset) * 2 * this.deltaTime; // Slight drift
         } else if (fish.multidirPhase === 1) {
           // Down (less common, swimming backward briefly)
-          fish.y += fish.speed * 0.4;
-          fish.x += Math.sin(fish.wavyOffset) * 2;
+          fish.y += fish.speed * 0.4 * this.deltaTime;
+          fish.x += Math.sin(fish.wavyOffset) * 2 * this.deltaTime;
         } else if (fish.multidirPhase === 2) {
           // Diagonal up-right
-          fish.y -= fish.speed * 0.5;
-          fish.x += fish.speed * 0.7;
+          fish.y -= fish.speed * 0.5 * this.deltaTime;
+          fish.x += fish.speed * 0.7 * this.deltaTime;
         } else {
           // Diagonal up-left
-          fish.y -= fish.speed * 0.5;
-          fish.x -= fish.speed * 0.7;
+          fish.y -= fish.speed * 0.5 * this.deltaTime;
+          fish.x -= fish.speed * 0.7 * this.deltaTime;
         }
 
         // Pulsing motion (like jellyfish/squid)
-        fish.wavyOffset += 0.12;
+        fish.wavyOffset += 0.12 * this.deltaTime;
         const pulseFactor = Math.sin(fish.wavyOffset) * 0.1 + 1;
         fish.element.style.transform = `scale(${pulseFactor})`;
 
@@ -2751,23 +2878,23 @@ class Game3FishingGame {
           fish.scurrySpeed = fish.speed;
         }
 
-        fish.scurryTimer++;
+        fish.scurryTimer += this.deltaTime;
 
         // Random speed bursts every 10-20 frames
         if (fish.scurryTimer % (10 + Math.floor(Math.random() * 10)) === 0) {
           fish.scurrySpeed = fish.speed * (0.5 + Math.random() * 1.5); // 0.5x to 2x speed
         }
 
-        // Quick movement
-        fish.x += fish.scurrySpeed;
+        // Quick movement (frame-rate independent)
+        fish.x += fish.scurrySpeed * this.deltaTime;
 
         //  vertical movement
-        fish.wavyOffset += 0.25;
-        fish.y += Math.sin(fish.wavyOffset) * 4 + (Math.random() - 0.5) * 3;
+        fish.wavyOffset += 0.25 * this.deltaTime;
+        fish.y += (Math.sin(fish.wavyOffset) * 4 + (Math.random() - 0.5) * 3) * this.deltaTime;
 
         // Occasional quick dart
         if (Math.random() < 0.05) {
-          fish.x += fish.speed * 2;
+          fish.x += fish.speed * 2 * this.deltaTime;
         }
 
         // Clamp position
@@ -2792,13 +2919,13 @@ class Game3FishingGame {
           fish.dartPhase = 0; // 0 = burst, 1 = glide
         }
 
-        fish.dartTimer++;
+        fish.dartTimer += this.deltaTime;
 
         if (fish.dartPhase === 0) {
-          // outbrust phase - fast movement (30 frames)
-          fish.x += fish.speed * 1.5;
-          fish.wavyOffset += 0.2;
-          fish.y += Math.sin(fish.wavyOffset) * 2;
+          // outbrust phase - fast movement (30 frames, frame-rate independent)
+          fish.x += fish.speed * 1.5 * this.deltaTime;
+          fish.wavyOffset += 0.2 * this.deltaTime;
+          fish.y += Math.sin(fish.wavyOffset) * 2 * this.deltaTime;
 
           if (fish.dartTimer > 30) {
             fish.dartTimer = 0;
@@ -2806,9 +2933,9 @@ class Game3FishingGame {
           }
         } else {
           // Glide phase - slightly slower, smooth (40 frames)
-          fish.x += fish.speed * 0.6;
-          fish.wavyOffset += 0.05;
-          fish.y += Math.sin(fish.wavyOffset) * 0.8;
+          fish.x += fish.speed * 0.6 * this.deltaTime;
+          fish.wavyOffset += 0.05 * this.deltaTime;
+          fish.y += Math.sin(fish.wavyOffset) * 0.8 * this.deltaTime;
 
           if (fish.dartTimer > 40) {
             fish.dartTimer = 0;
@@ -2831,18 +2958,18 @@ class Game3FishingGame {
         continue;
       }
 
-      // Regular fish movement
-      fish.x += fish.speed;
+      // Regular fish movement (frame-rate independent)
+      fish.x += fish.speed * this.deltaTime;
 
       // Realistic swimming motion
       if (fish.isWavy) {
         // Squid/octopus - dramatic wavy movement
-        fish.wavyOffset += 0.15;
-        fish.y += Math.sin(fish.wavyOffset) * 3.5;
+        fish.wavyOffset += 0.15 * this.deltaTime;
+        fish.y += Math.sin(fish.wavyOffset) * 3.5 * this.deltaTime;
       } else {
         // Natural swimming - subtle up/down bobbing
-        fish.wavyOffset += 0.08;
-        fish.y += Math.sin(fish.wavyOffset) * 1.2;
+        fish.wavyOffset += 0.08 * this.deltaTime;
+        fish.y += Math.sin(fish.wavyOffset) * 1.2 * this.deltaTime;
       }
 
       // Clamp Y position to prevent fish from going off-screen (top or bottom)
@@ -2900,6 +3027,11 @@ class Game3FishingGame {
     this.controller.totalPoints += pointsEarned;
     this.controller.updatePointsDisplayOnly();
 
+    // Firebase Data Logging: Track points increment
+    if (this.controller.dataLogger && typeof this.controller.dataLogger.logPointsIncrement === 'function') {
+      this.controller.dataLogger.logPointsIncrement(pointsEarned);
+    }
+
     // Track consecutive correct catches
     this.correctStreakCount++;
 
@@ -2917,9 +3049,16 @@ class Game3FishingGame {
 
   handleWrongCatch(fishObj) {
     const penalty = Math.abs(fishObj.data.basePoints);
+    const oldTotal = this.controller.totalPoints;
     this.points = Math.max(0, this.points - penalty);
     this.controller.totalPoints = Math.max(0, this.controller.totalPoints - penalty);
     this.controller.updatePointsDisplayOnly();
+
+    // Firebase Data Logging: Track points lost (as negative increment)
+    const actualPointsLost = oldTotal - this.controller.totalPoints;
+    if (actualPointsLost > 0 && this.controller.dataLogger && typeof this.controller.dataLogger.logPointsIncrement === 'function') {
+      this.controller.dataLogger.logPointsIncrement(-actualPointsLost);
+    }
 
     // RESET streak counter on wrong catch
     this.correctStreakCount = 0;
@@ -3001,6 +3140,11 @@ class Game3FishingGame {
     this.points += pointsEarned;
     this.controller.totalPoints += pointsEarned;
     this.controller.updatePointsDisplayOnly();
+
+    // Firebase Data Logging: Track garbage catch points
+    if (this.controller.dataLogger && typeof this.controller.dataLogger.logPointsIncrement === 'function') {
+      this.controller.dataLogger.logPointsIncrement(pointsEarned);
+    }
 
     // Reset streak counter when catching garbage
     this.correctStreakCount = 0;
@@ -3214,11 +3358,11 @@ class Game3FishingGame {
     for (let i = this.activeBubbles.length - 1; i >= 0; i--) {
       const bubble = this.activeBubbles[i];
 
-      // Rise upward
-      bubble.y -= bubble.speed;
+      // Rise upward (frame-rate independent)
+      bubble.y -= bubble.speed * this.deltaTime;
 
       // Wobble horizontally for realistic effect
-      bubble.wobble += bubble.wobbleSpeed;
+      bubble.wobble += bubble.wobbleSpeed * this.deltaTime;
       const wobbleX = Math.sin(bubble.wobble) * 15;
 
       bubble.element.style.bottom = `${canvasRect.height - bubble.y}px`;
@@ -3324,9 +3468,14 @@ class GameFlowController {
     if (soundButtonGlowing) {
       soundBtnClass = 'ruairidh-sound-button glowing';
     }
+
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const soundBtn = `<button class="${soundBtnClass}" id="sound-button" onclick="gameController.toggleSound()">
       <img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" />
-      <img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" />
+      <img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" />
     </button>`;
 
     // Build pause button - this one's a bit more complex because it behaves differently
@@ -3542,6 +3691,12 @@ class GameFlowController {
 
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Play audio based on layout step and enable forward button when complete
     const audioKeys = ['LAYOUT_SOUND', 'LAYOUT_PAUSE', 'LAYOUT_HELP', 'LAYOUT_CAIRN', 'LAYOUT_READY'];
     const audioKey = audioKeys[this.layoutTutorialStep];
@@ -3581,20 +3736,24 @@ class GameFlowController {
     const nowEnabled = this.audio.toggle(); // flips audio on/off and returns new state
 
     // Firebase Data Logging: Track sound toggles
-    if (this.dataLogger) {
+    if (this.dataLogger && typeof this.dataLogger.logSoundToggle === 'function') {
       this.dataLogger.logSoundToggle(nowEnabled);
     }
 
-    const muteOverlay = document.getElementById('sound-mute-overlay');
-
-    // Show or hide the red X over the speaker icon
-    if (muteOverlay) {
-      if (nowEnabled) {
-        muteOverlay.style.display = 'none';
-      } else {
-        muteOverlay.style.display = 'block'; // shows the muted indicator
-      }
+    // CRITICAL: Stop Ruairidh voice narration when muting
+    if (!nowEnabled && this.ruairidhVoice) {
+      this.ruairidhVoice.stop();
     }
+
+    // Update red X overlay - find ALL instances on the page
+    const muteOverlays = document.querySelectorAll('.sound-mute-overlay, #sound-mute-overlay');
+    muteOverlays.forEach(overlay => {
+      if (nowEnabled) {
+        overlay.style.display = 'none'; // Hide red X when sound is ON
+      } else {
+        overlay.style.display = 'block'; // Show red X when sound is OFF
+      }
+    });
 
     if (nowEnabled) {
       this.audio.startForState(this.currentState); // restart music for current screen
@@ -3612,12 +3771,17 @@ class GameFlowController {
       },
       earrach: {
         phrase: "San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar", // "In Spring, when the sheep is thin, the shellfish is fat"
-        explanation: "Tha an abairt seo a' ciallachadh gur e àm math a th' anns an Earrach dhuinn. Aig toiseach na bliadhna, tha na caoraich caol, ach tha na maoraich, 's e sin na giomaich is na crùbagan, gu math reamhar. Tha a mhuir agus an tìr a' toirt biadh dhuinn fad na bliadhna, fiùs ma tha rudeigin eile lag no gann!"
+        explanation: "Tha an abairt seo a' ciallachadh gur e àm math a th' anns an earrach dhuinn. Aig toiseach na bliadhna, tha na caoraich caol, ach tha na maoraich, 's e sin na giomaich is na crùbagan, gu math reamhar. Tha a' mhuir agus an tìr a' toirt biadh dhuinn fad na bliadhna, fiù 's ma tha rudeigin eile lag no gann!"
       }
     };
 
     const data = phrases[phraseId];
     if (!data) return; // just in case an invalid phraseId is passed
+
+    // CRITICAL: Log Seanfhacail help request to Firebase
+    if (this.dataLogger && typeof this.dataLogger.logHelpSeanfhacail === 'function') {
+      this.dataLogger.logHelpSeanfhacail(data.phrase);
+    }
 
     // Create the  popup box
     const modal = document.createElement('div');
@@ -3652,12 +3816,22 @@ class GameFlowController {
     const modal = document.getElementById('pause-modal');
 
     if (this.gamePaused) {
+      // CRITICAL: Update status to 'paused'
+      if (this.dataLogger && typeof this.dataLogger.updateStatus === 'function') {
+        this.dataLogger.updateStatus('paused');
+      }
+
       if (this.gameTimer) clearInterval(this.gameTimer); // stop the countdown
       if (this.game1Board) this.game1Board.isAnimating = true; // freeze the lobster
       if (button) button.innerHTML = SVG_ICONS.play;
       if (modal) modal.classList.add('active');
       this.audio.pauseGameSounds(this.currentState);
     } else {
+      // CRITICAL: Restore status to 'playing'
+      if (this.dataLogger && typeof this.dataLogger.updateStatus === 'function') {
+        this.dataLogger.updateStatus('playing');
+      }
+
       if (this.game1Board) {
         this.game1Board.isAnimating = false; // unfreeze the lobster
       }
@@ -3665,10 +3839,18 @@ class GameFlowController {
       // Restart the countdown timer
       if (this.gameTimer) clearInterval(this.gameTimer);
       this.gameTimer = setInterval(() => {
+        // CRITICAL: Only run timer if we're still in GAME1
+        if (this.currentState !== 'GAME1') {
+          clearInterval(this.gameTimer);
+          this.gameTimer = null;
+          return;
+        }
+
         this.timeRemaining--;
         this.updateGame1TimerDisplay();
         if (this.timeRemaining <= 0) {
           clearInterval(this.gameTimer);
+          this.gameTimer = null;
           setTimeout(() => this.setGameFlowState('GAME2_READY'), GAME_SETTINGS.TIMING.stateTransitionDelay);
         }
       }, 1000);
@@ -3688,10 +3870,20 @@ class GameFlowController {
     const modal = document.getElementById('pause-modal');
 
     if (this.game3Board.isPaused) {
+      // CRITICAL: Update status to 'paused'
+      if (this.dataLogger && typeof this.dataLogger.updateStatus === 'function') {
+        this.dataLogger.updateStatus('paused');
+      }
+
       if (button) button.innerHTML = SVG_ICONS.play;
       if (modal) modal.classList.add('active');
       this.audio.pauseGameSounds(this.currentState);
     } else {
+      // CRITICAL: Restore status to 'playing'
+      if (this.dataLogger && typeof this.dataLogger.updateStatus === 'function') {
+        this.dataLogger.updateStatus('playing');
+      }
+
       if (button) button.innerHTML = SVG_ICONS.pause;
       if (modal) modal.classList.remove('active');
       this.audio.resumeGameSounds(this.currentState);
@@ -3715,16 +3907,64 @@ class GameFlowController {
   // ============================================================================
   setGameFlowState(newState) {
     const oldState = this.currentState;
+
+    // DEFENSIVE: Prevent invalid state transitions
+    // Don't allow going back to GAME2_READY if we're already past Game 2
+    if (newState === 'GAME2_READY' && ['GAME3', 'GAME3_READY', 'GAME3_TUTORIAL', 'RESULTS', 'COMPLETED'].includes(oldState)) {
+      console.warn(`Prevented invalid transition from ${oldState} to ${newState}`);
+      return;
+    }
+
+    // CRITICAL: Clear Game 1 timer when leaving Game 1
+    // Without this, the timer continues running in background and forcibly transitions to GAME2_READY
+    if (oldState === 'GAME1' && newState !== 'GAME1') {
+      if (this.gameTimer) {
+        clearInterval(this.gameTimer);
+        this.gameTimer = null;
+        console.log('Cleared Game 1 timer when transitioning to ' + newState);
+      }
+    }
+
     this.currentState = newState;
 
     // Firebase Data Logging: Track state transitions and game starts
     if (this.dataLogger) {
-      this.dataLogger.logStateTransition(oldState, newState);
+      // Defensive: check if methods exist (handles cached old versions)
+      if (typeof this.dataLogger.logStateTransition === 'function') {
+        this.dataLogger.logStateTransition(oldState, newState);
+      }
 
       // Log game starts
-      if (newState === 'GAME1') this.dataLogger.logGameStart(1);
-      if (newState === 'GAME2') this.dataLogger.logGameStart(2);
-      if (newState === 'GAME3') this.dataLogger.logGameStart(3);
+      if (newState === 'GAME1' && typeof this.dataLogger.logGameStart === 'function') {
+        this.dataLogger.logGameStart(1);
+      }
+      if (newState === 'GAME2' && typeof this.dataLogger.logGameStart === 'function') {
+        this.dataLogger.logGameStart(2);
+      }
+      if (newState === 'GAME3' && typeof this.dataLogger.logGameStart === 'function') {
+        this.dataLogger.logGameStart(3);
+      }
+
+      // Update progress bar based on game flow state (fine-grained progression)
+      const progressMap = {
+        'LOGIN': 0,
+        'RUAIRIDH_INTRO': 5,
+        'PREGAME_TUTORIAL': 10,
+        'GAME1_TUTORIAL': 15,
+        'GAME1': 35,           // +20 for playing Game 1
+        'GAME2_READY': 38,     // +3 transition
+        'GAME2_TUTORIAL': 43,  // +5 tutorial
+        'GAME2': 63,           // +20 for playing Game 2
+        'GAME3_READY': 66,     // +3 transition
+        'GAME3_TUTORIAL': 71,  // +5 tutorial
+        'GAME3': 91,           // +20 for playing Game 3
+        'RESULTS': 96,         // +5 viewing results
+        'COMPLETED': 100       // +4 complete
+      };
+
+      if (progressMap[newState] !== undefined && typeof this.dataLogger.updateProgress === 'function') {
+        this.dataLogger.updateProgress(progressMap[newState]);
+      }
     }
 
     // Clear what was on screen before
@@ -3801,10 +4041,12 @@ class GameFlowController {
   }
 
   updateSoundButtonIcon() {
-    const muteOverlay = document.getElementById('sound-mute-overlay');
-    if (muteOverlay) {
-      muteOverlay.style.display = this.audio.isEnabled() ? 'none' : 'block';
-    }
+    // Update ALL sound button overlays on the page (handles multiple instances)
+    const muteOverlays = document.querySelectorAll('.sound-mute-overlay, #sound-mute-overlay');
+    const isEnabled = this.audio.isEnabled();
+    muteOverlays.forEach(overlay => {
+      overlay.style.display = isEnabled ? 'none' : 'block';
+    });
   }
 
   // Sets up a smaller version of the Game 1 board for the tutorial screens
@@ -3864,6 +4106,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Allow Enter key to submit // When being tested by teacher afetr iteration 1 and she
     // tried pressing enter and it didnt work, decided to implement this
     const input = document.getElementById('participant-code');
@@ -3878,63 +4123,82 @@ class GameFlowController {
 
   // Handles participant/teacher code login with Firebase authentication
   async handleLoginSubmit() {
+    console.log('=== LOGIN SUBMIT CALLED ===');
     const input = document.getElementById('participant-code');
-    if (!input) return;
+    if (!input) {
+      console.error('Input not found!');
+      return;
+    }
 
     const code = input.value.trim().toUpperCase();
+    console.log('Code entered:', code);
 
     if (!code) {
       alert('Feuch gun cuir thu a-steach an còd ceart agad!');
       return;
     }
 
-    try {
-      // Disable input while processing
-      input.disabled = true;
-      input.placeholder = 'A\' dèanamh dearbhaidh...'; // Authenticating...
+    // Simple client-side validation
+    const participantPattern = /^P-([0-9]|[1-4][0-9]|50)$/;  // P-0 to P-50
+    const teacherPattern = /^T-([1-9]|10)$/;  // T-1 to T-10 (no leading zeros)
 
-      // Call Cloud Function to validate code and get auth token
-      const validateFunc = firebase.functions().httpsCallable('validateAndAuthenticate');
-      const result = await validateFunc({ code });
+    const isParticipant = participantPattern.test(code);
+    const isTeacher = teacherPattern.test(code);
 
-      // Sign in with custom token
-      await firebase.auth().signInWithCustomToken(result.data.token);
-
-      // Route based on type
-      if (result.data.type === 'teacher') {
-        // Redirect to teacher dashboard
-        window.location.href = '/dashboard.html';
-        return;
-      }
-
-      // Participant flow - initialize data logger and continue to game
-      this.participantCode = code;
-      this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
-
-      // Initialize Firebase data logger
-      this.dataLogger = new window.DataLogger(code);
-      await this.dataLogger.initSession();
-      await this.dataLogger.logEvent('login', { participantCode: code });
-
-      // Continue to game intro
-      this.setGameFlowState('RUAIRIDH_INTRO');
-
-    } catch (error) {
-      console.error('Login error:', error);
-
-      // Re-enable input
-      input.disabled = false;
-      input.placeholder = 'Cuir a-steach an còd agad';
-
-      // Show user-friendly error message
-      if (error.code === 'functions/not-found') {
-        alert('Còd mì-dhligheach. Feuch gun cuir thu a-steach an còd ceart.');
-      } else if (error.code === 'functions/permission-denied') {
-        alert('Tha an còd seo air a dhì-ghnìomhachadh.');
-      } else {
-        alert('Mearachd: Chan urrainn dhuinn ceangal ris an t-seirbheis. Feuch a-rithist.');
-      }
+    if (!isParticipant && !isTeacher) {
+      alert('Còd mì-dhligheach!\n\nFeumaidh an còd a bhith san fhoirm:\nP-0 gu P-50 (com-pàirtichean)\nno T-1 gu T-10 (tidsearan)');
+      return;
     }
+
+    // Teacher codes go to dashboard
+    if (isTeacher) {
+      window.location.href = '/dashboard.html';
+      return;
+    }
+
+    console.log('=== STARTING PARTICIPANT FLOW ===');
+
+    // Participant flow
+    this.participantCode = code;
+    this.gameData = { participantCode: code, score: 0, gameStartTime: new Date() };
+    console.log('Participant code set:', this.participantCode);
+
+    // Initialize Firebase data logger (non-blocking - game continues even if logging fails)
+    console.log('Checking Firebase availability...');
+    console.log('window.DataLogger:', typeof window.DataLogger);
+    console.log('window.firebaseDb:', typeof window.firebaseDb);
+
+    if (window.DataLogger && window.firebaseDb) {
+      try {
+        console.log('🔄 Initializing DataLogger for participant:', code);
+        this.dataLogger = new window.DataLogger(code);
+
+        // Add 10-second timeout - give Firebase time to connect on slow networks
+        const initPromise = this.dataLogger.init();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Firebase init timeout after 10 seconds')), 10000)
+        );
+
+        await Promise.race([initPromise, timeoutPromise]);
+        console.log('✅ DataLogger initialized successfully - Firebase logging ENABLED');
+      } catch (error) {
+        console.error('❌ DataLogger initialization failed:', error);
+        console.error('Error type:', error.name);
+        console.error('Error message:', error.message);
+        console.warn('⚠️ Game will continue WITHOUT Firebase logging');
+        this.dataLogger = null;  // Disable logging but allow game to proceed
+      }
+    } else {
+      console.warn('⚠️ Firebase or DataLogger not available - continuing without logging');
+      console.log('Debug: window.DataLogger =', typeof window.DataLogger);
+      console.log('Debug: window.firebaseDb =', typeof window.firebaseDb);
+      this.dataLogger = null;
+    }
+
+    // Continue to game intro
+    console.log('=== CALLING setGameFlowState(RUAIRIDH_INTRO) ===');
+    this.setGameFlowState('RUAIRIDH_INTRO');
+    console.log('=== setGameFlowState COMPLETED ===');
   }
 
   // ----------------------------------------------------------
@@ -3953,13 +4217,16 @@ class GameFlowController {
         </div>
         <div class="arrow-buttons centred">
           <button id="start-audio-btn" class="play-green-btn" onclick="gameController.startRuairidhIntroAudio()" style="font-size: 20px; padding: 15px 40px;">
-            🔊 Cluich Fuaim / Play Audio
+            TÒISICH
           </button>
           <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed; display: none;" onclick="gameController.setGameFlowState('PREGAME_TUTORIAL')">Air adhart →</button>
         </div>
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
   }
 
   startRuairidhIntroAudio() {
@@ -4013,7 +4280,7 @@ class GameFlowController {
   // Step 1: Welcome message with a Gaelic phrase about springtime
   renderGame1Tutorial_Step1() {
     this.game1TutorialStep = 0;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach!' });
     const html = `
       <div class="game1-screen game1-tutorial-step1">
         ${banner}
@@ -4029,6 +4296,9 @@ class GameFlowController {
       </div>`;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     this.ruairidhVoice.play('GAME1_TUT_STEP1', () => {
       const btn = document.getElementById('forward-btn');
       if (btn) {
@@ -4043,7 +4313,7 @@ class GameFlowController {
   // Step 1b: Shows the lobster moving around - just on the sand
   renderGame1Tutorial_Step1b() {
     this.game1TutorialStep = 0;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach!' });
     const html = `
       <div class="game1-screen game1-tutorial-step1">
         ${banner}
@@ -4064,6 +4334,9 @@ class GameFlowController {
       </div>`;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Set up the demo board and start the lobster moving slowly
     this.initGame1TutorialBoard();
     this.game1TutorialBoard.renderTutorialOnlyLobster('game1-board-tutorial');
@@ -4083,14 +4356,14 @@ class GameFlowController {
   // Step 2: Explains what the board looks like (lobster + sand tiles)
   renderGame1Tutorial_Step2() {
     this.game1TutorialStep = 1;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach!' });
     const html = `
       <div class="game1-screen game1-tutorial-step2">
         ${banner}
         <div class="game1-tutorial-content-wrapper game1-tutorial-step2">
           <div class="game1-tutorial-text-section">
             <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("Ri mo thaobh chì thu giomach agus blocaichean gainmhich bhuidhe. Seo far a bheil sinn a' dol a dh' fheuchainn giomaich a ghlacadh!", 150)}
+              ${this.buildSpeechBubbleHTML("Ri mo thaobh chì thu giomach agus blocaichean gainmhich buidhe. Seo far a bheil sinn a' dol a dh' fheuchainn giomaich a ghlacadh!", 150)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.game1TutorialStep = 0; gameController.renderGame1Tutorial_Step1();">← Air ais</button>
                 <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.game1TutorialStep = 2; gameController.renderGame1Tutorial_Step3();">Air adhart →</button>
@@ -4103,6 +4376,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.initGame1TutorialBoard();
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
@@ -4121,14 +4397,14 @@ class GameFlowController {
   // Step 3: Explains how placing rocks traps lobsters
   renderGame1Tutorial_Step3() {
     this.game1TutorialStep = 2;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach!' });
     const html = `
       <div class="game1-screen game1-tutorial-step3">
         ${banner}
         <div class="game1-tutorial-content-wrapper game1-tutorial-step3">
           <div class="game1-tutorial-text-section">
             <div class="ruairidh-intro-screen game1-tutorial-box">
-              ${this.buildSpeechBubbleHTML("Nuair a bhrùthas tu air an gainmheach bhuidhe, 's urrainn dhut clach a chur sìos. Chan urrainn do na giomaich a' dhol thairis air na clachan!<br><br>Airson a h-uile giomach a gheibh thu, thèid clach a chur air an càirn agad.", 150)}
+              ${this.buildSpeechBubbleHTML("Nuair a bhrùthas tu air an gainmheach bhuidhe, 's urrainn dhut clach a chur sìos. Chan urrainn do na giomaich a dhol thairis air na clachan!<br><br>Airson a h-uile giomach a gheibh thu, thèid clach a chur air an càrn agad.", 150)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.game1TutorialStep = 1; gameController.renderGame1Tutorial_Step2();">← Air ais</button>
                 <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.game1TutorialStep = 3; gameController.renderGame1Tutorial_Step4();">Air adhart →</button>
@@ -4141,6 +4417,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.initGame1TutorialBoard({ withRocks: true }); // show rocks on this step
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
@@ -4159,7 +4438,7 @@ class GameFlowController {
   // Step 4: Final tips and the "Play" button to start the actual game
   renderGame1Tutorial_Step4() {
     this.game1TutorialStep = 3;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach' });
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Glac an Giomach!' });
     const html = `
       <div class="game1-screen game1-tutorial-step4">
         ${banner}
@@ -4179,6 +4458,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.initGame1TutorialBoard({ withRocks: true });
     this.game1TutorialBoard.renderTutorial('game1-board-tutorial');
@@ -4202,7 +4484,7 @@ class GameFlowController {
   // ----------------------------------------------------------
   renderGame1_Main() {
     const banner = this.buildBannerHTML({
-      showTitle: true, title: 'Glac an Giomach',
+      showTitle: true, title: 'Glac an Giomach!',
       showTimer: true, timerDisplay: '4:00',
       pauseDisabled: false, pauseHandler: 'gameController.togglePause()',
       helpDisabled: false, cairnId: 'cairn-points'
@@ -4226,6 +4508,9 @@ class GameFlowController {
       </div>`;
 
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     // Create the game board and start the 4-minute countdown
     this.game1Board = new Game1Board(5, this);
@@ -4255,12 +4540,21 @@ class GameFlowController {
 
     // Start the countdown - ticks every second
     this.gameTimer = setInterval(() => {
+      // CRITICAL: Only run timer if we're still in GAME1
+      if (this.currentState !== 'GAME1') {
+        clearInterval(this.gameTimer);
+        this.gameTimer = null;
+        console.log('Timer stopped - no longer in GAME1');
+        return;
+      }
+
       this.timeRemaining--;
       this.updateGame1TimerDisplay();  // Update the visual display
 
       // Check if time's up
       if (this.timeRemaining <= 0) {
         clearInterval(this.gameTimer);  // Stop the timer
+        this.gameTimer = null;
         // Brief pause before transitioning to next screen
         setTimeout(() => {
           this.setGameFlowState('GAME2_READY');
@@ -4303,10 +4597,21 @@ class GameFlowController {
       this.helpSystem = new SmartHelpSystem(this);
     }
 
-    // Firebase Data Logging: Track help requests
-    if (this.dataLogger && this.helpSystem.modal && !this.helpSystem.modal.classList.contains('visible')) {
-      // Only log when opening (not closing) the help modal
-      this.dataLogger.logHelpRequest(this.currentState, 0); // Could track time in game if needed
+    const isOpening = !this.helpSystem.isOpen;
+
+    // CRITICAL: Update status and log help request when OPENING
+    if (this.dataLogger && isOpening) {
+      if (typeof this.dataLogger.logHelpCuideachadh === 'function') {
+        this.dataLogger.logHelpCuideachadh('GAME1');
+      }
+      if (typeof this.dataLogger.updateStatus === 'function') {
+        this.dataLogger.updateStatus('help');
+      }
+    } else if (this.dataLogger && !isOpening) {
+      // CRITICAL: Restore status to playing when CLOSING
+      if (typeof this.dataLogger.updateStatus === 'function') {
+        this.dataLogger.updateStatus('playing');
+      }
     }
 
     this.helpSystem.toggle();
@@ -4349,6 +4654,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     this.ruairidhVoice.play('GAME2_READY', () => {
       const btn = document.getElementById('forward-btn');
       if (btn) {
@@ -4374,14 +4682,14 @@ class GameFlowController {
   // STEP 1: Introduction to the matching game concept
   renderGame2TutorialScreen() {
     this.game2TutorialStep = 0;
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan' });
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan!' });
 
     const html = `
       <div class="game2-tutorial-screen">
         ${banner}
         <div class="intro-screen-wrapper">
           <div class="ruairidh-intro-screen">
-            ${this.buildSpeechBubbleHTML("Anns an geama seo, feumaidh tu mo chuideachadh paidhrichean a dhèanamh de rudan as urrainn dhuinn a' lorg air an tràigh neo aig muir.")}
+            ${this.buildSpeechBubbleHTML("Anns an geama seo, feumaidh tu mo chuideachadh paidhrichean a dhèanamh de rudan as urrainn dhuinn a lorg air an tràigh no aig muir.")}
             <div class="arrow-buttons">
               <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_READY')">← Air ais</button>
               <button id="forward-btn" class="arrow-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.renderGame2TutorialScreen_Step2()">Air adhart →</button>
@@ -4390,6 +4698,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.ruairidhVoice.play('GAME2_TUT_STEP1', () => {
       const btn = document.getElementById('forward-btn');
@@ -4410,7 +4721,7 @@ class GameFlowController {
     const tweed1 = availableTweeds[Math.floor(Math.random() * availableTweeds.length)];
     const tweed2 = availableTweeds[Math.floor(Math.random() * availableTweeds.length)];
 
-    const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan' });
+    const banner = this.buildBannerHTML({ showTitle: true, title: 'Cho Coltrach ris an Dà Sgadan!' });
 
     const html = `
       <div class="game2-tutorial-screen">
@@ -4418,7 +4729,7 @@ class GameFlowController {
         <div class="game2-tutorial-content-wrapper">
           <div class="game2-tutorial-text-section">
             <div class="ruairidh-intro-screen" style="max-width: 600px;">
-              ${this.buildSpeechBubbleHTML("Bidh pìosan clò Hearaich air a' bhòrd ri mo thaobh. Brùth orra gus faicinn dè a tha air an cùlaibh agus feumaidh sibh paidhrichean a dhèanamh asta.", 120)}
+              ${this.buildSpeechBubbleHTML("Bidh pìosan clò Hearaich air a' bhòrd ri mo thaobh. Brùth orra gus faicinn dè tha air an cùlaibh agus feumaidh sibh paidhrichean a dhèanamh asta.", 120)}
               <div class="arrow-buttons">
                 <button class="arrow-btn" onclick="gameController.setGameFlowState('GAME2_TUTORIAL')">← Air ais</button>
                 <button id="forward-btn" class="play-green-btn" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="gameController.setGameFlowState('GAME2')">Air adhart</button>
@@ -4434,6 +4745,9 @@ class GameFlowController {
         </div>
       </div>`;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.ruairidhVoice.play('GAME2_TUT_STEP2', () => {
       const btn = document.getElementById('forward-btn');
@@ -4455,11 +4769,15 @@ class GameFlowController {
   // memory element for some users, making it feel stressful rather than fun.
   renderGame2_Main() {
     // Note: pause button is disabled because there's no timer in this game
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const html = `
       <div class="game2-screen">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" /></button>
             <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
             <button class="ruairidh-help-button" onclick="gameController.toggleGame2HelpModal()">?</button>
           </div>
@@ -4503,7 +4821,7 @@ class GameFlowController {
               <span class="help-tip-number">2</span>
               <div class="help-tip-content">
                 <!-- "How to do it: Press a card to flip it" -->
-                <strong>Mar a nì thu e:</strong> <p>Brùth air cairt gus a thionndaidh.</p>
+                <strong>Mar a nì thu e:</strong> <p>Brùth air cairt gus a tionndadh.</p>
               </div>
             </div>
 
@@ -4546,6 +4864,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Create the card game board &  render it
     this.game2Board = new CardMatchingGame(this);
     this.game2Board.render();
@@ -4560,13 +4881,26 @@ class GameFlowController {
       modal.classList.toggle('active');
 
       if (isOpening) {
-        // TBD - Remove this because no timer on game 2?
-        // Freeze the game while reading help - i had this in here from when it was timed
+        // CRITICAL: Log help request and update status to 'help'
+        if (this.dataLogger) {
+          if (typeof this.dataLogger.logHelpCuideachadh === 'function') {
+            this.dataLogger.logHelpCuideachadh('GAME2');
+          }
+          if (typeof this.dataLogger.updateStatus === 'function') {
+            this.dataLogger.updateStatus('help');
+          }
+        }
+
+        // Freeze the game while reading help
         if (this.game2Board) {
           this.game2Board.isPaused = true;
         }
         this.audio.pauseGameSounds(this.currentState);
       } else {
+        // CRITICAL: Restore status to 'playing' when closing
+        if (this.dataLogger && typeof this.dataLogger.updateStatus === 'function') {
+          this.dataLogger.updateStatus('playing');
+        }
 
         if (this.game2Board) {
           this.game2Board.isPaused = false;
@@ -4659,10 +4993,13 @@ class GameFlowController {
   addPointToCairn() {
     this.totalPoints++;
     this.updatePointsDisplayOnly();
+
+    // Always play point sound alongside any other audio (like lobster voice or background music)
+    // The point sound plays simultaneously without interrupting other audio
     this.audio.playPointSound();  // Gives user feedback that theyve recieced thhat point
 
     // Firebase Data Logging: Track points increment (batched every 10 seconds)
-    if (this.dataLogger) {
+    if (this.dataLogger && typeof this.dataLogger.logPointsIncrement === 'function') {
       this.dataLogger.logPointsIncrement(1);
     }
   }
@@ -4680,17 +5017,21 @@ class GameFlowController {
 
     // Note: pause and help buttons are disabled on this screen
     // since it's just an intro, not actual gameplay
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const html = `
       <div class="game3-ready-screen">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" /></button>
             <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
             <button class="ruairidh-help-button" disabled>?</button>
           </div>
           <div class="banner-title-container">
             <!-- "As fast as the salmon" -->
-            <div class="game3-title">Cho luath ris a' bhradan</div>
+            <div class="game3-title">Cho luath ris a' bhradan!</div>
           </div>
           <div class="ruairidh-banner-right">
             <div class="points-box">
@@ -4708,7 +5049,7 @@ class GameFlowController {
               </div>
               <div class="speech-bubble">
                 <!-- "The next game is: 'As fast as the salmon!' Come and I'll tell you more!" -->
-                <p>'S e an ath gheama: <strong>"Cho luath ris a' bhradan!"</strong> Trobhad gus an innis mi barrachd dhuibh!</p>
+                <p>'S e an ath gheama: "Cho luath ris a' bhradan!" Trobhad gus an innis mi barrachd dhuibh!</p>
               </div>
             </div>
             <div class="arrow-buttons centred">
@@ -4719,6 +5060,9 @@ class GameFlowController {
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     this.ruairidhVoice.play('GAME3_READY', () => {
       const btn = document.getElementById('forward-btn');
@@ -4749,37 +5093,41 @@ class GameFlowController {
     const tutorialSteps = [
       // STEP 0: "Look here! I'll be up here at the top. I'll show you what fish I want!"
       {
-        bubbleContent: `<img src="./svgs/game-3/game-3-fish/sgadan-L.svg" alt="Sgadan" class="target-fish-image" />`,
+        bubbleContent: `<img src="./svgs/game-3/game-3-fish/cuiteag-R.svg" alt="Cuiteag" class="target-fish-image" />`,
         pointer: `↑ Coimhead an seo! ↑`,  // "Look here!"
-        message: `Bidh mise an seo aig a' mhulach. Seallaidh mi dhuibh dè an t-iasg a tha mi ag iarraidh!`
+        message: `Bidh mise an seo aig a' mhullach. Seallaidh mi dhuibh dè an t-iasg a tha mi ag iarraidh!`
       },
       // STEP 1: "If you catch the right fish that I want, you'll get points!"
       {
-        bubbleContent: `<img src="./svgs/game-3/game-3-fish/sgadan-L.svg" alt="Sgadan" class="target-fish-image" />`,
+        bubbleContent: `<img src="./svgs/game-3/game-3-fish/cuiteag-R.svg" alt="Cuiteag" class="target-fish-image" />`,
         pointer: null,
-        message: `Ma gheibh sibh an t-iasg cheart a tha mise ag iarraidh, gheibh sibh puingean!`
+        message: `Ma gheibh sibh an t-iasg ceart a tha mise ag iarraidh, gheibh sibh puingean!`
       },
       // STEP 2: "Keep an eye out for rubbish! If you tap on rubbish you'll get points too!"
       // This adds an environmental awareness element to the game
       {
         bubbleContent: `<img src="./svgs/game-3/game-3-garbage/plastic-bottle-1.svg" alt="Sgudal" class="target-fish-image" />`,
         pointer: null,
-        message: `Cùm do shùil a-mach airson sgudal! Ma bhrùthas tu air sgudal gheibh sibh puingean cuideachd!`
+        message: `Cùm do shùil a-mach airson sgudal! Ma bhrùthas tu air sgudal, gheibh sibh puingean cuideachd!`
       }
     ];
 
     const step = tutorialSteps[this.game3TutorialStep];
 
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const html = `
       <div class="game3-screen game3-tutorial-preview">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" /></button>
             <button class="ruairidh-pause-button" disabled>${SVG_ICONS.pause}</button>
             <button class="ruairidh-help-button" disabled>?</button>
           </div>
           <div class="banner-title-container">
-            <div class="game3-title">Cho luath ris a' bhradan</div>
+            <div class="game3-title">Cho luath ris a' bhradan!</div>
           </div>
           <div class="ruairidh-banner-right">
             <div class="points-box">
@@ -4818,6 +5166,9 @@ class GameFlowController {
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
 
     // Play audio based on game3 tutorial step
     const audioKeys = ['GAME3_TUT_STEP0', 'GAME3_TUT_STEP1', 'GAME3_TUT_STEP2'];
@@ -4858,16 +5209,20 @@ class GameFlowController {
 
 
   renderGame3_Main() {
+    // CRITICAL: Set red X overlay display based on ACTUAL current audio state
+    const isAudioEnabled = this.audio.isEnabled();
+    const muteOverlayDisplay = isAudioEnabled ? 'none' : 'block';
+
     const html = `
       <div class="game3-screen">
         <div class="ruairidh-banner">
           <div class="ruairidh-banner-left">
-            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: none;" /></button>
+            <button class="ruairidh-sound-button" id="sound-button" onclick="gameController.toggleSound()"><img src="./svgs/all-games/speaker-icon.svg" alt="Speaker" class="sound-icon" /><img src="./svgs/all-games/red-x.svg" alt="Muted" class="sound-mute-overlay" id="sound-mute-overlay" style="display: ${muteOverlayDisplay};" /></button>
             <button class="ruairidh-pause-button" id="pause-button" onclick="gameController.toggleGame3Pause()">${SVG_ICONS.pause}</button>
             <button class="ruairidh-help-button" onclick="gameController.toggleGame3HelpModal()">?</button>
           </div>
           <div class="banner-title-container">
-            <div class="game3-title">Cho luath ris a' bhradan</div>
+            <div class="game3-title">Cho luath ris a' bhradan!</div>
           </div>
           <div class="ruairidh-banner-right">
             <div class="timer-box">
@@ -4928,7 +5283,7 @@ class GameFlowController {
             <div class="help-tip">
               <span class="help-tip-number">2</span>
               <div class="help-tip-content">
-                <strong>Lorg an t-iasg ceart:</strong> <p>Brùth air an t-iasg anns a' mhuir a tha co-ionann ris an fhear a tha Ruairidh ag iarraidh.</p>
+                <strong>Lorg an t-iasg ceart:</strong> <p>Brùth air an t-iasg sa mhuir a tha co-ionann ris an fhear a tha Ruairidh ag iarraidh.</p>
               </div>
             </div>
 
@@ -4971,6 +5326,9 @@ class GameFlowController {
     `;
     this.gameContainer.innerHTML = html;
 
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
+
     // Create and start the fishing game
     this.game3Board = new Game3FishingGame(this);
     this.game3Board.init();
@@ -4985,13 +5343,28 @@ class GameFlowController {
       modal.classList.toggle('active');
 
       if (isOpening) {
+        // CRITICAL: Log help request and update status to 'help'
+        if (this.dataLogger) {
+          if (typeof this.dataLogger.logHelpCuideachadh === 'function') {
+            this.dataLogger.logHelpCuideachadh('GAME3');
+          }
+          if (typeof this.dataLogger.updateStatus === 'function') {
+            this.dataLogger.updateStatus('help');
+          }
+        }
+
         // Freeze the game while reading help module
         if (this.game3Board) {
           this.game3Board.isPaused = true;
         }
         this.audio.pauseGameSounds(this.currentState);
       } else {
-        // Back to gamepaly
+        // CRITICAL: Restore status to 'playing' when closing
+        if (this.dataLogger && typeof this.dataLogger.updateStatus === 'function') {
+          this.dataLogger.updateStatus('playing');
+        }
+
+        // Back to gameplay
         if (this.game3Board) {
           this.game3Board.isPaused = false;
         }
@@ -5015,7 +5388,7 @@ class GameFlowController {
     if (this.gameTimer) clearInterval(this.gameTimer);
 
     // Firebase Data Logging: Finalize session with complete data
-    if (this.dataLogger) {
+    if (this.dataLogger && typeof this.dataLogger.finalizeSession === 'function') {
       await this.dataLogger.finalizeSession({
         totalPoints: this.totalPoints,
         completedGames: ['game1', 'game2', 'game3'],
@@ -5029,13 +5402,15 @@ class GameFlowController {
       <div class="login-screen">
         <h1>Deiseil!</h1>
         <p>Cluicheadair: ${this.participantCode}</p>
-        <div class="game-complete-emoji">🦞</div>
-        <p class="game-complete-score">Puingean: ${this.totalPoints} Giomaich</p>
+        <p class="game-complete-score">Puingean: ${this.totalPoints}</p>
         <p class="game-complete-message">Ceud taing airson an geama seo a' chluich, tha na puingean agad air a' shàbhaladh.</p>
-        <button class="play-button" onclick="location.reload()">Cluich a-rithist!</button>
+        <button class="play-button" style="background: #4caf50;" onclick="location.reload()">DEISEIL</button>
       </div>
     `;
     this.gameContainer.innerHTML = html;
+
+    // CRITICAL: Sync red X overlay with current audio state after rendering new HTML
+    this.updateSoundButtonIcon();
   }
 }
 
@@ -5048,8 +5423,23 @@ let gameController;
 
 // Start the game once the page has finished loading
 document.addEventListener('DOMContentLoaded', () => {
-  gameController = new GameFlowController();
-  gameController.setGameFlowState('LOGIN');  // show the login screen first
+  try {
+    console.log('Initializing game...');
+    gameController = new GameFlowController();
+    console.log('GameFlowController created successfully');
+    gameController.setGameFlowState('LOGIN');  // show the login screen first
+    console.log('Login screen should now be visible');
+  } catch (error) {
+    console.error('CRITICAL ERROR during game initialization:', error);
+    document.getElementById('game-container').innerHTML = `
+      <div style="padding: 40px; text-align: center; font-family: Arial;">
+        <h1 style="color: red;">Mearachd / Error</h1>
+        <p>Failed to initialize game: ${error.message}</p>
+        <p style="font-size: 12px; color: #666;">${error.stack}</p>
+        <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 20px;">Reload Page</button>
+      </div>
+    `;
+  }
 });
 
 // Re-render the hex grid if the window is resized during Game 1
