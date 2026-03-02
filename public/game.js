@@ -4309,8 +4309,6 @@ class GameFlowController {
       }
     } else {
       console.warn('⚠️ Firebase or DataLogger not available - continuing without logging');
-      console.log('Debug: window.DataLogger =', typeof window.DataLogger);
-      console.log('Debug: window.firebaseDb =', typeof window.firebaseDb);
       this.dataLogger = null;
     }
 
@@ -4616,7 +4614,6 @@ class GameFlowController {
         <div class="game1-footer">
           <div id="round-status"></div>
           <button class="nav-btn" onclick="gameController.resetGame1Round()">Tòisich a-rithist</button>
-          <button class="nav-btn dev-skip-btn" onclick="gameController.setGameFlowState('GAME2_READY')" style="background: #ff6b6b; margin-left: 10px;">DEV: Skip to Game 2 →</button>
         </div>
       </div>
       <div class="pause-modal" id="pause-modal">
@@ -4950,9 +4947,6 @@ class GameFlowController {
         </div>
         <div class="game2-content-wrapper">
           <div class="game2-board" id="game2-board"></div>
-          <div class="game2-footer" style="text-align: center; margin-top: 10px;">
-            <button class="nav-btn dev-skip-btn" onclick="gameController.setGameFlowState('GAME3_READY')" style="background: #ff6b6b;">DEV: Skip to Game 3 →</button>
-          </div>
         </div>
       </div>
 
@@ -5406,9 +5400,6 @@ class GameFlowController {
         </div>
         <!-- The Game3FishingGame class renders the swimming fish here -->
         <div class="game3-canvas-container" id="game3-canvas"></div>
-        <div class="game3-footer" style="text-align: center; margin-top: 10px; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 100;">
-          <button class="nav-btn dev-skip-btn" onclick="gameController.skipToResults()" style="background: #ff6b6b;">DEV: Skip to Results →</button>
-        </div>
       </div>
 
       <!-- Pause modal: "Game paused" / "Start" -->
@@ -5527,14 +5518,6 @@ class GameFlowController {
         this.audio.resumeGameSounds(this.currentState);
       }
     }
-  }
-
-  skipToResults() {
-    // Dev function to skip to results
-    if (this.gameTimer) {
-      clearInterval(this.gameTimer);
-    }
-    this.setGameFlowState('RESULTS');
   }
 
   // ----------------------------------------------------------
