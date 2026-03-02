@@ -1,11 +1,18 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // Participants collection - SIMPLE RULES
     match /participants/{participantCode} {
       // Anyone can read and write their own participant document
       // This is for a research study with pre-generated codes (P-01 to P-50)
+      allow read, write: if true;
+    }
+
+    // EXPERIMENT BACKUP - Complete data backup for safety
+    match /experiment_backup/{document=**} {
+      // Allow all reads and writes to backup collection
+      // This captures all login events, snapshots, and events for data recovery
       allow read, write: if true;
     }
 

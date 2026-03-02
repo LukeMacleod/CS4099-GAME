@@ -112,6 +112,31 @@
   <script src="js/dashboard-simple.js"></script>
 
   <script>
+    // BACKUP: Log teacher dashboard access
+    (async function logTeacherDashboardAccess() {
+      try {
+        const db = window.firebaseDb;
+        if (!db) return;
+
+        const teacherAccessLog = {
+          accessTime: firebase.firestore.FieldValue.serverTimestamp(),
+          accessTimeLocal: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+          type: 'teacher_dashboard_access'
+        };
+
+        await db.collection('experiment_backup')
+          .doc('dashboard_access')
+          .collection('entries')
+          .add(teacherAccessLog);
+
+        console.log('✅ BACKUP: Teacher dashboard access logged');
+      } catch (error) {
+        console.error('❌ BACKUP: Failed to log dashboard access:', error);
+      }
+    })();
+
     // Clear data button functionality
     document.getElementById('clear-data-btn')?.addEventListener('click', async () => {
       if (confirm('Clear all participant data? This cannot be undone.')) {
