@@ -1,0 +1,190 @@
+/*
+  Scotling v2 — shared stylesheet, scotling.com
+  Draft starting point (role 22, school-adoption-lead), 16 Oct 2026.
+  REVISIT when studio/pods/design/design-system.md lands (not yet written) — this file
+  reads its values from studio/pods/design/design-tokens.json (DRAFT) instead.
+
+  Fonts: system font stack only. No fonts are loaded from a third-party CDN at runtime
+  (Constitution 4.2 non-negotiables). design-tokens.json names 'Baloo 2' (display) and
+  'Atkinson Hyperlegible' (body/UI) as the eventual brand faces — both SIL OFL 1.1,
+  Google Fonts — for the Visual Brand Designer to self-host as local font-file downloads
+  with the licence recorded alongside. Until then this fallback stack is deliberate, not
+  a placeholder: design-tokens.json notes it "already renders Gaelic graves correctly on
+  every school device inspected (16 Oct 2026)", so Gaelic diacritics never depend on a
+  font load succeeding.
+*/
+
+:root {
+  --saltire-blue: #185FA5;
+  --saltire-blue-ink: #0E3C6B;
+  --saltire-blue-tint: #E3EEF8;
+  --thistle-gold: #C9992C;
+  --thistle-gold-tint: #F6ECD4;
+
+  --ink-900: #1A1A1A;
+  --ink-700: #3C3C3C;
+  --ink-500: #6B6B6B;
+  --line-200: #E5E5E5;
+  --surface-050: #F7F7F7;
+  --surface-000: #FFFFFF;
+
+  --success: #1E8E5A;
+  --caution: #B5750C;
+  --danger: #C4341F;
+  --focus-ring: #185FA5;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --font-ui: 'Atkinson Hyperlegible', -apple-system, 'Segoe UI', system-ui, Roboto, sans-serif;
+  --font-display: 'Baloo 2', var(--font-ui);
+  /*
+    Note: the two custom-property values above name the eventual brand faces but no such
+    font file is loaded anywhere in this stylesheet — the browser silently falls through
+    to the system-ui stack because no @font-face exists yet. Nothing here fetches a
+    third-party CDN.
+  */
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--ink-900);
+  background: var(--surface-000);
+}
+
+h1, h2, h3 { line-height: 1.25; color: var(--saltire-blue-ink); }
+h1 { font-size: 36px; margin: 0 0 var(--space-4); }
+h2 { font-size: 28px; margin: var(--space-7) 0 var(--space-3); }
+h3 { font-size: 22px; margin: var(--space-5) 0 var(--space-2); }
+p  { margin: 0 0 var(--space-4); max-width: 68ch; }
+ul, ol { margin: 0 0 var(--space-4); padding-left: 1.3em; }
+li { margin-bottom: var(--space-2); }
+
+a { color: var(--saltire-blue-ink); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: var(--saltire-blue); }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute; left: -999px; top: 0;
+  background: var(--saltire-blue-ink); color: #fff; padding: var(--space-2) var(--space-4);
+  z-index: 100;
+}
+.skip-link:focus { left: var(--space-2); top: var(--space-2); }
+
+.site-header {
+  border-bottom: 4px solid var(--thistle-gold);
+  background: var(--saltire-blue-ink);
+}
+.site-header .wrap {
+  max-width: 1100px; margin: 0 auto; padding: var(--space-3) var(--space-4);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.site-header a { color: #fff; }
+.brand { font-family: var(--font-display); font-weight: 800; font-size: 22px; text-decoration: none; }
+.site-nav ul {
+  list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-4);
+  margin: 0; padding: 0;
+}
+.site-nav a {
+  text-decoration: none; font-weight: 700; font-size: 15px;
+  display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2;
+}
+.site-nav .gd { font-weight: 800; }
+.site-nav .en { font-size: 11px; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.04em; }
+.site-nav a[aria-current="page"] { border-bottom: 3px solid var(--thistle-gold); }
+
+main { max-width: 820px; margin: 0 auto; padding: var(--space-7) var(--space-4) var(--space-8); }
+main.wide { max-width: 1100px; }
+
+.lede { font-size: 20px; color: var(--ink-700); }
+
+.callout {
+  border: 1px solid var(--line-200); border-left: 6px solid var(--saltire-blue);
+  background: var(--surface-050); border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5); margin: var(--space-5) 0;
+}
+.callout.gold { border-left-color: var(--thistle-gold); }
+.callout h3 { margin-top: 0; }
+
+.badge {
+  display: inline-block; background: var(--thistle-gold-tint); color: var(--ink-900);
+  border: 1px solid var(--thistle-gold); border-radius: var(--radius-pill);
+  padding: 2px 12px; font-size: 13px; font-weight: 700; margin: 0 var(--space-2) var(--space-2) 0;
+}
+
+.draft-note {
+  font-size: 14px; color: var(--ink-500); border: 1px dashed var(--line-200);
+  border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4); margin: var(--space-5) 0;
+}
+
+table { border-collapse: collapse; width: 100%; margin: var(--space-4) 0 var(--space-5); }
+th, td { border: 1px solid var(--line-200); padding: var(--space-2) var(--space-3); text-align: left; vertical-align: top; }
+th { background: var(--surface-050); }
+
+.steps { list-style: none; padding: 0; margin: var(--space-4) 0; counter-reset: step; }
+.steps li {
+  counter-increment: step; position: relative; padding-left: 44px; margin-bottom: var(--space-4);
+}
+.steps li::before {
+  content: counter(step); position: absolute; left: 0; top: 0;
+  width: 30px; height: 30px; border-radius: var(--radius-pill);
+  background: var(--saltire-blue); color: #fff; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+form { max-width: 480px; }
+label { display: block; font-weight: 700; margin-bottom: var(--space-1); }
+input[type="text"], input[type="email"], select {
+  width: 100%; padding: 10px 12px; margin-bottom: var(--space-4);
+  border: 1px solid var(--ink-500); border-radius: var(--radius-sm); font: inherit; color: inherit;
+}
+button, .btn {
+  font: inherit; font-weight: 800; background: var(--saltire-blue); color: #fff;
+  border: none; border-radius: var(--radius-pill); padding: 12px 28px; cursor: pointer;
+  text-decoration: none; display: inline-block;
+}
+button:hover, .btn:hover { background: var(--saltire-blue-ink); }
+
+.site-footer {
+  border-top: 1px solid var(--line-200); background: var(--surface-050);
+  padding: var(--space-6) var(--space-4); font-size: 14px; color: var(--ink-500);
+}
+.site-footer .wrap { max-width: 1100px; margin: 0 auto; }
+.site-footer a { color: var(--ink-700); }
+.site-footer nav ul { list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); padding: 0; margin: 0 0 var(--space-3); }
+
+/* Gaelic glyph check: à è ì ò ù — rendered inline, no fallback image. */
+.glyph-check { font-weight: 800; }
+
+@media (max-width: 640px) {
+  h1 { font-size: 28px; }
+  h2 { font-size: 22px; }
+  body { font-size: 16px; }
+  .site-header .wrap { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

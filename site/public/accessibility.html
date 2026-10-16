@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility / So-ruigsinneachd — Scotling</title>
+<meta name="description" content="Our accessibility statement: the WCAG 2.2 AA target, and the gaps we know about today.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">Scotling</a>
+    <nav class="site-nav" aria-label="Main">
+      <ul>
+        <li><a href="index.html"><span class="gd">Dachaigh</span><span class="en">Home</span></a></li>
+        <li><a href="games.html"><span class="gd">Geamannan</span><span class="en">Games</span></a></li>
+        <li><a href="evidence.html"><span class="gd">Fianais</span><span class="en">Evidence</span></a></li>
+        <li><a href="schools.html"><span class="gd">Sgoiltean</span><span class="en">Schools</span></a></li>
+        <li><a href="home.html"><span class="gd">Dachaigh</span><span class="en">Families</span></a></li>
+        <li><a href="contact.html"><span class="gd">Fios thugainn</span><span class="en">Contact</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <p class="badge">So-ruigsinneachd</p>
+  <h1>Accessibility statement</h1>
+  <p class="lede">Last reviewed 16 October 2026. This site, and the game it describes, are being
+  built against WCAG 2.2 AA. This statement says plainly where we believe we meet that today and
+  where we know we do not yet.</p>
+
+  <div class="draft-note">Draft — to be re-checked by the Accessibility Specialist and HCI Lead
+  before this is treated as a final, audited statement. No automated or manual accessibility audit
+  has been run on this site yet; the claims below are design-time, not audit-verified.</div>
+
+  <h2>This website</h2>
+  <ul>
+    <li>No JavaScript is required to read any page.</li>
+    <li>A "skip to content" link is present on every page.</li>
+    <li>Colour choices follow a 4.5:1 minimum contrast target for body text; our gold accent colour
+    is used only for borders, badges and backgrounds behind dark text — never as text colour on a
+    light background, because on its own it does not meet that ratio.</li>
+    <li>No content relies on colour alone; headings and structure use real HTML elements
+    (<code>&lt;h1&gt;</code>–<code>&lt;h3&gt;</code>, lists, tables with headers), not styled
+    paragraphs.</li>
+    <li>Layout is responsive and does not lock pinch-zoom.</li>
+  </ul>
+
+  <h2>Known gaps, from our own evaluation</h2>
+  <p>The dissertation trial that this project is built on fed back real accessibility gaps directly,
+  and we are stating them rather than quietly fixing them off-page: the trial teacher identified a
+  need for dyslexia-friendly fonts, broader audio narration, and adaptive difficulty in the evaluated
+  build (dissertation, p.66–67). None of those three are solved yet in the live game.</p>
+  <ul>
+    <li><strong>Dyslexia-friendly typography</strong> — not yet shipped in the game itself; this
+    website uses a system font stack chosen for legibility, with a dyslexia-friendly typeface
+    (Atkinson Hyperlegible, an open-licence font) planned once it is properly self-hosted rather than
+    loaded from a third party at runtime.</li>
+    <li><strong>Audio narration coverage</strong> — the current build has real recorded narration for
+    its existing content, not yet extended across every planned addition.</li>
+    <li><strong>Adaptive difficulty</strong> — not yet built.</li>
+  </ul>
+
+  <h2>Language accessibility</h2>
+  <p>Every Gaelic string on this site is shown with its English alongside, and every Gaelic string is
+  a draft awaiting review by a native Gaelic speaker before it is treated as correct — no automated
+  system, including the one that helped build this site, is allowed to certify Gaelic as correct.</p>
+
+  <h2>Tell us about a problem</h2>
+  <p>Use the <a href="contact.html">contact page</a>. As noted there, the form is not wired to a real
+  inbox yet.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="index.html">Dachaigh / Home</a></li>
+        <li><a href="games.html">Geamannan / Games</a></li>
+        <li><a href="evidence.html">Fianais / Evidence</a></li>
+        <li><a href="schools.html">Sgoiltean / Schools</a></li>
+        <li><a href="home.html">Teaghlaichean / Families</a></li>
+        <li><a href="privacy.html">Prìobhaideachas / Privacy</a></li>
+        <li><a href="accessibility.html">So-ruigsinneachd / Accessibility</a></li>
+        <li><a href="contact.html">Fios thugainn / Contact</a></li>
+      </ul>
+    </nav>
+    <p>Scotling. Gaelic strings on this site are drafts awaiting native-speaker review before any
+    real classroom sees them. No third-party trackers or analytics run on this site.</p>
+  </div>
+</footer>
+</body>
+</html>

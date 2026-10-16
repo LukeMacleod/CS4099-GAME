@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact / Fios thugainn — Scotling</title>
+<meta name="description" content="Tell us your school and role, and we'll get in touch. This form collects the minimum: school, role, email.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">Scotling</a>
+    <nav class="site-nav" aria-label="Main">
+      <ul>
+        <li><a href="index.html"><span class="gd">Dachaigh</span><span class="en">Home</span></a></li>
+        <li><a href="games.html"><span class="gd">Geamannan</span><span class="en">Games</span></a></li>
+        <li><a href="evidence.html"><span class="gd">Fianais</span><span class="en">Evidence</span></a></li>
+        <li><a href="schools.html"><span class="gd">Sgoiltean</span><span class="en">Schools</span></a></li>
+        <li><a href="home.html"><span class="gd">Dachaigh</span><span class="en">Families</span></a></li>
+        <li><a href="contact.html" aria-current="page"><span class="gd">Fios thugainn</span><span class="en">Contact</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <p class="badge">Express interest</p>
+  <h1>Fios thugainn — get in touch</h1>
+  <p class="lede">For a school, a teacher or a Gaelic-education contact wanting to hear more. This
+  form asks for three things only: your school (or organisation), your role, and an email address.
+  Nothing about any pupil, and nothing is required beyond this.</p>
+
+  <div class="draft-note">
+    <strong>This form does not go anywhere yet.</strong> It posts to
+    <code>https://forms.scotling.example/placeholder-expression-of-interest</code>, a clearly marked
+    placeholder endpoint — nobody receives this submission today. Wiring it to a real inbox is a
+    Founder Card "prepared, not executed" item (Constitution 7.7.3): it is an external action and
+    needs a founder yes/no first, same as any other live contact point. Until then, if you are
+    reading this as a real person: email the founder directly instead of using this form.
+  </div>
+
+  <form action="https://forms.scotling.example/placeholder-expression-of-interest" method="post">
+    <label for="school">School or organisation</label>
+    <input type="text" id="school" name="school" autocomplete="organization" required>
+
+    <label for="role">Your role</label>
+    <select id="role" name="role" required>
+      <option value="">Choose one</option>
+      <option value="head-teacher">Head teacher / depute head</option>
+      <option value="class-teacher">Class teacher (GME / Gaelic)</option>
+      <option value="gaelic-development-officer">Gaelic development officer</option>
+      <option value="parent-carer">Parent or carer</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label for="email">Email address</label>
+    <input type="email" id="email" name="email" autocomplete="email" required>
+
+    <button type="submit">Send expression of interest</button>
+  </form>
+
+  <p class="draft-note">We collect only what is above. No pupil names, no pupil data, no payment
+  details, no account creation. See <a href="privacy.html">Privacy</a> for the full position.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="index.html">Dachaigh / Home</a></li>
+        <li><a href="games.html">Geamannan / Games</a></li>
+        <li><a href="evidence.html">Fianais / Evidence</a></li>
+        <li><a href="schools.html">Sgoiltean / Schools</a></li>
+        <li><a href="home.html">Teaghlaichean / Families</a></li>
+        <li><a href="privacy.html">Prìobhaideachas / Privacy</a></li>
+        <li><a href="accessibility.html">So-ruigsinneachd / Accessibility</a></li>
+        <li><a href="contact.html">Fios thugainn / Contact</a></li>
+      </ul>
+    </nav>
+    <p>Scotling. Gaelic strings on this site are drafts awaiting native-speaker review before any
+    real classroom sees them. No third-party trackers or analytics run on this site.</p>
+  </div>
+</footer>
+</body>
+</html>
