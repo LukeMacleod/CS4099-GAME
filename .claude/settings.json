@@ -1,0 +1,73 @@
+{
+ "permissions": {
+  "deny": [
+   "Bash(git push*)",
+   "Bash(git add -A*)",
+   "Bash(git add --all*)",
+   "Bash(git add .)",
+   "Bash(git checkout main*)",
+   "Bash(git switch main*)",
+   "Bash(git merge main*)",
+   "Bash(git rebase main*)",
+   "Bash(firebase deploy*)",
+   "Bash(firebase hosting:channel:deploy*)",
+   "Bash(npx firebase deploy*)",
+   "Bash(wrangler*)",
+   "Bash(npm publish*)",
+   "Bash(gh pr create*)",
+   "Bash(gh release create*)",
+   "Bash(gh repo create*)",
+   "Bash(mail *)",
+   "Bash(sendmail*)",
+   "Bash(open mailto:*)",
+   "Bash(osascript*Mail*)",
+   "Bash(osascript*Messages*)",
+   "Edit(scripts/guard.py)",
+   "Write(scripts/guard.py)",
+   "Edit(.claude/settings.json)",
+   "Write(.claude/settings.json)",
+   "Edit(CLAUDE.md)",
+   "Write(CLAUDE.md)",
+   "Edit(.claude/skills/**)",
+   "Write(.claude/skills/**)",
+   "Edit(.claude/agents/**)",
+   "Write(.claude/agents/**)",
+   "Edit(init.sh)",
+   "Write(init.sh)",
+   "Bash(git checkout main*)",
+   "Bash(git switch main*)",
+   "Bash(git push*)",
+   "Bash(firebase*deploy*)",
+   "Bash(gh pr*)"
+  ],
+  "allow": [
+   "Bash(git status*)",
+   "Bash(git log*)",
+   "Bash(git diff*)",
+   "Bash(npx playwright test*)",
+   "Bash(python3 scripts/*)"
+  ]
+ },
+ "hooks": {
+  "PreToolUse": [
+   {
+    "matcher": "Bash",
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/guard.py\" pretool"
+     }
+    ]
+   },
+   {
+    "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/guard.py\" pretool"
+     }
+    ]
+   }
+  ]
+ }
+}
