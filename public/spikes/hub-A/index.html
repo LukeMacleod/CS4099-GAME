@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scotling Hub — Art-Direction Spike A</title>
+<meta name="description" content="Hand-authored layered SVG game hub for Scotling V2: Hebridean shoreline, CSS parallax and weather, eight game cards.">
+<meta name="theme-color" content="#0B2A47">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="hub.css">
+<!--
+  ============================================================================
+  SCOTLING V2 — ART-DIRECTION SPIKE A (visual-brand-designer, role 12)
+  16 October 2026. Branch dev/v2. Not production. Not deployed.
+
+  GAELIC PENDING NATIVE-SPEAKER REVIEW.
+  Every Gaelic string in this file is a PENDING row in
+  ~/scotling-studio/studio/content/pending/visual-brand-designer-site-rows.json
+  with its attested source URL. No agent certifies Gaelic (Constitution 7.7.2).
+  Nothing here reaches a child before the Gaelic Language Lead and a human
+  native speaker have signed the rows off. English gloss is shown alongside
+  every Gaelic string on screen, deliberately — see README.md.
+
+  LICENCE: all artwork below is authored by hand in this file (SVG paths and
+  CSS only). No stock imagery, no Freepik, no third-party fonts, no CDN, no
+  tracker, no analytics, no network request of any kind at runtime.
+
+  TYPE: system font stack only. Grave-accent proof (a e i o u) is rendered in
+  the dev panel (press D) at five sizes, and in the card titles.
+
+  PROVISIONAL TOKENS: studio/pods/design/design-system.md did not exist when
+  this was built. Every colour outside Saltire blue #185FA5 is marked
+  PROVISIONAL in hub.css and must be revisited when the design system lands.
+  Same for studio/pods/product/site-v2-spec.md and
+  studio/pods/design/world-bible.md (character canon for Ruairidh + Giomach).
+  ============================================================================
+-->
+</head>
+<body class="wx-fair">
+
+<a class="skip" href="#rail">Skip to the games</a>
+
+<main class="hub">
+
+  <!-- ===================== LAYERED SVG SCENE ===================== -->
+  <div class="scene" id="scene">
+    <svg id="sceneSvg" class="scene__svg" viewBox="140 60 1320 620"
+         preserveAspectRatio="xMidYMid slice"
+         role="img"
+         aria-label="A Hebridean shoreline at low evening sun: sea, a skerry with a seal, a whitewashed croft with tweed drying on a line, machair with a cairn, and a rock pool with a lobster.">
+      <defs>
+        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#07284A"/>
+          <stop offset="34%"  stop-color="#124E85"/>
+          <stop offset="62%"  stop-color="#3C84C0"/>
+          <stop offset="86%"  stop-color="#9FC2DC"/>
+          <stop offset="100%" stop-color="#F0CE97"/>
+        </linearGradient>
+        <radialGradient id="gSun" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#FFF2CF" stop-opacity="0.95"/>
+          <stop offset="38%"  stop-color="#FBD98A" stop-opacity="0.45"/>
+          <stop offset="100%" stop-color="#F3B95C" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="gSeaFar" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#2F6F9F"/>
+          <stop offset="100%" stop-color="#1B527E"/>
+        </linearGradient>
+        <linearGradient id="gSeaNear" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#1B527E"/>
+          <stop offset="100%" stop-color="#0D3759"/>
+        </linearGradient>
+        <linearGradient id="gSand" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#C9B994"/>
+          <stop offset="100%" stop-color="#E6D8B6"/>
+        </linearGradient>
+        <linearGradient id="gMachair" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#87A85E"/>
+          <stop offset="55%"  stop-color="#63804A"/>
+          <stop offset="100%" stop-color="#3C5435"/>
+        </linearGradient>
+        <linearGradient id="gWall" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stop-color="#FCF8EF"/>
+          <stop offset="100%" stop-color="#D9CFBC"/>
+        </linearGradient>
+        <linearGradient id="gRoof" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#4C5865"/>
+          <stop offset="100%" stop-color="#2B3540"/>
+        </linearGradient>
+        <linearGradient id="gStone" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stop-color="#A9AEB2"/>
+          <stop offset="100%" stop-color="#6F767C"/>
+        </linearGradient>
+        <linearGradient id="gSeal" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#77889A"/>
+          <stop offset="100%" stop-color="#43525F"/>
+        </linearGradient>
+        <linearGradient id="gFore" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#3E5739"/>
+          <stop offset="34%"  stop-color="#2C4130"/>
+          <stop offset="100%" stop-color="#132418"/>
+        </linearGradient>
+        <linearGradient id="gShell" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#D4553C"/>
+          <stop offset="100%" stop-color="#9C2F23"/>
+        </linearGradient>
+      </defs>
+
+      <!-- L0 sky: bleeds far past the viewBox so any aspect ratio is covered -->
+      <g class="L L0">
+        <rect x="-900" y="-1600" width="3400" height="1960" fill="url(#gSky)"/>
+        <circle class="sunHalo" cx="1218" cy="222" r="236" fill="url(#gSun)"/>
+        <circle cx="1218" cy="222" r="46" fill="#FFF0C6"/>
+        <circle cx="1218" cy="222" r="46" fill="#FFE1A0" opacity="0.6"/>
+      </g>
+
+      <!-- L1 far isles -->
+      <g class="L L1">
+        <path d="M-900 312 L120 312 L188 288 L262 300 L344 272 L432 296 L520 286 L612 306 L700 312 L2500 312 Z"
+              fill="#2A5A86" opacity="0.72"/>
+        <path d="M820 312 L900 290 L968 300 L1056 278 L1140 298 L1230 292 L1320 310 L2500 312 L2500 316 L820 316 Z"
+              fill="#2A5A86" opacity="0.55"/>
+      </g>
+
+      <!-- L2 clouds + birds -->
+      <g class="L L2">
+        <g class="cloud cloud--a" opacity="0.5">
+          <ellipse cx="300" cy="150" rx="128" ry="27" fill="#E8EEF4"/>
+          <ellipse cx="238" cy="140" rx="70"  ry="22" fill="#E8EEF4"/>
+          <ellipse cx="366" cy="142" rx="60"  ry="19" fill="#DCE6EE"/>
+        </g>
+        <g class="cloud cloud--b" opacity="0.38">
+          <ellipse cx="980" cy="104" rx="166" ry="25" fill="#DCE6EE"/>
+          <ellipse cx="900" cy="96"  rx="86"  ry="19" fill="#DCE6EE"/>
+        </g>
+        <g class="cloud cloud--c" opacity="0.3">
+          <ellipse cx="640" cy="212" rx="200" ry="20" fill="#C9DAE8"/>
+        </g>
+        <g class="gulls">
+          <g transform="translate(560 170)"><path class="gull gull--1" d="M0 0 q9 -8 18 0 q9 -8 18 0" fill="none" stroke="#F2F6FA" stroke-width="3.2" stroke-linecap="round"/></g>
+          <g transform="translate(690 206)"><path class="gull gull--2" d="M0 0 q7 -6 14 0 q7 -6 14 0" fill="none" stroke="#F2F6FA" stroke-width="2.6" stroke-linecap="round"/></g>
+          <g transform="translate(470 228)"><path class="gull gull--3" d="M0 0 q6 -5 12 0 q6 -5 12 0" fill="none" stroke="#E6EEF6" stroke-width="2.2" stroke-linecap="round"/></g>
+        </g>
+      </g>
+
+      <!-- L3 open sea -->
+      <g class="L L3">
+        <rect x="-900" y="310" width="3400" height="62" fill="url(#gSeaFar)"/>
+        <rect x="-900" y="368" width="3400" height="110" fill="url(#gSeaNear)"/>
+        <path class="glint" d="M1100 330 h170 M1060 344 h92 M1216 352 h120 M1150 366 h64"
+              stroke="#FFE7B4" stroke-width="2.4" stroke-linecap="round" opacity="0.5"/>
+        <path class="swell swell--a" d="M-900 352 q120 -11 240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0"
+              fill="none" stroke="#5E9BC6" stroke-width="3" opacity="0.5"/>
+        <path class="swell swell--b" d="M-900 392 q140 -13 280 0 t280 0 t280 0 t280 0 t280 0 t280 0 t280 0 t280 0 t280 0 t280 0"
+              fill="none" stroke="#7FB4D8" stroke-width="3.4" opacity="0.42"/>
+        <!-- boat -->
+        <g transform="translate(846 402)"><g class="boat">
+          <path d="M-46 0 q46 22 92 0 q-14 16 -46 16 q-32 0 -46 -16 Z" fill="#17364F"/>
+          <rect x="-3" y="-44" width="5" height="46" rx="2" fill="#17364F"/>
+          <path d="M4 -42 q30 20 2 38 Z" fill="#E9E2D2"/>
+        </g></g>
+      </g>
+
+      <!-- L4 skerry + Ruairidh an Ron -->
+      <g class="L L4">
+        <path d="M976 428 q38 -34 84 -32 q52 2 86 32 q-44 12 -86 12 q-44 0 -84 -12 Z" fill="url(#gStone)"/>
+        <path d="M992 428 q34 -8 70 -8 q38 0 64 8 Z" fill="#5C646A" opacity="0.5"/>
+        <g class="seal" transform="translate(1052 400)">
+          <ellipse class="seal__body" cx="0" cy="8" rx="44" ry="21" fill="url(#gSeal)"/>
+          <path d="M34 2 q30 -14 42 -2 q-16 8 -42 10 Z" fill="#4E5D6B"/>
+          <circle cx="-26" cy="-10" r="20" fill="#8496A7"/>
+          <ellipse cx="-30" cy="-3" rx="12" ry="8" fill="#B9C6D2"/>
+          <circle class="eye" cx="-36" cy="-14" r="3.6" fill="#101C26"/>
+          <circle cx="-22" cy="-15" r="3.6" fill="#101C26"/>
+          <circle cx="-37" cy="-15.4" r="1.2" fill="#FFFFFF"/>
+          <circle cx="-23" cy="-16.4" r="1.2" fill="#FFFFFF"/>
+          <circle cx="-37.5" cy="-2" r="2" fill="#2C3A46"/>
+          <path d="M-40 1 q-12 -2 -17 -6 M-40 3 q-12 2 -17 5" stroke="#9FB0BF" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+        </g>
+        <ellipse class="ripple ripple--a" cx="1052" cy="436" rx="54" ry="7" fill="none" stroke="#9CC7E4" stroke-width="2" opacity="0.5"/>
+        <ellipse class="ripple ripple--b" cx="1052" cy="440" rx="74" ry="9" fill="none" stroke="#9CC7E4" stroke-width="1.6" opacity="0.3"/>
+      </g>
+
+      <!-- L5 shore + machair + croft -->
+      <g class="L L5">
+        <path d="M-900 476 q260 -22 560 -14 q340 10 700 -6 q380 -17 2140 10 L2500 700 L-900 700 Z" fill="url(#gSand)"/>
+        <path class="foam" d="M-900 474 q180 -14 380 -8 q260 8 520 -4 q280 -13 520 -2 q300 10 1980 -2"
+              fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+        <path d="M-900 524 q300 -26 640 -16 q380 12 760 -10 q400 -23 2000 12 L2500 2800 L-900 2800 Z" fill="url(#gMachair)"/>
+
+        <!-- croft -->
+        <g class="croft" transform="translate(438 446)">
+          <path d="M-82 42 L-82 -6 L0 -46 L82 -6 L82 42 Z" fill="url(#gRoof)"/>
+          <rect x="-72" y="6" width="144" height="54" rx="3" fill="url(#gWall)"/>
+          <rect x="-72" y="6" width="144" height="54" rx="3" fill="none" stroke="#B9AF9C" stroke-width="1.4"/>
+          <rect x="-44" y="22" width="22" height="22" rx="2" fill="#2E4E6B"/>
+          <rect x="22"  y="22" width="22" height="22" rx="2" fill="#2E4E6B"/>
+          <rect x="-11" y="28" width="22" height="32" rx="2" fill="#7C4B2A"/>
+          <rect x="44" y="-32" width="18" height="30" rx="3" fill="#8A8277"/>
+          <g class="smoke">
+            <circle class="puff puff--1" cx="53" cy="-38" r="8"  fill="#E9EEF2" opacity="0"/>
+            <circle class="puff puff--2" cx="53" cy="-38" r="10" fill="#E9EEF2" opacity="0"/>
+            <circle class="puff puff--3" cx="53" cy="-38" r="7"  fill="#E9EEF2" opacity="0"/>
+          </g>
+        </g>
+
+        <!-- tweed drying on a line: Clo na Hearadh -->
+        <g class="tweedline" transform="translate(618 448)">
+          <path d="M-74 -34 L96 -28" stroke="#6B5B46" stroke-width="2.2" fill="none"/>
+          <rect class="tweed tweed--1" x="-62" y="-32" width="40" height="46" rx="2" fill="#7C6A4E"/>
+          <rect class="tweed tweed--1" x="-62" y="-32" width="40" height="46" rx="2" fill="none" stroke="#5B4C36" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect class="tweed tweed--2" x="-8"  y="-31" width="40" height="52" rx="2" fill="#5E7247"/>
+          <rect class="tweed tweed--2" x="-8"  y="-31" width="40" height="52" rx="2" fill="none" stroke="#44562F" stroke-width="1" stroke-dasharray="3 3"/>
+          <rect class="tweed tweed--3" x="46"  y="-30" width="38" height="44" rx="2" fill="#8C5F4A"/>
+          <rect class="tweed tweed--3" x="46"  y="-30" width="38" height="44" rx="2" fill="none" stroke="#6A4435" stroke-width="1" stroke-dasharray="3 3"/>
+        </g>
+
+        <!-- cairn: Carn -->
+        <g class="cairn" transform="translate(1196 496)">
+          <ellipse cx="0" cy="22" rx="46" ry="8" fill="#2F4430" opacity="0.5"/>
+          <path d="M-40 20 q12 -20 40 -20 q28 0 40 20 Z" fill="url(#gStone)"/>
+          <path d="M-26 2 q10 -17 26 -17 q17 0 26 17 Z" fill="#9AA0A5"/>
+          <ellipse cx="0" cy="-20" rx="18" ry="11" fill="#B4BABE"/>
+          <ellipse cx="-2" cy="-32" rx="11" ry="8" fill="#9AA0A5"/>
+        </g>
+
+        <!-- marram grass -->
+        <g transform="translate(1272 512)"><g class="grass grass--a">
+          <path d="M0 0 q-5 -26 -16 -40 M4 0 q1 -30 -3 -46 M9 0 q7 -26 17 -38 M14 0 q10 -20 22 -28"
+                stroke="#88A862" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </g></g>
+        <g transform="translate(362 520)"><g class="grass grass--b">
+          <path d="M0 0 q-6 -22 -18 -32 M5 0 q0 -26 -5 -40 M11 0 q8 -22 20 -32"
+                stroke="#9BBA6F" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        </g></g>
+        <g transform="translate(1116 526)"><g class="grass grass--c">
+          <path d="M0 0 q-6 -24 -17 -36 M5 0 q1 -28 -4 -42 M11 0 q8 -24 19 -34"
+                stroke="#80A05C" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </g></g>
+        <!-- machair wildflowers: thistle + buttercup -->
+        <g class="flowers">
+          <circle cx="1248" cy="528" r="3.4" fill="#E3B23C"/>
+          <circle cx="1304" cy="540" r="3.4" fill="#F4EFE2"/>
+          <circle cx="1150" cy="544" r="3.6" fill="#7D5BA6"/>
+          <circle cx="402"  cy="534" r="3.2" fill="#E3B23C"/>
+          <circle cx="338"  cy="546" r="3.4" fill="#7D5BA6"/>
+          <circle cx="470"  cy="552" r="3.2" fill="#F4EFE2"/>
+        </g>
+      </g>
+
+      <!-- L6 foreground: rock pool + Giomach + creel -->
+      <g class="L L6">
+        <path d="M-900 596 q300 -40 660 -26 q420 16 820 -14 q420 -31 1920 20 L2500 2800 L-900 2800 Z" fill="url(#gFore)"/>
+        <!-- near-foreground dune detail: mostly hidden behind the rail in landscape,
+             it stops the band reading as a flat slab on tall portrait screens -->
+        <g opacity="0.85">
+          <path d="M300 648 q-9 -40 -26 -58 M308 648 q2 -46 -6 -70 M317 648 q12 -40 30 -56 M326 648 q16 -32 34 -44"
+                stroke="#44603C" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M1232 664 q-10 -42 -28 -60 M1241 664 q2 -48 -6 -72 M1251 664 q13 -42 32 -58"
+                stroke="#3C5636" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+          <path d="M640 676 q-8 -34 -22 -48 M648 676 q1 -38 -5 -58 M656 676 q10 -34 26 -46"
+                stroke="#395232" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+          <ellipse cx="880" cy="662" rx="46" ry="15" fill="#2A3D2B"/>
+          <ellipse cx="872" cy="656" rx="30" ry="11" fill="#33492F"/>
+          <ellipse cx="438" cy="700" rx="60" ry="18" fill="#243726"/>
+          <ellipse cx="1060" cy="712" rx="74" ry="20" fill="#20321F"/>
+        </g>
+        <!-- rock pool -->
+        <g transform="translate(772 486)">
+          <path d="M-96 26 q-18 -40 24 -52 q46 -13 94 -2 q50 11 40 48 q-10 34 -80 32 q-66 -2 -78 -26 Z" fill="#5E666B"/>
+          <ellipse cx="0" cy="8" rx="68" ry="26" fill="#17496F"/>
+          <ellipse cx="0" cy="6" rx="60" ry="21" fill="#2D77A8" opacity="0.8"/>
+          <ellipse class="ripple ripple--c" cx="6" cy="6" rx="30" ry="11" fill="none" stroke="#BBE0F4" stroke-width="1.8" opacity="0.6"/>
+          <!-- Giomach -->
+          <g class="lobster" transform="translate(2 4) scale(0.92)">
+            <ellipse cx="0" cy="0" rx="26" ry="13" fill="url(#gShell)"/>
+            <path d="M22 -2 q18 2 26 10 q-12 6 -26 2 Z" fill="#B23A2A"/>
+            <path d="M24 2 q16 8 20 16 q-14 2 -24 -8 Z" fill="#9C2F23"/>
+            <g class="claw claw--l"><path d="M-24 -6 q-20 -10 -30 -4 q-4 9 8 13 q12 4 22 -2 Z" fill="#C8482F"/><path d="M-46 -11 q-10 1 -10 7" stroke="#8E2A1F" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>
+            <g class="claw claw--r"><path d="M-22 6 q-20 8 -28 16 q6 7 16 2 q11 -6 16 -12 Z" fill="#B23A2A"/></g>
+            <path d="M-20 -10 q-16 -18 -30 -22 M-18 -12 q-12 -20 -24 -26" stroke="#8E2A1F" stroke-width="2" fill="none" stroke-linecap="round" class="antennae"/>
+            <circle cx="-14" cy="-6" r="3" fill="#15202A"/>
+            <circle cx="-14.8" cy="-6.9" r="1" fill="#FFFFFF"/>
+          </g>
+        </g>
+        <!-- creel -->
+        <g transform="translate(1010 548)">
+          <path d="M-54 22 L-42 -14 L42 -14 L54 22 Z" fill="#8A6B45"/>
+          <path d="M-48 8 H48 M-45 -2 H45 M-32 22 V-14 M0 22 V-14 M32 22 V-14"
+                stroke="#6A5133" stroke-width="2" fill="none"/>
+          <path d="M-42 -14 q42 -22 84 0" fill="none" stroke="#6A5133" stroke-width="3"/>
+        </g>
+      </g>
+
+      <!-- L7 Gaelic place + character tags.
+           GAELIC PENDING NATIVE-SPEAKER REVIEW. Sources in the PENDING rows file. -->
+      <g class="L L7 tags" id="tags">
+        <g class="tag" role="group" aria-label="Trai gh, Gaelic for beach or shore">
+          <circle class="tag__dot" cx="916" cy="486" r="5"/>
+          <path class="tag__lead" d="M916 486 L916 462"/>
+          <text class="tag__gd" x="916" y="452" text-anchor="middle" lang="gd">Tràigh</text>
+          <text class="tag__en" x="916" y="434" text-anchor="middle" lang="en">beach</text>
+        </g>
+        <g class="tag" role="group" aria-label="Machair, Gaelic for the low-lying fertile coastal plain">
+          <circle class="tag__dot" cx="1266" cy="520" r="5"/>
+          <path class="tag__lead" d="M1266 520 L1266 496"/>
+          <text class="tag__gd" x="1266" y="486" text-anchor="middle" lang="gd">Machair</text>
+          <text class="tag__en" x="1266" y="468" text-anchor="middle" lang="en">coastal plain</text>
+        </g>
+        <g class="tag" role="group" aria-label="Carn, Gaelic for cairn">
+          <circle class="tag__dot" cx="1196" cy="462" r="5"/>
+          <path class="tag__lead" d="M1196 462 L1196 438"/>
+          <text class="tag__gd" x="1196" y="428" text-anchor="middle" lang="gd">Càrn</text>
+          <text class="tag__en" x="1196" y="410" text-anchor="middle" lang="en">cairn</text>
+        </g>
+        <g class="tag" role="group" aria-label="Clo na Hearadh, Gaelic for Harris Tweed">
+          <circle class="tag__dot" cx="618" cy="420" r="5"/>
+          <path class="tag__lead" d="M618 420 L618 396"/>
+          <text class="tag__gd" x="618" y="386" text-anchor="middle" lang="gd">Clò na Hearadh</text>
+          <text class="tag__en" x="618" y="368" text-anchor="middle" lang="en">Harris Tweed</text>
+        </g>
+        <g class="tag" role="group" aria-label="Ruairidh an Ron, the seal guide character">
+          <circle class="tag__dot" cx="1052" cy="376" r="5"/>
+          <path class="tag__lead" d="M1052 376 L1052 352"/>
+          <text class="tag__gd" x="1052" y="342" text-anchor="middle" lang="gd">Ruairidh an Ròn</text>
+          <text class="tag__en" x="1052" y="324" text-anchor="middle" lang="en">Ruairidh the seal</text>
+        </g>
+        <g class="tag" role="group" aria-label="Giomach, Gaelic for lobster">
+          <circle class="tag__dot" cx="748" cy="470" r="5"/>
+          <path class="tag__lead" d="M748 470 L748 446"/>
+          <text class="tag__gd" x="748" y="436" text-anchor="middle" lang="gd">Giomach</text>
+          <text class="tag__en" x="748" y="418" text-anchor="middle" lang="en">lobster</text>
+        </g>
+      </g>
+
+    </svg>
+
+    <div class="scene__rain" aria-hidden="true"></div>
+    <div class="scene__grade" aria-hidden="true"></div>
+  </div>
+
+  <!-- ===================== CHROME ===================== -->
+  <header class="head">
+    <div class="head__mark">
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+        <rect width="40" height="40" rx="10" fill="#185FA5"/>
+        <path d="M6 6 L34 34 M34 6 L6 34" stroke="#F6F1E7" stroke-width="5.5" stroke-linecap="round"/>
+        <circle cx="20" cy="20" r="6.5" fill="#E3B23C"/>
+      </svg>
+      <span class="mark__word">Scotling</span>
+    </div>
+
+    <div class="head__titles">
+      <h1 class="h1" lang="gd">Geamaichean Gàidhlig</h1>
+      <p class="h1sub" lang="en">Gaelic games — pick one</p>
+    </div>
+
+    <div class="head__tools">
+      <div class="wx" role="group" aria-label="Weather">
+        <button class="wx__btn is-on" type="button" data-wx="fair" aria-pressed="true" title="Fair">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
+          <span class="sr">Fair</span>
+        </button>
+        <button class="wx__btn" type="button" data-wx="dreich" aria-pressed="false" title="Overcast">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 18h11a4 4 0 0 0 .2-8 6 6 0 0 0-11.5 1.6A3.2 3.2 0 0 0 6.5 18z"/></svg>
+          <span class="sr">Overcast</span>
+        </button>
+        <button class="wx__btn" type="button" data-wx="rain" aria-pressed="false" title="Rain">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 15h11a4 4 0 0 0 .2-8 6 6 0 0 0-11.5 1.6A3.2 3.2 0 0 0 6.5 15z"/><path d="M8 18l-1 3M13 18l-1 3M18 18l-1 3"/></svg>
+          <span class="sr">Rain</span>
+        </button>
+      </div>
+      <button class="tgl" type="button" id="tagsBtn" aria-pressed="true">
+        <span lang="gd">Gàidhlig</span> labels
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================== GAME RAIL ===================== -->
+  <section class="rail" id="rail" aria-labelledby="railHead">
+    <div class="rail__top">
+      <h2 class="h2" id="railHead">Eight games</h2>
+      <div class="rail__nav">
+        <button class="arw" type="button" id="prevBtn" aria-controls="track"><span class="sr">Previous games</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button class="arw" type="button" id="nextBtn" aria-controls="track"><span class="sr">More games</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <!--
+      GAELIC PENDING NATIVE-SPEAKER REVIEW.
+      Cards 1-3 use the three game titles from the dissertation, p.39, which
+      also shipped in v1. Card 4 is the attested noun 'Carn' with the cairn
+      seanfhacal; v1 ships TWO different spellings of that proverb - logged
+      for the Gaelic Language Lead. Card 5 uses Am Faclair Beag's 'Clo na
+      Hearadh'; v1 shipped 'clo Hearaich' - also logged. Cards 6-8 are
+      ENGLISH PLACEHOLDERS for game ideas the pilot children themselves
+      proposed (dissertation p.59). No Gaelic has been invented for them.
+    -->
+    <ul class="track" id="track" tabindex="0" role="list">
+
+      <li class="crd" role="listitem">
+        <button class="crd__btn" type="button" data-game="giomach">
+          <span class="crd__art">
+            <svg viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+              <rect width="220" height="132" fill="#15537F"/>
+              <path d="M0 96 q55 -16 110 0 t110 0 v36 H0 Z" fill="#E6D8B6"/>
+              <g fill="none" stroke="#2E7CC4" stroke-width="2" opacity="0.65">
+                <path d="M40 40 l14 -8 14 8 v16 l-14 8 -14 -8 Z"/>
+                <path d="M68 56 l14 -8 14 8 v16 l-14 8 -14 -8 Z"/>
+                <path d="M96 40 l14 -8 14 8 v16 l-14 8 -14 -8 Z"/>
+                <path d="M124 56 l14 -8 14 8 v16 l-14 8 -14 -8 Z"/>
+                <path d="M152 40 l14 -8 14 8 v16 l-14 8 -14 -8 Z"/>
+              </g>
+              <path d="M96 40 l14 -8 14 8 v16 l-14 8 -14 -8 Z" fill="#E3B23C" opacity="0.9"/>
+              <g transform="translate(110 54) scale(0.7)">
+                <ellipse rx="22" ry="11" fill="#C8482F"/>
+                <path d="M-20 -5 q-17 -9 -25 -3 q-3 8 7 11 q10 3 18 -2 Z" fill="#D4553C"/>
+                <path d="M-18 5 q-17 7 -24 14 q5 6 14 2 q9 -5 13 -10 Z" fill="#B23A2A"/>
+                <path d="M19 -2 q15 2 22 9 q-10 5 -22 2 Z" fill="#B23A2A"/>
+                <circle cx="-11" cy="-5" r="2.6" fill="#15202A"/>
+              </g>
+            </svg>
+          </span>
+          <span class="crd__body">
+            <span class="crd__gd" lang="gd">Glac an Giomach</span>
+            <span class="crd__en" lang="en">Trap the Lobster</span>
+            <span class="crd__meta">Hex grid · strategy · 4 min</span>
+          </span>
+          <span class="pill pill--live">In v1</span>
+        </button>
+      </li>
+
+      <li class="crd" role="listitem">
+        <button class="crd__btn" type="button" data-game="sgadan">
+          <span class="crd__art">
+            <svg viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+              <rect width="220" height="132" fill="#7C6A4E"/>
+              <g stroke="#5B4C36" stroke-width="3" opacity="0.5">
+                <path d="M0 14h220M0 34h220M0 54h220M0 74h220M0 94h220M0 114h220"/>
+              </g>
+              <g stroke="#9B8862" stroke-width="3" opacity="0.45">
+                <path d="M14 0v132M44 0v132M74 0v132M104 0v132M134 0v132M164 0v132M194 0v132"/>
+              </g>
+              <g transform="translate(70 66)">
+                <ellipse rx="34" ry="14" fill="#B9C9D6"/>
+                <path d="M30 0 l20 -11 v22 Z" fill="#8FA6B8"/>
+                <circle cx="-20" cy="-3" r="3.2" fill="#15202A"/>
+                <path d="M-8 -6 q8 6 0 12" stroke="#8FA6B8" stroke-width="2" fill="none"/>
+              </g>
+              <g transform="translate(150 86)">
+                <ellipse rx="30" ry="12" fill="#CBD8E2"/>
+                <path d="M26 0 l18 -10 v20 Z" fill="#9FB4C4"/>
+                <circle cx="-17" cy="-2" r="2.8" fill="#15202A"/>
+              </g>
+            </svg>
+          </span>
+          <span class="crd__body">
+            <span class="crd__gd" lang="gd">Cho coltach ris an dà sgadan</span>
+            <span class="crd__en" lang="en">As alike as two herring</span>
+            <span class="crd__meta">Memory pairs · Harris Tweed backs</span>
+          </span>
+          <span class="pill pill--live">In v1</span>
+        </button>
+      </li>
+
+      <li class="crd" role="listitem">
+        <button class="crd__btn" type="button" data-game="bradan">
+          <span class="crd__art">
+            <svg viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+              <rect width="220" height="44" fill="#2D77A8"/>
+              <rect y="44" width="220" height="44" fill="#1B527E"/>
+              <rect y="88" width="220" height="44" fill="#0C3353"/>
+              <g transform="translate(118 44)">
+                <ellipse rx="44" ry="15" fill="#D98A6A"/>
+                <path d="M40 0 l24 -14 v28 Z" fill="#C2765A"/>
+                <path d="M-6 -14 q12 6 0 12" fill="#C2765A"/>
+                <circle cx="-28" cy="-3" r="3.6" fill="#15202A"/>
+                <circle cx="-29" cy="-4" r="1.2" fill="#FFF"/>
+                <path d="M-14 -2 q14 -6 28 0" stroke="#B9674D" stroke-width="2" fill="none"/>
+              </g>
+              <g transform="translate(46 100)" opacity="0.8">
+                <ellipse rx="20" ry="8" fill="#6E8FA6"/>
+                <path d="M18 0 l12 -7 v14 Z" fill="#577A92"/>
+              </g>
+              <g transform="translate(176 20)" opacity="0.7">
+                <ellipse rx="16" ry="6" fill="#9FC2DC"/>
+                <path d="M14 0 l10 -6 v12 Z" fill="#7FA8C8"/>
+              </g>
+            </svg>
+          </span>
+          <span class="crd__body">
+            <span class="crd__gd" lang="gd">Cho luath ris a' bhradan</span>
+            <span class="crd__en" lang="en">As fast as the salmon</span>
+            <span class="crd__meta">Reaction · three depth zones</span>
+          </span>
+          <span class="pill pill--live">In v1</span>
+        </button>
+      </li>
+
+      <li class="crd" role="listitem">
+        <button class="crd__btn" type="button" data-game="carn">
+          <span class="crd__art">
+            <svg viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+              <rect width="220" height="132" fill="#4B7AA8"/>
+              <path d="M0 92 q60 -20 120 -6 q50 12 100 -10 v56 H0 Z" fill="#63804A"/>
+              <g transform="translate(110 96)">
+                <path d="M-40 18 q12 -20 40 -20 q28 0 40 20 Z" fill="#8A9095"/>
+                <path d="M-26 0 q10 -17 26 -17 q17 0 26 17 Z" fill="#A4AAAF"/>
+                <ellipse cx="0" cy="-22" rx="18" ry="11" fill="#BBC1C5"/>
+                <ellipse cx="-2" cy="-36" rx="11" ry="8" fill="#9AA0A5"/>
+                <ellipse cx="0" cy="-48" rx="7" ry="5" fill="#E3B23C"/>
+              </g>
+            </svg>
+          </span>
+          <span class="crd__body">
+            <span class="crd__gd" lang="gd">Càrn</span>
+            <span class="crd__en" lang="en">The cairn</span>
+            <span class="crd__meta" lang="gd">Nithear càrn mòr bho chlachan beaga<span class="crd__gloss" lang="en"> — a big cairn is made from small stones</span></span>
+          </span>
+          <span class="pill pill--new">New in v2</span>
+        </button>
+      </li>
+
+      <li class="crd" role="listitem">
+        <button class="crd__btn" type="button" data-game="clo">
+          <span class="crd__art">
+            <svg viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+              <rect width="220" height="132" fill="#5E7247"/>
+              <g opacity="0.85">
+                <rect y="10" width="220" height="7" fill="#8C5F4A"/>
+                <rect y="34" width="220" height="7" fill="#C7B48A"/>
+                <rect y="58" width="220" height="7" fill="#44562F"/>
+                <rect y="82" width="220" height="7" fill="#8C5F4A"/>
+                <rect y="106" width="220" height="7" fill="#C7B48A"/>
+              </g>
+              <g opacity="0.55">
+                <rect x="16" width="7" height="132" fill="#2F3D22"/>
+                <rect x="60" width="7" height="132" fill="#C7B48A"/>
+                <rect x="104" width="7" height="132" fill="#8C5F4A"/>
+                <rect x="148" width="7" height="132" fill="#2F3D22"/>
+                <rect x="192" width="7" height="132" fill="#C7B48A"/>
+              </g>
+              <rect x="0" y="0" width="220" height="132" fill="none" stroke="#E3B23C" stroke-width="4" opacity="0.5"/>
+            </svg>
+          </span>
+          <span class="crd__body">
+            <span class="crd__gd" lang="gd">Clò na Hearadh</span>
+            <span class="crd__en" lang="en">Harris Tweed</span>
+            <span class="crd__meta">Pattern weaving · colour and sett</span>
+          </span>
+          <span class="pill pill--new">New in v2</span>
+        </button>
+      </li>
+
+      <li class="crd" role="listitem">
+        <button class="crd__btn" type="button" data-game="ferry">
+          <span class="crd__art">
+            <svg viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+              <rect width="220" height="132" fill="#9FC2DC"/>
+              <rect y="70" width="220" height="62" fill="#1B527E"/>
+              <path d="M0 74 q55 -8 110 0 t110 0 v6 H0 Z" fill="#2D77A8"/>
+              <g transform="translate(110 64)">
+                <path d="M-58 10 q58 20 116 0 l-10 16 q-48 10 -96 0 Z" fill="#17364F"/>
+                <rect x="-46" y="-14" width="92" height="24" rx="3" fill="#F2EFE7"/>
+                <rect x="-30" y="-30" width="54" height="16" rx="3" fill="#E6E1D4"/>
+                <rect x="30" y="-40" width="10" height="26" rx="3" fill="#C8482F"/>
+                <g fill="#2E4E6B"><rect x="-38" y="-8" width="10" height="10"/><rect x="-20" y="-8" width="10" height="10"/><rect x="-2" y="-8" width="10" height="10"/><rect x="16" y="-8" width="10" height="10"/></g>
+              </g>
+            </svg>
+          </span>
+          <span class="crd__body">
+            <span class="crd__gd crd__gd--pending" lang="en">Ferry Run <em>(Gaelic title pending)</em></span>
+            <span class="crd__en" lang="en">Drive the island ferry</span>
+            <span class="crd__meta">Child-proposed, pilot discussion group</span>
+          </span>
+          <span class="pill pill--idea">Concept</span>
+        </button>
+      </li>
+
+      <li class="crd" role="listitem">
+        <button class="crd__btn" type="button" data-game="blackening">
+          <span class="crd__art">
+            <svg viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+              <rect width="220" height="132" fill="#2E3E4E"/>
+              <path d="M0 100 h220 v32 H0 Z" fill="#46525E"/>
+              <g transform="translate(104 78)">
+                <path d="M-60 0 h78 l20 -24 h20 l8 24 v16 h-126 Z" fill="#7D5BA6"/>
+                <circle cx="-36" cy="18" r="11" fill="#1B232B"/>
+                <circle cx="40" cy="18" r="11" fill="#1B232B"/>
+                <circle cx="-36" cy="18" r="4" fill="#8A9095"/>
+                <circle cx="40" cy="18" r="4" fill="#8A9095"/>
+                <rect x="24" y="-20" width="16" height="14" rx="2" fill="#BBD3E4"/>
+              </g>
+              <g fill="#E3B23C"><circle cx="40" cy="36" r="5"/><circle cx="168" cy="28" r="4"/><circle cx="130" cy="48" r="3.4"/><circle cx="74" cy="20" r="3.4"/></g>
+            </svg>
+          </span>
+          <span class="crd__body">
+            <span class="crd__gd crd__gd--pending" lang="en">The Blackening <em>(Gaelic title pending)</em></span>
+            <span class="crd__en" lang="en">The pre-wedding tradition</span>
+            <span class="crd__meta">Child-proposed, pilot discussion group</span>
+          </span>
+          <span class="pill pill--idea">Concept</span>
+        </button>
+      </li>
+
+      <li class="crd" role="listitem">
+        <button class="crd__btn" type="button" data-game="pipes">
+          <span class="crd__art">
+            <svg viewBox="0 0 220 132" aria-hidden="true" focusable="false">
+              <rect width="220" height="132" fill="#0E3C6B"/>
+              <g stroke="#2E7CC4" stroke-width="2" opacity="0.5"><path d="M46 0v132M92 0v132M138 0v132M184 0v132"/></g>
+              <g transform="translate(104 70)">
+                <ellipse cx="0" cy="12" rx="34" ry="24" fill="#7C6A4E"/>
+                <path d="M-34 10 h68" stroke="#5B4C36" stroke-width="3"/>
+                <rect x="-26" y="-56" width="8" height="52" rx="3" fill="#2B2018"/>
+                <rect x="-8" y="-66" width="8" height="62" rx="3" fill="#2B2018"/>
+                <rect x="10" y="-48" width="8" height="44" rx="3" fill="#2B2018"/>
+                <rect x="-28" y="-60" width="12" height="7" rx="2" fill="#E3B23C"/>
+                <rect x="-10" y="-70" width="12" height="7" rx="2" fill="#E3B23C"/>
+                <rect x="8" y="-52" width="12" height="7" rx="2" fill="#E3B23C"/>
+                <path d="M28 16 q26 8 34 -6" stroke="#2B2018" stroke-width="5" fill="none" stroke-linecap="round"/>
+              </g>
+              <g fill="#E3B23C" opacity="0.9"><circle cx="30" cy="104" r="7"/><circle cx="76" cy="112" r="7"/><circle cx="144" cy="108" r="7"/><circle cx="190" cy="116" r="7"/></g>
+            </svg>
+          </span>
+          <span class="crd__body">
+            <span class="crd__gd crd__gd--pending" lang="en">Pipe Hero <em>(Gaelic title pending)</em></span>
+            <span class="crd__en" lang="en">Rhythm on the great pipes</span>
+            <span class="crd__meta">Child-proposed, pilot discussion group</span>
+          </span>
+          <span class="pill pill--idea">Concept</span>
+        </button>
+      </li>
+    </ul>
+
+    <p class="status" id="status" role="status" aria-live="polite">Art-direction spike. No game is wired up behind these cards yet.</p>
+  </section>
+
+  <!-- ===================== DEV PANEL ===================== -->
+  <aside class="dev" id="dev" hidden>
+    <h3 class="dev__h">Spike A — instruments</h3>
+    <dl class="dev__grid">
+      <dt>fps now</dt><dd id="fpsNow">—</dd>
+      <dt>fps min</dt><dd id="fpsMin">—</dd>
+      <dt>fps mean</dt><dd id="fpsAvg">—</dd>
+      <dt>animated nodes</dt><dd id="animCount">—</dd>
+      <dt>SVG nodes</dt><dd id="svgCount">—</dd>
+      <dt>reduced motion</dt><dd id="rmState">—</dd>
+    </dl>
+    <h4 class="dev__h4">Grave-accent proof — system stack</h4>
+    <div class="proof">
+      <p style="font-size:44px" lang="gd">à è ì ò ù — À È Ì Ò Ù</p>
+      <p style="font-size:28px" lang="gd">Càrn · Tràigh · Clò na Hearadh · Ròn</p>
+      <p style="font-size:18px" lang="gd">Cho luath ris a' bhradan — Nithear càrn mòr bho chlachan beaga</p>
+      <p style="font-size:13px" lang="gd">Glè mhath · Sàr-mhath · obh obh · b' àill leibh · duda?</p>
+      <p style="font-size:10px" lang="gd">àèìòù ÀÈÌÒÙ ’ ‘ — combining test: a&#768;e&#768;i&#768;o&#768;u&#768;</p>
+    </div>
+    <p class="dev__note">Press <kbd>D</kbd> to close. Nothing here ships to a child.</p>
+  </aside>
+
+  <button class="devbtn" id="devBtn" type="button" title="Instruments (D)"><span class="sr">Toggle instruments</span>fps</button>
+</main>
+
+<script src="hub.js"></script>
+</body>
+</html>
