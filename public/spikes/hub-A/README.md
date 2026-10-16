@@ -5,7 +5,8 @@ plus CSS animation, with no WebGL, no raster assets, no paid tool and no licence
 **Assumes:** a 2018 iPad in Safari is the floor device, and the hub must stay beautiful when
 every Gaelic string on it is still unverified.
 **Depends on it:** the design system's colour/type tokens, the world bible's character canon,
-and the product spec's game list — none of which existed when this was built.
+and the product spec's game list — all three have now landed (DRAFT) and pass 2 reconciles
+against them; see section 6.
 **Status:** DRAFT spike. Not a product. No game is wired behind the cards. No Gaelic is certified.
 **Live at:** <http://127.0.0.1:8787/spikes/hub-A/> on branch `dev/v2`.
 
@@ -15,7 +16,8 @@ and the product spec's game list — none of which existed when this was built.
 
 A single screen: a child picks a game. A Hebridean shoreline at low evening sun — sea, skerry,
 croft, tweed on the line, machair, cairn, rock pool — with Ruairidh an Ròn and a giomach in it,
-and a snap-scrolling rail of eight game cards underneath.
+and eight game cards underneath: a snap-scrolling rail in landscape, a two-column scrolling grid
+in portrait.
 
 Everything on screen is drawn in `index.html` as SVG paths and animated in `hub.css`. There are
 exactly three files and three network requests, all same-origin:
@@ -23,8 +25,8 @@ exactly three files and three network requests, all same-origin:
 | file | bytes | what it is |
 |---|---|---|
 | `index.html` | ~38 KB | markup + the whole scene as inline SVG |
-| `hub.css` | ~17 KB | tokens, layout, parallax, idle motion, weather |
-| `hub.js` | ~9 KB | viewBox fitting, parallax input, fps instrument, rail nav |
+| `hub.css` | ~22 KB | tokens, layout, parallax, idle motion, weather, portrait grid |
+| `hub.js` | ~10 KB | focal-point viewBox fit, parallax input, fps instrument, rail nav |
 
 No images. No fonts. No CDN. No analytics. No storage. No cookies. Nothing is requested from a
 third party at runtime — verified by capturing the network log (section 4).
@@ -74,26 +76,29 @@ the dissertation names the seal both `Ruairidh a' Ròn` (p.38) and `Ruairidh an 
 
 Instrumented with a `requestAnimationFrame` counter exposed as `window.__hubFPS`; driven over
 the DevTools protocol with synthetic pointer movement so the parallax path is exercised, then
-sampled for 8 seconds in 500 ms windows (first two windows discarded as warm-up).
+sampled for 8 seconds in 500 ms windows (first two windows discarded as warm-up). Re-measured
+after the pass-2 changes (token swap, portrait grid, focal-point fit).
 
-| run | min fps | mean fps |
-|---|---|---|
-| no throttle | 60 | 60.0 |
-| 4× CPU throttle | 60 | 60.0 |
-| 6× CPU throttle | 60 | 60.0 |
+| run | viewport | min fps | mean fps |
+|---|---|---|---|
+| no throttle | 1180x820 landscape | 60 | 60.0 |
+| 4x CPU throttle | 1180x820 landscape | 60 | 60.0 |
+| 6x CPU throttle | 1180x820 landscape | 60 | 60.0 |
+| 6x CPU throttle | 810x1080 portrait (two-column grid) | 58 | 59.9 |
 
-Scene cost: **203 SVG nodes, 31 animated nodes, 476 DOM nodes total.** Console errors: none.
-Network requests: 3, all same-origin (`/`, `hub.css`, `hub.js`). `node --check` passes on `hub.js`.
+Scene cost: **203 SVG nodes, 31 animated nodes, 477 DOM nodes total.** Console errors: none in
+any run. Network requests: 3, all same-origin (`/`, `hub.css`, `hub.js`). `node --check` passes
+on `hub.js`.
 
 How it stays cheap: every animation is `transform` or `opacity` only; parallax writes two CSS
 custom properties at most once per frame and nine layers resolve them in `translate3d`; there are
 no SVG filters, no `backdrop-filter`, no blurs, no box-shadows on animated elements, and no
 `background-position` animation. `prefers-reduced-motion: reduce` disables the lot.
 
-**This is not the acceptance test.** It was measured in headless Chrome 155 on a Mac at
-1180×820, with CPU throttling as a stand-in for an older device. Safari rasterises SVG
-differently and headless compositing is not a real display pipeline. **A 2018 iPad in Safari
-must still be measured on the actual device** before this approach is chosen.
+**This is not the acceptance test.** It was measured in headless Chrome 155 on a Mac, with CPU
+throttling as a stand-in for an older device. Safari rasterises SVG differently and headless
+compositing is not a real display pipeline. **A 2018 iPad in Safari must still be measured on the
+actual device** before this approach is chosen.
 
 ## 5. What it costs in hours
 
@@ -102,7 +107,8 @@ voice recording and safeguarding sign-off, which are human and sequential.
 
 | work | hours |
 |---|---|
-| Finish this hub to production (tokens, portrait art variant, routing, audio, a11y, QA) | 16–25 |
+| Finish this hub to production (portrait art variant, routing, audio, a11y, QA) | 14–22 |
+| Swap to the design system's Baloo 2 + Atkinson Hyperlegible once ratified (self-hosted, licence recorded) | 1–2 |
 | **Extend Approach A to one full game** (scene art 6–10, mechanic + state 10–16, tutorial/help 4–6, audio hooks 2–3, Gaelic plumbing 2–3, a11y 3–4, device testing 3–4) | **30–46, call it 35** |
 | Each additional card vignette, authored by hand at this quality | 0.75–1.25 |
 
@@ -115,46 +121,112 @@ The pipeline cost is in *drawing*, not code. Authoring SVG by hand is slower per
 buying stock and is the reason it is licence-clean — there is no Freepik dependency and no
 paid tool anywhere in it.
 
-## 6. What it needs from the design system
+## 6. Reconciliation with the design system, world bible and site spec
 
-`studio/pods/design/design-system.md`, `studio/pods/product/site-v2-spec.md` and
-`studio/pods/design/world-bible.md` did not exist when this was built. Everything below is a
-provisional decision made here that must be revisited when they land — each one is marked
-`PROVISIONAL` in `hub.css`.
+Pass 1 was built before `studio/pods/design/design-system.md`,
+`studio/pods/design/design-tokens.json`, `studio/pods/design/world-bible.md` and
+`studio/pods/product/site-v2-spec.md` existed, so every non-Saltire colour was marked
+PROVISIONAL. All four have now landed as DRAFT. Pass 2 reconciles against them. Nothing in this
+folder is labelled PROVISIONAL any more: a value is either **TOKEN** (taken from the token file
+verbatim) or **GAP** (the token file has no answer, with the measured reason written in `hub.css`
+next to it).
 
-1. **Thistle gold.** Used `#E3B23C` (plus `#F0D79A` light, `#B8862A` deep). Needs a ruling.
-2. **Thistle purple** `#7D5BA6` as a tertiary, used only for machair wildflowers.
-3. **The Saltire ramp.** `#185FA5` is fixed by the constitution; the four tints and shades
-   around it here are invented and need a real ramp with contrast ratios.
-4. **Type.** System stack only — `Iowan Old Style / Palatino / Georgia` display, system sans for
-   UI. It renders à è ì ò ù correctly (proof strip in the dev panel, press `D`). But T-1 asked
-   for **dyslexia-friendly fonts** (p.56, p.67) and that needs a licence-clean self-hosted face
-   downloaded at build time with its licence recorded — a design-system decision, not a spike one.
-5. **Scale tokens** — radii, spacing, motion durations and easing, focus-ring spec.
-6. **Minimum tap target and contrast floor** for a 6-year-old on a shared, smeared classroom iPad.
-7. **Character canon** (world bible): Ruairidh's and Giomach's proportions, palette and
-   expression range. The two drawn here are placeholders, not canon.
-8. **Status pill taxonomy** — "In v1 / New in v2 / Concept" is a guess at the product's language.
+### 6.1 Adopted from `design-tokens.json`
+
+| what | was | now |
+|---|---|---|
+| thistle gold | `#E3B23C` (invented) | `#C9992C` — `color.brand.thistle-gold` |
+| gold tint | `#F0D79A` (invented) | `#F6ECD4` — `color.brand.thistle-gold-tint` |
+| radii | 9 / 14 / 20 px | 8 / 16 / 24 / 999 — `radius_px` |
+| easing | `cubic-bezier(.22,.61,.36,1)` | `cubic-bezier(0.22, 1, 0.36, 1)` — `motion.easing` |
+| durations | hard-coded `.18s`/`.2s`/`.26s` | `--t-micro` 120 / `--t-standard` 240 / `--t-celebratory` 480 |
+| brand mark centre | `#E3B23C` | `#C9992C` |
+
+### 6.2 Two contrast defects this reconciliation found
+
+Both are reported rather than quietly worked around, per the token file's own `contrast_rule`.
+
+1. **`color.semantic.focus-ring` (`#185FA5`) cannot be used on a dark surface.** Measured against
+   this hub's chrome it is **2.80:1** on the rail and **2.30:1** on a card face, below the WCAG 2.2
+   **3:1** non-text floor. `hub.css` aliases `--focus-ring` to the gold (7.02:1 / 5.78:1) and says
+   why. **The design system needs a second focus-ring value for dark surfaces.**
+2. **This spike was itself shipping an AA failure.** The "New in v2" pill used `#2E7CC4` behind
+   white 9.9px bold text: **4.38:1**, below the 4.5:1 floor. Fixed to true Saltire blue `#185FA5`
+   at **6.52:1**.
+
+### 6.3 Still open — not settled by the landed documents
+
+1. **The Saltire-blue drift.** `design-system.md` §5.1 raises it as a Founder Card decision:
+   `#185FA5` (Constitution §3) vs the `#5562F6`/`#60B4F9` the live site actually ships. This page
+   uses `#185FA5`. If the founder rules the other way, every blue here changes.
+2. **Type.** `design-tokens.json` names **Baloo 2** (display) and **Atkinson Hyperlegible**
+   (body/UI), both SIL OFL 1.1, the second chosen because the dissertation's own trial teacher
+   asked for a dyslexia-friendly face (p.70). The constitution permits a build-time font download
+   with the licence recorded, so this is allowed — but this spike deliberately **does not adopt it
+   yet**: `design-system.md` is DRAFT, its own `glyph_check_status` is `[VERIFY]`, and committing
+   ~200 KB of binaries to a public repo against an unratified type decision is the wrong order.
+   The system stack renders à è ì ò ù correctly today (proof strip in the dev panel, press `D`).
+   Cost of the swap once it ratifies: **1–2 hours** including the licence-register entry.
+3. **No dark-surface ramp.** The token file ships one surface family and it is light
+   (`surface-000` .. `surface-050`). This hub is a dark UI, so `--gold-lift`, `--ink` and the two
+   panel values are derived locally, at the thistle-gold hue, with their ratios written in
+   `hub.css`. **Request: publish a dark-surface ramp, or rule that the hub must be a light UI.**
+4. **Character canon.** `world-bible.md` fixes the name **Ruairidh an Ròn** (which is what this
+   page uses) but carries no visual canon — no proportions, palette or expression range. The seal
+   and the lobster drawn here are still placeholders. The world bible also names **an rionnach**
+   (the mackerel) as the evidenced third character, from the proverb at p.110; not drawn here.
+5. **Scene art is not tokenised** and arguably should not be. Sky, sea, sand, machair and night
+   stay local to this spike under `GAP 3` in `hub.css`.
+6. **Status-pill taxonomy.** "In v1 / New in v2 / Concept / Needs consultation" is still this
+   spike's guess at the product's language. Site spec §2 does not cover the hub.
+
+### 6.4 What the world bible changed on the page
+
+`world-bible.md` §3 flags the blackening specifically: it is an adult community custom involving
+mess and mock-capture, and Harbord et al.'s "not all cultural knowledge should be gamified"
+(dissertation p.31) applies directly — it needs community and parent consultation before any build
+decision, "not a default yes because a child liked the idea". That card no longer sits in the rail
+looking like a planned game: it carries the caveat on its face and a distinct **Needs
+consultation** status.
 
 ## 7. Known gaps
 
-- **Portrait framing.** On a tall screen the scene fits everything in, which leaves a wide quiet
-  band of machair above the rail. It is not ugly but it is not composed. A portrait art variant
-  with repositioned elements is needed; tracked here, not solved.
+- **Portrait is now composed, not just fitted** (closed in pass 2). A 0.75-aspect iPad cannot show
+  a 2.08-aspect shoreline without spending the spare height on something, and pass 1 spent it on
+  empty sky. Pass 2 lifts the scene's focal point and gives the freed space to the games: in
+  portrait the rail becomes a **two-column grid that scrolls vertically**, which is also the better
+  way to choose from eight things on a tall screen. Landscape is unchanged. What is still missing
+  is a genuine **portrait art variant** with elements repositioned for a tall frame; the current
+  fit is good, not composed.
 - **Safari 14 floor.** Rotations use `transform-box: fill-box`. Below Safari 14 the grass, tweed
   and claw would pivot about the wrong point. A 2018 iPad on iPadOS 15+ is fine; anything older
   is not.
-- **No audio.** Ruairidh's narration slots are not wired.
+- **No audio.** Ruairidh's narration slots are not wired. The world bible also flags that no
+  performer release is on file for the existing recordings (V-006) — a Founder Card item.
 - **The cards go nowhere.** Clicking one updates a status line and says so plainly. No dark
   pattern, no fake loading, no "coming soon" nag.
 - **Not compared against Spike B.** This measures Approach A only. The choice between approaches
   belongs to the design pod with the engineer's build-cost view alongside.
+- **No agent has reviewed this.** Constitution 7.7.5: no agent approves its own work.
 
 ## 8. Licence
 
 All artwork, CSS and JavaScript in this folder were authored by hand for Scotling by role 12.
 No stock imagery, no Freepik, no third-party fonts, no third-party code, no paid tool. Nothing
 needs a licence register entry because nothing was brought in.
+
+## 9. Change log
+
+**Pass 1 — 16 Oct 2026.** Scene, cards, parallax, weather, dev panel, 18 PENDING Gaelic rows.
+
+**Pass 2 — 16 Oct 2026.** Reconciled against the design system, token file and world bible now
+that they have landed (section 6). Adopted the real thistle-gold, radii, easing and motion
+durations. Found and reported two contrast defects, one of them this spike's own. Replaced the
+viewBox centre-fit with a focal-point fit and gave portrait a two-column card grid, closing the
+dead-band gap pass 1 logged. Moved the Machair label out of the Càrn label. Gave the blackening
+card the world bible's consultation caveat. Re-measured: 60 fps landscape at 1x/4x/6x, 58 min in
+portrait at 6x, no console errors, still three same-origin requests. **No Gaelic was added,
+changed or generated in pass 2** — the 18 PENDING rows are unchanged.
 
 ---
 *Spike A · visual-brand-designer (role 12, pod design) · 16 October 2026 · branch `dev/v2`.

@@ -38,9 +38,24 @@
     var w, h;
     if (a >= SAFE_A) { h = SAFE.h; w = SAFE.h * a; }
     else { w = SAFE.w; h = SAFE.w / a; }
-    // Bias the frame upward a little so the game rail sits over empty machair,
-    // not over Ruairidh.
-    var oy = Math.min(h * 0.12, 90);
+    // Frame on a focal point rather than on the centre. FOCAL_Y is the middle
+    // of the shoreline band (croft / tweed line / rock pool / skerry), which is
+    // what the composition is actually about.
+    //
+    // A 0.75-aspect iPad cannot show a 2.08-aspect composition without spending
+    // the spare height on something. Biasing it all into the sky left a dead
+    // sky band; biasing it all out left a dead machair band. So the focal point
+    // is placed HIGH in portrait and the freed space goes to the card grid,
+    // which in portrait becomes two columns (see hub.css @media). FOCAL_F is
+    // the share of viewport height the focal point sits at.
+    var FOCAL_Y = 470;
+    var FOCAL_F;
+    if (a >= SAFE_A)      FOCAL_F = 0.52;          // landscape: centred
+    else if (a <= 0.80)   FOCAL_F = 0.23;          // portrait: high, grid below
+    else {                                          // interpolate between
+      FOCAL_F = 0.23 + (a - 0.80) * (0.52 - 0.23) / (SAFE_A - 0.80);
+    }
+    var oy = (FOCAL_Y - cy) + h * (0.5 - FOCAL_F);
     svg.setAttribute('viewBox',
       (cx - w / 2).toFixed(1) + ' ' + (cy - h / 2 + oy).toFixed(1) + ' ' +
       w.toFixed(1) + ' ' + h.toFixed(1));

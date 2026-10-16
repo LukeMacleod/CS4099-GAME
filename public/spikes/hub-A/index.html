@@ -28,11 +28,25 @@
   TYPE: system font stack only. Grave-accent proof (a e i o u) is rendered in
   the dev panel (press D) at five sizes, and in the card titles.
 
-  PROVISIONAL TOKENS: studio/pods/design/design-system.md did not exist when
-  this was built. Every colour outside Saltire blue #185FA5 is marked
-  PROVISIONAL in hub.css and must be revisited when the design system lands.
-  Same for studio/pods/product/site-v2-spec.md and
-  studio/pods/design/world-bible.md (character canon for Ruairidh + Giomach).
+  TOKENS: reconciled 16 Oct 2026 against studio/pods/design/design-tokens.json
+  and design-system.md, which have now landed (both still DRAFT, so none of
+  this is ratified). The UI ramp in hub.css is the token file verbatim, marked
+  TOKEN; four places where the token file has no answer yet are marked GAP with
+  the measured reason and a named request back to the design system. Two of
+  those are real defects found by this reconciliation and reported, not hidden:
+  (a) semantic.focus-ring #185FA5 measures 2.30:1 on a card face, below the
+      WCAG 2.2 3:1 non-text floor, so it cannot be used on a dark UI;
+  (b) this spike was itself shipping a pill at 4.38:1 against white 9.9px bold
+      text — now fixed to true Saltire blue at 6.52:1.
+  Open and NOT settled by the landed documents: design-system.md s.5 raises the
+  Saltire-blue drift (#185FA5 here vs #5562F6/#60B4F9 on the live site) as a
+  Founder Card decision. This page uses #185FA5 per Constitution s.3. If the
+  founder rules the other way, every blue on this page changes.
+  World bible (studio/pods/design/world-bible.md) has landed too: it fixes
+  "Ruairidh an Ron" as the canonical name, which is what this page uses, but it
+  carries no visual canon for the characters, so the seal and the lobster drawn
+  here are still placeholders. It also names "an rionnach" (the mackerel) as
+  the evidenced third character, from the proverb at p.110 — not drawn here.
   ============================================================================
 -->
 </head>
@@ -301,10 +315,10 @@
           <text class="tag__en" x="916" y="434" text-anchor="middle" lang="en">beach</text>
         </g>
         <g class="tag" role="group" aria-label="Machair, Gaelic for the low-lying fertile coastal plain">
-          <circle class="tag__dot" cx="1266" cy="520" r="5"/>
-          <path class="tag__lead" d="M1266 520 L1266 496"/>
-          <text class="tag__gd" x="1266" y="486" text-anchor="middle" lang="gd">Machair</text>
-          <text class="tag__en" x="1266" y="468" text-anchor="middle" lang="en">coastal plain</text>
+          <circle class="tag__dot" cx="930" cy="584" r="5"/>
+          <path class="tag__lead" d="M930 584 L930 560"/>
+          <text class="tag__gd" x="930" y="550" text-anchor="middle" lang="gd">Machair</text>
+          <text class="tag__en" x="930" y="532" text-anchor="middle" lang="en">coastal plain</text>
         </g>
         <g class="tag" role="group" aria-label="Carn, Gaelic for cairn">
           <circle class="tag__dot" cx="1196" cy="462" r="5"/>
@@ -344,7 +358,7 @@
       <svg class="mark" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
         <rect width="40" height="40" rx="10" fill="#185FA5"/>
         <path d="M6 6 L34 34 M34 6 L6 34" stroke="#F6F1E7" stroke-width="5.5" stroke-linecap="round"/>
-        <circle cx="20" cy="20" r="6.5" fill="#E3B23C"/>
+        <circle cx="20" cy="20" r="6.5" fill="#C9992C"/><!-- thistle-gold token -->
       </svg>
       <span class="mark__word">Scotling</span>
     </div>
@@ -598,9 +612,19 @@
           <span class="crd__body">
             <span class="crd__gd crd__gd--pending" lang="en">The Blackening <em>(Gaelic title pending)</em></span>
             <span class="crd__en" lang="en">The pre-wedding tradition</span>
-            <span class="crd__meta">Child-proposed, pilot discussion group</span>
+            <!--
+              WORLD BIBLE s.3 (landed 16 Oct 2026) flags this card specifically.
+              Blackening is an adult community custom involving mess and
+              mock-capture; Harbord et al.'s "not all cultural knowledge should
+              be gamified" (dissertation p.31) applies directly. It needs
+              community and parent consultation before any build decision — not
+              a default yes because a child liked the idea. The card therefore
+              carries that caveat on its face and a distinct status, rather than
+              sitting in the rail looking like a planned game.
+            -->
+            <span class="crd__meta">Child-proposed, pilot discussion group<span class="crd__gloss"> — needs community and parent consultation before any build decision (world bible §3)</span></span>
           </span>
-          <span class="pill pill--idea">Concept</span>
+          <span class="pill pill--check">Needs consultation</span>
         </button>
       </li>
 

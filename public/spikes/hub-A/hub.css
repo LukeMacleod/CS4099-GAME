@@ -3,44 +3,89 @@
    Hand-authored. No third-party CSS, no CDN, no webfont, no tracker.
    Type: system stack only (renders a e i o u with graves — proof in dev panel).
 
-   TOKENS: #185FA5 is the brand Saltire blue (Constitution s.3).
-   Everything marked PROVISIONAL is this role's proposal and MUST be
-   reconciled with studio/pods/design/design-system.md when that lands.
+   TOKEN RECONCILIATION, 16 Oct 2026 (second pass).
+   studio/pods/design/design-tokens.json and design-system.md have now LANDED
+   (both DRAFT). The UI ramp below is taken from that file verbatim and is
+   labelled TOKEN. Values this spike still has to invent are labelled GAP with
+   the reason; each GAP is a specific request back to the design system, not a
+   free choice. Nothing is labelled PROVISIONAL any more — see README section 6.
    =========================================================================== */
 
 :root{
-  /* Brand — fixed */
-  --saltire:        #185FA5;
-  /* PROVISIONAL tints/shades of the Saltire */
-  --saltire-deep:   #0B2A47;
-  --saltire-night:  #07284A;
-  --saltire-lift:   #2E7CC4;
-  /* PROVISIONAL thistle gold + thistle purple */
-  --gold:           #E3B23C;
-  --gold-soft:      #F0D79A;
-  --gold-deep:      #B8862A;
-  --thistle:        #7D5BA6;
-  /* PROVISIONAL neutrals */
+  /* --- TOKEN: color.brand (design-tokens.json) ------------------------- */
+  --saltire:        #185FA5;   /* saltire-blue       — Constitution s.3 */
+  --saltire-ink:    #0E3C6B;   /* saltire-blue-ink   */
+  --saltire-tint:   #E3EEF8;   /* saltire-blue-tint  */
+  --gold:           #C9992C;   /* thistle-gold       */
+  --gold-tint:      #F6ECD4;   /* thistle-gold-tint  */
+
+  /* --- TOKEN: color.semantic ------------------------------------------- */
+  --success:        #1E8E5A;
+  --caution:        #B5750C;
+  --danger:         #C4341F;
+
+  /* --- GAP 1: no dark-surface ramp exists ------------------------------
+     design-tokens.json ships one surface family and it is light
+     (surface-000 #FFFFFF .. surface-050 #F7F7F7). This hub is a dark UI over
+     an evening sky, so three steps had to be derived here. Hue is held at the
+     thistle-gold hue (~44deg) so they are a ramp, not a new colour. Measured
+     against the rail (#061626) and the card face (#192836):
+       --gold-lift  on card 10.65:1   (small bold text, AA needs 4.5)
+       --gold       on card  5.78:1
+       --ink on --gold       7.02:1
+     Request to the design system: publish a dark-surface ramp with these
+     ratios, or rule that the hub must be a light UI.                      */
+  --gold-lift:      #F0D79A;
   --ink:            #061626;
   --paper:          #F6F1E7;
-  --machair:        #7FA65A;
-  --sand:           #E6D8B6;
-
   --panel:          rgba(255,255,255,.075);
   --panel-line:     rgba(255,255,255,.16);
 
-  /* Type — system only. Serif display gives the brand some adult weight;
-     the sans carries everything a child has to read quickly. */
+  /* --- GAP 2: focus ring -----------------------------------------------
+     color.semantic.focus-ring is #185FA5. On this chrome it measures 2.80:1
+     against the rail and 2.30:1 against a card face — BELOW the 3:1 WCAG 2.2
+     non-text floor, so the token cannot be used here and --gold is used
+     instead (7.02:1 / 5.78:1). The design system needs a second focus-ring
+     value for dark surfaces. Reported, not worked around silently.         */
+  --focus-ring:     var(--gold);
+
+  /* --- GAP 3: scene art colours ----------------------------------------
+     Sky, sea, sand, machair and night are illustration, not UI, and the
+     design system does not (and arguably should not) tokenise them. They stay
+     local to this spike and the world bible owns the palette brief.         */
+  --saltire-deep:   #0B2A47;
+  --saltire-night:  #07284A;
+  --saltire-lift:   #2E7CC4;
+  --machair:        #7FA65A;
+  --sand:           #E6D8B6;
+  --thistle:        #7D5BA6;   /* machair wildflowers only */
+
+  /* --- Type ------------------------------------------------------------
+     GAP 4: design-tokens.json names 'Baloo 2' (display) and 'Atkinson
+     Hyperlegible' (body/UI), both SIL OFL 1.1, and the constitution permits a
+     build-time font download with the licence recorded. This spike does NOT
+     adopt them yet, deliberately: design-system.md is DRAFT, its own
+     glyph_check_status is [VERIFY], and committing ~200 KB of binaries to a
+     public repo against an unratified type decision is the wrong order. The
+     system stack below renders a e i o u with graves today (proof strip in
+     the dev panel, press D) and the swap is these two lines when it ratifies.
+     Cost of the swap when it does: ~1-2 hours incl. licence register entry. */
   --f-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
           Arial, "Noto Sans", "Liberation Sans", sans-serif;
   --f-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
           "Times New Roman", "Liberation Serif", serif;
 
-  --r-lg: 20px;
-  --r-md: 14px;
-  --r-sm: 9px;
+  /* --- TOKEN: radius_px ------------------------------------------------- */
+  --r-sm:  8px;
+  --r-md:  16px;
+  --r-lg:  24px;
+  --r-pill: 999px;
 
-  --ease: cubic-bezier(.22,.61,.36,1);
+  /* --- TOKEN: motion ---------------------------------------------------- */
+  --t-micro:       120ms;
+  --t-standard:    240ms;
+  --t-celebratory: 480ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* parallax input, written once per frame by hub.js */
   --px: 0;
@@ -68,7 +113,7 @@ body{
   position:absolute; left:12px; top:-60px; z-index:50;
   background:var(--gold); color:var(--ink); font-weight:650;
   padding:10px 16px; border-radius:var(--r-sm); text-decoration:none;
-  transition:top .18s var(--ease);
+  transition:top var(--t-micro) var(--ease);
 }
 .skip:focus{ top:12px; }
 
@@ -144,7 +189,7 @@ body{
 }
 .tag__en{
   font-family:var(--f-ui); font-size:14px; font-weight:600; letter-spacing:.055em;
-  text-transform:uppercase; fill:var(--gold-soft);
+  text-transform:uppercase; fill:var(--gold-tint);
   paint-order:stroke; stroke:rgba(6,22,38,.72); stroke-width:3.5px; stroke-linejoin:round;
 }
 body.no-tags .tags{ opacity:0; }
@@ -195,27 +240,27 @@ body.wx-dreich .glint, body.wx-rain .glint{ opacity:0; }
 }
 .h1sub{
   margin:.42em 0 0; font-size:clamp(.82rem,1.5vw,1.02rem); font-weight:600;
-  letter-spacing:.1em; text-transform:uppercase; color:var(--gold-soft);
+  letter-spacing:.1em; text-transform:uppercase; color:var(--gold-tint);
   text-shadow:0 2px 10px rgba(4,18,32,.65);
 }
 
 .head__tools{ flex:0 0 auto; display:flex; align-items:center; gap:10px; }
-.wx{ display:flex; gap:2px; padding:3px; border-radius:999px;
+.wx{ display:flex; gap:2px; padding:3px; border-radius:var(--r-pill);
      background:rgba(6,22,38,.46); border:1px solid var(--panel-line); }
 .wx__btn{
   width:38px; height:38px; display:grid; place-items:center;
-  border:0; border-radius:999px; background:transparent; cursor:pointer;
-  color:rgba(255,255,255,.72); transition:background .2s var(--ease), color .2s var(--ease);
+  border:0; border-radius:var(--r-pill); background:transparent; cursor:pointer;
+  color:rgba(255,255,255,.72); transition:background var(--t-standard) var(--ease), color var(--t-standard) var(--ease);
 }
 .wx__btn svg{ width:20px; height:20px; fill:none; stroke:currentColor;
               stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
 .wx__btn:hover{ color:#fff; background:rgba(255,255,255,.1); }
 .wx__btn.is-on{ background:var(--gold); color:var(--ink); }
 .tgl{
-  height:44px; padding:0 16px; border-radius:999px; cursor:pointer;
+  height:44px; padding:0 16px; border-radius:var(--r-pill); cursor:pointer;
   background:rgba(6,22,38,.46); border:1px solid var(--panel-line);
   color:rgba(255,255,255,.88); font:inherit; font-size:.85rem; font-weight:600;
-  transition:border-color .2s var(--ease), color .2s var(--ease);
+  transition:border-color var(--t-standard) var(--ease), color var(--t-standard) var(--ease);
 }
 .tgl[aria-pressed="false"]{ color:rgba(255,255,255,.5); }
 .tgl:hover{ border-color:var(--gold); color:#fff; }
@@ -240,9 +285,9 @@ body.wx-dreich .glint, body.wx-rain .glint{ opacity:0; }
 .rail__nav{ display:flex; gap:8px; }
 .arw{
   width:44px; height:44px; display:grid; place-items:center; cursor:pointer;
-  border-radius:999px; background:rgba(255,255,255,.07);
+  border-radius:var(--r-pill); background:rgba(255,255,255,.07);
   border:1px solid var(--panel-line); color:#fff;
-  transition:background .2s var(--ease), border-color .2s var(--ease);
+  transition:background var(--t-standard) var(--ease), border-color var(--t-standard) var(--ease);
 }
 .arw svg{ width:20px; height:20px; fill:none; stroke:currentColor;
           stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round; }
@@ -265,8 +310,8 @@ body.wx-dreich .glint, body.wx-rain .glint{ opacity:0; }
   padding:0 0 clamp(10px,1.4vh,15px); cursor:pointer; text-align:left;
   background:var(--panel); border:1px solid var(--panel-line);
   border-radius:var(--r-lg); overflow:hidden; color:inherit; font:inherit;
-  transition:transform .26s var(--ease), border-color .26s var(--ease),
-             background .26s var(--ease);
+  transition:transform var(--t-standard) var(--ease), border-color var(--t-standard) var(--ease),
+             background var(--t-standard) var(--ease);
 }
 .crd__btn:hover,
 .crd__btn:focus-visible{
@@ -286,7 +331,7 @@ body.wx-dreich .glint, body.wx-rain .glint{ opacity:0; }
                       color:var(--gold); letter-spacing:.03em; margin-top:2px; }
 .crd__en{
   display:block; margin-top:3px; font-size:.8rem; font-weight:600;
-  color:var(--gold-soft); letter-spacing:.012em;
+  color:var(--gold-lift); letter-spacing:.012em;
 }
 .crd__meta{
   display:block; margin-top:7px; font-size:.7rem; line-height:1.45;
@@ -296,14 +341,20 @@ body.wx-dreich .glint, body.wx-rain .glint{ opacity:0; }
 
 .pill{
   position:absolute; top:10px; right:10px;
-  padding:4px 9px; border-radius:999px;
+  padding:4px 9px; border-radius:var(--r-pill);
   font-size:.62rem; font-weight:750; letter-spacing:.09em; text-transform:uppercase;
   backdrop-filter:none;
 }
 .pill--live{ background:var(--gold); color:var(--ink); }
-.pill--new { background:var(--saltire-lift); color:#fff; }
-.pill--idea{ background:rgba(6,22,38,.72); color:var(--gold-soft);
-             border:1px solid rgba(227,178,60,.45); }
+.pill--new { background:var(--saltire); color:#fff; }   /* 6.52:1 — was #2E7CC4 at 4.38:1, AA fail */
+.pill--idea{ background:rgba(6,22,38,.72); color:var(--gold-lift);
+             border:1px solid rgba(201,153,44,.55); }
+/* A concept that cannot simply be built — world bible s.3. Uses the caution
+   token (#B5750C) lightened for this dark face; honest status, not a warning
+   badge aimed at a child. Measured 10.79:1 on the card face. */
+.pill--check{ background:rgba(6,22,38,.72); color:#F2C877;
+              border:1px solid rgba(181,117,12,.85); max-width:9.5em;
+              line-height:1.15; text-align:right; }
 
 .status{
   margin:0; padding:0 clamp(16px,3vw,40px);
@@ -313,7 +364,7 @@ body.wx-dreich .glint, body.wx-rain .glint{ opacity:0; }
 /* ======================= DEV PANEL ======================= */
 .devbtn{
   position:absolute; right:12px; bottom:12px; z-index:6;
-  height:30px; padding:0 11px; border-radius:999px; cursor:pointer;
+  height:30px; padding:0 11px; border-radius:var(--r-pill); cursor:pointer;
   background:rgba(6,22,38,.6); border:1px solid var(--panel-line);
   color:rgba(255,255,255,.5); font:inherit; font-size:.64rem;
   font-weight:700; letter-spacing:.12em; text-transform:uppercase;
@@ -340,7 +391,7 @@ body.wx-dreich .glint, body.wx-rain .glint{ opacity:0; }
 kbd{ font:inherit; background:rgba(255,255,255,.12); padding:1px 5px; border-radius:4px; }
 
 /* ======================= FOCUS / A11Y ======================= */
-:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; border-radius:var(--r-sm); }
+:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:3px; border-radius:var(--r-sm); }
 .track:focus-visible{ outline-offset:-3px; }
 
 /* ======================= RESPONSIVE ======================= */
@@ -370,4 +421,46 @@ kbd{ font:inherit; background:rgba(255,255,255,.12); padding:1px 5px; border-rad
   .crd__btn{ background:rgba(6,22,38,.92); border-color:#fff; }
   .crd__meta{ color:rgba(246,241,231,.8); }
   .rail{ background:rgba(6,22,38,.98); }
+}
+
+/* =================== PORTRAIT: TWO-COLUMN CARD GRID ===================
+   A 0.75-aspect iPad cannot show a 2.08-aspect shoreline without leaving a
+   dead band. Rather than letting that band be empty sky or empty machair,
+   portrait gives the space to the games: the rail becomes a two-column
+   grid that scrolls vertically, which is also the better way to choose from
+   eight things on a tall screen. hub.js lifts the scene's focal point to
+   match. Landscape is untouched.
+   ===================================================================== */
+@media (max-aspect-ratio: 4/5){
+  .rail{
+    inset:auto 0 0 0;
+    max-height:68svh;
+    display:flex; flex-direction:column;
+    padding-top:clamp(18px,3vh,34px);
+    background:linear-gradient(to top,
+        rgba(6,22,38,.985) 0%, rgba(6,22,38,.975) 66%,
+        rgba(6,22,38,.92) 82%, rgba(6,22,38,.58) 93%, rgba(6,22,38,0) 100%);
+  }
+  .rail__nav{ display:none; }          /* vertical scroll, no arrows to fake */
+  /* With the scene's focal point lifted, the title block has to come up too,
+     or the subtitle lands on the Clo na Hearadh label. */
+  .head__titles{ margin-top:0; }
+  .h1{ font-size:clamp(1.7rem,6vw,2.5rem); }
+  .track{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:clamp(10px,1.6vw,16px);
+    overflow-x:hidden; overflow-y:auto;
+    scroll-snap-type:none;
+    flex:1 1 auto; min-height:0;
+    padding-bottom:18px;
+  }
+  .crd{ scroll-snap-align:none; }
+  .crd__btn{ width:100%; }
+  .crd__btn:hover,
+  .crd__btn:focus-visible{ transform:none; }   /* no lift under a thumb */
+  /* Crop a sliver off the art so a third row peeks and the grid reads as
+     scrollable without a scrollbar or a nudge. */
+  .crd__art{ aspect-ratio:220/112; overflow:hidden; }
+  .status{ flex:0 0 auto; padding-top:6px; }
 }
