@@ -2,21 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Participants collection - SIMPLE RULES
-    match /participants/{participantCode} {
-      // Anyone can read and write their own participant document
-      // This is for a research study with pre-generated codes (P-01 to P-50)
-      allow read, write: if true;
-    }
-
-    // EXPERIMENT BACKUP - Complete data backup for safety
-    match /experiment_backup/{document=**} {
-      // Allow all reads and writes to backup collection
-      // This captures all login events, snapshots, and events for data recovery
-      allow read, write: if true;
-    }
-
-    // Deny all other access
+    // PHASE 0 LOCKDOWN (2026-08-07): The research study is complete and all
+    // data has been exported and archived. Deny all client access until the
+    // Phase 1 multi-tenant auth model (School > Teacher > Class > Pupil)
+    // defines real, scoped rules. See PRODUCT-ROADMAP.md.
     match /{document=**} {
       allow read, write: if false;
     }
