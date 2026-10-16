@@ -1,0 +1,27 @@
+{
+ "_schema": [
+  "id",
+  "gaelic",
+  "english_gloss",
+  "usage_context",
+  "category",
+  "source_url",
+  "confidence",
+  "dialect_note",
+  "verified_by"
+ ],
+ "_note": "Test fixture only. Not the studio master. Mirrors the one row proposed in studio/content/pending/game-frontend-engineer-rows.json so scripts/test-content-pipeline.mjs can prove the build+loader mechanics end-to-end without writing to the governed master file (only the Gaelic Language Lead may do that).",
+ "strings": [
+  {
+   "id": "game3.encouragement.sin_thu_fhein",
+   "gaelic": "Sin thu fhèin!",
+   "english_gloss": "There you are! / Well done yourself! / Good for you!",
+   "usage_context": "Game 3 (Cho luath ris a' bhradan) - Ruairidh's encouragement line shown after a 5-correct-catch streak",
+   "category": "idiom",
+   "source_url": "SpeakGaelic (BBC/MG ALBA), 'Sin thu fhèin! (Phrases - A' dol a chèilidh)', 2024 - cited in DISSERTATION (final, Apr 2026), Appendix A, Table 14",
+   "confidence": "High",
+   "dialect_note": "None recorded in source dissertation table.",
+   "verified_by": "PENDING"
+  }
+ ]
+}

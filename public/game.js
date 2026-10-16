@@ -1984,7 +1984,15 @@ class Game3FishingGame {
     // ===== ENCOURAGEMENT SYSTEM =====
     // Ruairidh says some encouraging colloqiual Galeic terms when you catch 5 correct fish in a row
     // "Sin thu fhèin!" = "Well done yourself!", "Sgoinneil!" = "Brilliant!", "Fìor Mhath!" = "Very good!"
-    this.encouragementMessages = ["Sin thu fhèin!", "Sgoinneil!", "Fìor Mhath!"];
+    // NOTE: only the first message is wired through the content pipeline so far
+    // (studio/content/gaelic_strings.json -> scripts/build-content.mjs -> GaelicStrings.get()).
+    // The other two are still hard-coded pending migration - see the content
+    // pipeline doc in studio/pods/engineering for why only one was moved in this pass.
+    this.encouragementMessages = [
+      this.controller.gaelicStrings.get('game3.encouragement.sin_thu_fhein'),
+      "Sgoinneil!",
+      "Fìor Mhath!"
+    ];
     this.currentMessageIndex = 0;
     this.correctStreakCount = 0;
 
@@ -3557,6 +3565,12 @@ class GameFlowController {
 
     // Ruairidh voice narration system
     this.ruairidhVoice = new RuairidhVoice(this.audio);
+
+    // Gaelic content pipeline (studio/content/gaelic_strings.json -> public/content/gaelic_strings.json).
+    // See scripts/build-content.mjs. Only one string (id: game3.encouragement.sin_thu_fhein,
+    // Game 3's streak-of-5 encouragement line) is wired through this so far - see the
+    // content pipeline doc in studio/pods/engineering for the migration status of the rest.
+    this.gaelicStrings = new GaelicStrings();
   }
 
   // Builds the top banner (buttons, timer, points) - options control what's shown

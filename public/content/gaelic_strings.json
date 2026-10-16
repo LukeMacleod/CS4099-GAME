@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "generated_at": "2026-10-16T10:54:21.226Z",
+    "generated_by": "scripts/build-content.mjs",
+    "source": "/Users/lookmacloud/scotling-studio/studio/content/gaelic_strings.json",
+    "source_row_count": 0,
+    "shipped_count": 0,
+    "pending_excluded_count": 0,
+    "malformed_skipped_count": 0,
+    "include_pending": false
+  },
+  "strings": {}
+}
