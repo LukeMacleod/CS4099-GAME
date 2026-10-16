@@ -1,0 +1,11 @@
+{
+  "name": "scotling-play-ci",
+  "private": true,
+  "description": "Playwright CI harness only. The app itself ships as static files in public/ with no build step.",
+  "scripts": {
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

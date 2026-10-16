@@ -1,0 +1,51 @@
+# Studio CI: Playwright checks on pull requests into studio/* branches only.
+#
+# This workflow NEVER deploys. It has no Firebase/Cloudflare/Wrangler step, requests no
+# deploy-capable secrets, and its permissions are read-only. Deploys stay in
+# firebase-hosting-merge.yml, which only runs on push to `main` and is founder-only
+# (CLAUDE.md 7.7.3). If a future edit to this file adds a deploy step, that is a guardrail
+# break per CLAUDE.md 7.7.6 and should be rejected in review.
+name: Studio PR checks (Playwright, no deploy)
+
+on:
+  pull_request:
+    branches:
+      - 'studio/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright:
+    name: Playwright smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install CI dependencies
+        run: npm install
+
+      - name: Install Playwright (Chromium only)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright smoke tests
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
