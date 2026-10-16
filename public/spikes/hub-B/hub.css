@@ -1,0 +1,253 @@
+/* Scotling V2 — Art-direction Spike B ("Deep Harbour")
+   Role 12, visual-brand-designer. All CSS authored for this spike.
+   Licence: same as repo. No third-party CSS, no webfonts, no CDN. */
+
+:root {
+  /* Brand (constitution 4 / founder directive) */
+  --saltire:        #185FA5;
+  --saltire-deep:   #0E3C6B;
+  --saltire-night:  #06243F;
+  --thistle-gold:   #E8B33A;
+  --thistle-gold-2: #F7D27A;
+  --thistle-purple: #7D5BA6;   /* small accent only; gold is the brand accent */
+
+  --machair:        #7FA86B;
+  --foam:           #EAF4FA;
+  --ink:            #0A1B2B;
+  --paper:          #F4F7FA;
+
+  --hud-bg:         rgba(6, 36, 63, 0.82);
+  --hud-line:       rgba(232, 179, 58, 0.38);
+
+  --r-lg: 18px;
+  --r-md: 11px;
+  --r-sm: 7px;
+
+  /* System stack only. Every family here ships the Latin-1 Supplement block,
+     so à è ì ò ù resolve without a webfont. Verified at runtime, see hub.js. */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+             "Liberation Sans", Roboto, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Avenir Next", "Segoe UI Semibold", "Noto Sans", Cantarell,
+             -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--saltire-night);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+body { display: flex; flex-direction: column; }
+
+/* ---------- stage ---------- */
+
+#stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0B2C53 0%, #164E86 48%, #2E7BB4 72%, #8FC4DE 100%);
+  touch-action: none;
+  cursor: grab;
+}
+#stage.dragging { cursor: grabbing; }
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* static poster: shown only when canvas is unavailable */
+#poster {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+.no-canvas #scene { display: none; }
+.no-canvas #poster { display: block; }
+#poster svg { width: 100%; height: 100%; display: block; }
+
+/* ---------- keyboard / screen-reader card list ----------
+   The carousel is painted on canvas; this list is the accessible
+   equivalent. It is focusable, not display:none, so Tab reaches it. */
+
+#cards-a11y {
+  position: absolute;
+  left: 0; top: 0;
+  margin: 0; padding: 0;
+  list-style: none;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+#cards-a11y li { margin: 0; }
+#cards-a11y button {
+  position: absolute;
+  left: -9999px;
+  width: 1px; height: 1px;
+  background: var(--saltire-deep);
+  color: var(--paper);
+  border: 2px solid var(--thistle-gold);
+  border-radius: var(--r-md);
+  font: inherit;
+  padding: 10px 14px;
+}
+#cards-a11y button:focus-visible {
+  position: fixed;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  width: auto; height: auto;
+  z-index: 40;
+  outline: 3px solid var(--thistle-gold-2);
+  outline-offset: 3px;
+}
+
+/* ---------- HUD ---------- */
+
+#hud {
+  position: absolute;
+  left: 14px; top: 14px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  max-width: calc(100% - 28px);
+  padding: 9px 11px;
+  background: var(--hud-bg);
+  border: 1px solid var(--hud-line);
+  border-radius: var(--r-md);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  font-size: 12.5px;
+  line-height: 1.25;
+}
+
+#hud .group { display: flex; gap: 6px; align-items: center; }
+#hud .sep { width: 1px; align-self: stretch; background: var(--hud-line); }
+
+#hud label.sw {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid rgba(244, 247, 250, 0.22);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+#hud label.sw:hover { border-color: var(--thistle-gold); }
+#hud label.sw input { accent-color: var(--thistle-gold); margin: 0; }
+
+#hud select {
+  font: inherit;
+  color: var(--paper);
+  background: rgba(10, 27, 43, 0.9);
+  border: 1px solid rgba(244, 247, 250, 0.22);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+#readout {
+  font-variant-numeric: tabular-nums;
+  color: var(--thistle-gold-2);
+  white-space: nowrap;
+}
+#readout .warn { color: #FFB3A7; }
+#readout .ok { color: #9BE8B0; }
+
+/* ---------- strapline / proverb strip ---------- */
+
+#strap {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 15;
+  width: min(760px, calc(100% - 28px));
+  text-align: center;
+  padding: 10px 14px;
+  background: rgba(6, 36, 63, 0.58);
+  border: 1px solid rgba(232, 179, 58, 0.26);
+  border-radius: var(--r-md);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+#strap .gd {
+  font-family: var(--font-display);
+  font-size: clamp(14px, 2.2vw, 19px);
+  color: var(--thistle-gold-2);
+  letter-spacing: 0.012em;
+}
+#strap .en {
+  font-size: clamp(11.5px, 1.6vw, 13.5px);
+  color: rgba(244, 247, 250, 0.78);
+  margin-top: 3px;
+}
+#strap .src {
+  font-size: 10.5px;
+  color: rgba(244, 247, 250, 0.5);
+  margin-top: 5px;
+}
+
+/* ---------- footer: diacritic proof + provenance ---------- */
+
+#proof {
+  flex: 0 0 auto;
+  background: #061a2c;
+  border-top: 1px solid rgba(232, 179, 58, 0.22);
+  padding: 12px 16px 14px;
+  font-size: 12.5px;
+  color: rgba(244, 247, 250, 0.82);
+}
+#proof .row { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: baseline; }
+#proof h2 {
+  margin: 0 0 7px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--thistle-gold);
+  font-weight: 600;
+}
+/* The size classes sit ON the .glyphs span, not inside it, so these are
+   compound selectors. They were descendant selectors and silently matched
+   nothing, which meant the strip claimed three sizes and rendered one. */
+.glyphs { font-family: var(--font-display); line-height: 1.1; }
+.glyphs.g12 { font-size: 12px; }
+.glyphs.g20 { font-size: 20px; }
+.glyphs.g34 { font-size: 34px; }
+#proof .verdict { font-weight: 600; }
+#proof .pass { color: #9BE8B0; }
+#proof .fail { color: #FFB3A7; }
+#proof a { color: var(--thistle-gold-2); }
+#proof .note { margin-top: 9px; color: rgba(244, 247, 250, 0.58); font-size: 11.5px; }
+
+@media (max-width: 700px) {
+  /* The bottom of a phone screen belongs to Ruairidh and the card row, so
+     the proverb moves up into the empty sky under the controls. */
+  #strap {
+    bottom: auto;
+    top: 96px;
+    width: calc(100% - 20px);
+    padding: 8px 10px;
+  }
+  #hud { font-size: 11.5px; gap: 6px; padding: 7px 9px; left: 10px; top: 10px; }
+  #hud .sep { display: none; }
+  #proof { font-size: 11.5px; padding: 10px 16px 12px; }
+  #proof .row { gap: 6px 14px; }
+  .glyphs.g34 { font-size: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* hub.js also freezes the render loop; this covers any CSS motion */
+  * { animation: none !important; transition: none !important; }
+}

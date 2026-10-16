@@ -1,0 +1,128 @@
+{
+  "_what": "Gaelic content for art-direction spike B. Generated from the studio's PENDING rows, not written here.",
+  "_source_of_truth": "~/scotling-studio/studio/content/pending/visual-brand-designer-site-rows.json (rows VBD-*)",
+  "_status": "PENDING NATIVE-SPEAKER REVIEW. Not certified by any agent (constitution 7.7.2). Must not reach a child before the Gaelic Language Lead and a human native speaker sign it off.",
+  "_why_this_file_exists": "The product repo's CLAUDE.md says no Gaelic string lives in code. The production content pipeline (scripts/build-content.mjs) correctly EXCLUDES PENDING rows, so a review spike cannot draw from it. This file keeps the spike's Gaelic out of hub.js instead. If it fails to load, the page renders English only - it never falls back to an unreviewed Gaelic string baked into the script.",
+  "_generated": "2026-10-16 by role 12 (visual-brand-designer)",
+  "strings": {
+    "VBD-001": {
+      "gaelic": "Geamaichean Gàidhlig",
+      "english_gloss": "Gaelic Games",
+      "confidence": "Med",
+      "source_url": "https://github.com/LukeMacleod/CS4099-GAME",
+      "verified_by": "PENDING"
+    },
+    "VBD-002": {
+      "gaelic": "Glac an Giomach",
+      "english_gloss": "Trap the Lobster",
+      "confidence": "Med",
+      "source_url": "https://github.com/LukeMacleod/CS4099-GAME",
+      "verified_by": "PENDING"
+    },
+    "VBD-003": {
+      "gaelic": "Cho coltach ris an dà sgadan",
+      "english_gloss": "As alike as two herring",
+      "confidence": "Low",
+      "source_url": "https://learngaelic.scot/dictionary/index.jsp?abairt=sgadan&slang=both&wholeword=false",
+      "verified_by": "PENDING"
+    },
+    "VBD-004": {
+      "gaelic": "Cho luath ris a' bhradan",
+      "english_gloss": "As fast as a salmon",
+      "confidence": "Med",
+      "source_url": "https://github.com/LukeMacleod/CS4099-GAME",
+      "verified_by": "PENDING"
+    },
+    "VBD-005": {
+      "gaelic": "Nithear càirn mòr bho chlachan beaga",
+      "english_gloss": "A big cairn is made from small stones",
+      "confidence": "Low",
+      "source_url": "https://archive.org/details/collectionofgael00nichuoft",
+      "verified_by": "PENDING"
+    },
+    "VBD-006": {
+      "gaelic": "An giomach, an rionnach is an ròn, trì seòid a' mhara",
+      "english_gloss": "The lobster, herring and the seal: the three jewels of the sea",
+      "confidence": "Low",
+      "source_url": "https://www.faclair.com/ViewEntry.aspx?ID=115BD9193AA9DC5BF4B7827F66528F8B",
+      "verified_by": "PENDING"
+    },
+    "VBD-010": {
+      "gaelic": "Nach buidhe dhut",
+      "english_gloss": "Aren't you lucky!",
+      "confidence": "Med",
+      "source_url": "https://learngaelic.scot/dictionary/index.jsp?abairt=nach%20buidhe%20dhut&slang=both&wholeword=false",
+      "verified_by": "PENDING"
+    },
+    "VBD-011": {
+      "gaelic": "Sin thu fhèin",
+      "english_gloss": "Good for you! / There you are!",
+      "confidence": "Low",
+      "source_url": "https://speakgaelic.scot/",
+      "verified_by": "PENDING"
+    },
+    "VBD-012": {
+      "gaelic": "och",
+      "english_gloss": "oh / a sigh",
+      "confidence": "Med",
+      "source_url": "https://www.faclair.com/ViewEntry.aspx?ID=E01434EFC843E45D5E01BAC9E8040EE9",
+      "verified_by": "PENDING"
+    },
+    "VBD-013": {
+      "gaelic": "nise",
+      "english_gloss": "now",
+      "confidence": "Low",
+      "source_url": "https://www.faclair.com/ViewEntry.aspx?ID=86992C75F397FF43A461E53D74AA63B7",
+      "verified_by": "PENDING"
+    },
+    "VBD-014": {
+      "gaelic": "duda?",
+      "english_gloss": "eh? what?",
+      "confidence": "Med",
+      "source_url": "https://learngaelic.scot/dictionary/index.jsp?abairt=duda&slang=both&wholeword=false",
+      "verified_by": "PENDING"
+    },
+    "VBD-015": {
+      "gaelic": "obh obh",
+      "english_gloss": "oh oh",
+      "confidence": "Low",
+      "source_url": "https://github.com/LukeMacleod/CS4099-GAME",
+      "verified_by": "PENDING"
+    },
+    "VBD-016": {
+      "gaelic": "seadh",
+      "english_gloss": "uh-huh / yes",
+      "confidence": "Med",
+      "source_url": "https://learngaelic.scot/dictionary/index.jsp?abairt=seadh&slang=both&wholeword=false",
+      "verified_by": "PENDING"
+    },
+    "VBD-017": {
+      "gaelic": "aidh aidh",
+      "english_gloss": "aye aye",
+      "confidence": "Low",
+      "source_url": "https://github.com/LukeMacleod/CS4099-GAME",
+      "verified_by": "PENDING"
+    },
+    "VBD-018": {
+      "gaelic": "haoidh",
+      "english_gloss": "hey!",
+      "confidence": "Low",
+      "source_url": "https://www.faclair.com/ViewEntry.aspx?ID=F499758EDBC7C32081D212BFEC25E067",
+      "verified_by": "PENDING"
+    },
+    "VBD-020": {
+      "gaelic": "San Earrach, nuair a bhios a chaora caol, bidh am maorach reamhar.",
+      "english_gloss": "In Spring, when the sheep are lean, the shell-fish will be fat",
+      "confidence": "Med",
+      "source_url": "https://www3.smo.uhi.ac.uk/gaidhlig/corpus/seanfhaclan/Gaelic_Proverbs_TD_Macdonald.doc",
+      "verified_by": "PENDING"
+    },
+    "VBD-021": {
+      "gaelic": "Gàidhlig",
+      "english_gloss": "Gaelic (the language)",
+      "confidence": "High",
+      "source_url": "https://www.faclair.com/?txtSearch=g%C3%A0idhlig",
+      "verified_by": "PENDING"
+    }
+  }
+}
