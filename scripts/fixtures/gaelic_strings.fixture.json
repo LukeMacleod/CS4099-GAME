@@ -10,7 +10,7 @@
   "dialect_note",
   "verified_by"
  ],
- "_note": "Test fixture only. Not the studio master. Mirrors the one row proposed in studio/content/pending/game-frontend-engineer-rows.json so scripts/test-content-pipeline.mjs can prove the build+loader mechanics end-to-end without writing to the governed master file (only the Gaelic Language Lead may do that).",
+ "_note": "Test fixture only. Not the studio master. Mirrors the one row proposed in studio/content/pending/15-rows.json so scripts/test-content-pipeline.mjs can prove the build+loader mechanics end-to-end without writing to the governed master file (only the Gaelic Language Lead may do that).",
  "strings": [
   {
    "id": "game3.encouragement.sin_thu_fhein",
