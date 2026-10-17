@@ -1,0 +1,38 @@
+[
+  {
+    "name": "hub-A",
+    "path": "/spikes/hub-A/",
+    "viewport": { "width": 1366, "height": 768 },
+    "portrait": { "width": 810, "height": 1080 },
+    "throttle": [1, 6, 10],
+    "readout": null,
+    "tabStops": 14,
+    "regions": [
+      { "label": "card 1 Gaelic title",            "rect": [14, 592, 200, 20] },
+      { "label": "card 1 English gloss",           "rect": [14, 638, 160, 16] },
+      { "label": "card 1 meta line (11.2px)",      "rect": [14, 662, 180, 14] },
+      { "label": "scene tag Gaelic (Clo na Hearadh)", "rect": [344, 214, 200, 22] },
+      { "label": "scene tag English (HARRIS TWEED)",  "rect": [348, 200, 170, 14] },
+      { "label": "rail heading EIGHT GAMES",       "rect": [38, 379, 116, 14] }
+    ]
+  },
+  {
+    "name": "hub-B",
+    "path": "/spikes/hub-B/",
+    "viewport": { "width": 1366, "height": 768 },
+    "portrait": { "width": 810, "height": 1080 },
+    "throttle": [1, 6, 10],
+    "readout": "#readout",
+    "tabStops": 14,
+    "regions": [
+      { "label": "centre card Gaelic title",             "rect": [556, 388, 240, 26] },
+      { "label": "centre card English gloss",            "rect": [556, 432, 180, 20] },
+      { "label": "card 1 step right of centre, Gaelic",  "rect": [860, 392, 170, 46] },
+      { "label": "card 1 step left of centre, Gaelic",   "rect": [232, 386, 96, 60] },
+      { "label": "card 2 steps left (Pipe Rhythm)",      "rect": [88, 410, 80, 16] },
+      { "label": "card 2 steps right (Ferry Run)",       "rect": [1156, 412, 64, 16] },
+      { "label": "idiom banner Gaelic",                  "rect": [452, 564, 460, 22] },
+      { "label": "idiom banner English",                 "rect": [496, 590, 374, 18] }
+    ]
+  }
+]
